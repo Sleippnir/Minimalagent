@@ -28,12 +28,14 @@ BEGIN
         i.interviewer_prompt_version_id,
         i.evaluator_prompt_version_id,
         i.rubric_version_id,
-        ipv.prompt as interviewer_prompt, -- CORRECTED: Fetched from prompt_versions
-        epv.prompt as evaluator_prompt   -- CORRECTED: Fetched from prompt_versions
+        ip.content as interviewer_prompt,
+        ep.content as evaluator_prompt
     INTO v_interview_record
     FROM interviews i
     LEFT JOIN prompt_versions ipv ON i.interviewer_prompt_version_id = ipv.prompt_version_id
+    LEFT JOIN prompt_versions ip ON ipv.prompt_id = ip.prompt_version_id
     LEFT JOIN prompt_versions epv ON i.evaluator_prompt_version_id = epv.prompt_version_id
+    LEFT JOIN prompt_versions ep ON epv.prompt_id = ep.prompt_version_id
     WHERE i.interview_id = p_interview_id;
 
     IF NOT FOUND THEN
