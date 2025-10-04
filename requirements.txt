@@ -52,7 +52,7 @@ textblob>=0.17.1
 pipecat-ai>=0.0.85
 
 # Google AI y Cloud Services
-google-genai>=0.8.0
+google-generativeai>=0.8.0
 google-cloud-speech>=2.33.0
 google-cloud-texttospeech>=2.30.0
 
@@ -61,12 +61,12 @@ loguru>=0.7.0
 
 # WebRTC implementation for real-time communication
 aiortc>=1.6.0
-pipecat[daily]
+#pipecat[daily]
 pipecat-ai[silero]
 pipecat-ai[local-smart-turn-v3]
 pipecat-ai[webrtc]
 simli-ai
 pipecat-ai[cartesia]
 pipecat-ai[deepgram]
-pipecat-ai[daily]
+#pipecat-ai[daily]
 pipecat_ai_small_webrtc_prebuilt

@@ -3,7 +3,7 @@ Interview repository implementation using Supabase.
 Handles CRUD operations for Interview entities.
 """
 from typing import Optional, List, Dict, Any
-from ....domain.entities.interview import Interview
+from ..evaluator.interview import Interview
 from .base_repository import SupabaseBaseRepository
 
 
@@ -34,7 +34,18 @@ class InterviewRepository(SupabaseBaseRepository[Interview]):
             self.logger.error(f"Error retrieving interview by interview_id: {e}")
             raise Exception(f"Database error: {e}")
     
-    async def update_by_interview_id(self, interview: Interview) -> Interview:
+    async def get_transcript(self, interview_id: str) -> Optional[Dict[str, Any]]:
+        """Get transcript data for an interview"""
+        try:
+            result = self.supabase.table("transcripts").select("*").eq("interview_id", interview_id).execute()
+            
+            if result.data:
+                return result.data[0]  # Return the transcript data
+            return None
+            
+        except Exception as e:
+            self.logger.error(f"Error retrieving transcript: {e}")
+            raise Exception(f"Database error: {e}")
         """Update interview using interview_id field"""
         try:
             data = self.to_dict(interview)
@@ -47,6 +58,30 @@ class InterviewRepository(SupabaseBaseRepository[Interview]):
                 
         except Exception as e:
             self.logger.error(f"Error updating interview: {e}")
+            raise Exception(f"Database error: {e}")
+    
+    async def save_transcript(self, interview_id: str, transcript_data: Dict[str, Any]) -> bool:
+        """Save transcript data to transcripts table"""
+        try:
+            # Insert into transcripts table
+            result = self.supabase.table("transcripts").insert({
+                "interview_id": interview_id,
+                "transcript_json": transcript_data["transcript_json"],
+                "full_text": transcript_data["full_text"]
+            }).execute()
+            
+            if result.data:
+                # Update interview status to completed
+                self.supabase.table(self.table_name).update({
+                    "status": "completed",
+                    "completed_at": "now()"
+                }).eq("interview_id", interview_id).execute()
+                
+                return True
+            return False
+            
+        except Exception as e:
+            self.logger.error(f"Error saving transcript: {e}")
             raise Exception(f"Database error: {e}")
     
     async def get_by_status(self, has_evaluations: bool = None) -> List[Interview]:

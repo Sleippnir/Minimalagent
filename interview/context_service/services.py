@@ -26,6 +26,19 @@ class QueueService:
             print(f"Error getting interview from evaluator queue: {e}")
             return None
 
+    async def get_interview_context_from_queue(self, auth_token: str) -> Optional[Dict[str, Any]]:
+        """Retrieve interview context from interviewer_queue by auth token"""
+        try:
+            results = await self.client.get("interviewer_queue", {"auth_token": auth_token})
+            
+            if results:
+                return results[0]  # The interview context
+            return None
+            
+        except Exception as e:
+            print(f"Error getting interview context from interviewer_queue: {e}")
+            return None
+
     async def get_next_evaluation_task(self) -> Optional[Dict[str, Any]]:
         """Get the next available evaluation task from evaluator_queue"""
         try:
@@ -71,9 +84,12 @@ class TranscriptService:
             transcript_data = {
                 "interview_id": interview_id,
                 "full_text": full_text,
-                "transcript_json": transcript_json,
-                "audio_path": audio_path
+                "transcript_json": transcript_json
             }
+            
+            # Only include audio_path if provided
+            if audio_path:
+                transcript_data["audio_path"] = audio_path
             
             await self.client.post("transcripts", transcript_data)
             print(f"✅ Successfully inserted transcript for interview {interview_id}")

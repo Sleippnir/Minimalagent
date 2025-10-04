@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  # Backend API Server
+  api:
+    build: .
+    ports:
+      - "8001:8001"  # API server
+      - "7860:7860"  # WebRTC bot (when launched)
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY}
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY}
+      - ELEVENLABS_VOICE_ID=${ELEVENLABS_VOICE_ID}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - SIMLI_API_KEY=${SIMLI_API_KEY}
+      - SIMLI_FACE_ID=${SIMLI_FACE_ID}
+      - AUTH_TOKEN=${AUTH_TOKEN}
+    volumes:
+      - ./storage:/app/storage  # Mount storage directory for transcripts
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend Test Interface
+  frontend:
+    image: nginx:alpine
+    ports:
+      - "8080:80"  # Frontend on port 8080
+    volumes:
+      - ./frontend:/usr/share/nginx/html  # Mount frontend files
+      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf  # Custom nginx config
+    depends_on:
+      - api
+    restart: unless-stopped

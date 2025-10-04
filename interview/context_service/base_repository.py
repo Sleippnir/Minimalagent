@@ -3,10 +3,12 @@ Base Supabase client and operations for the evaluation service.
 Provides common database operations with proper error handling.
 """
 from typing import Optional, List, Dict, Any, TypeVar, Generic
-from supabase import create_client, Client
 from abc import ABC, abstractmethod
 import logging
-from ...config import get_settings
+from ..config import InterviewConfig
+from supabase import create_client, Client
+
+T = TypeVar('T')
 
 T = TypeVar('T')
 
@@ -17,11 +19,7 @@ class SupabaseBaseRepository(ABC, Generic[T]):
     """
     
     def __init__(self, table_name: str):
-        self.settings = get_settings()
-        self.supabase: Client = create_client(
-            self.settings.SUPABASE_URL,
-            self.settings.SUPABASE_ANON_KEY
-        )
+        self.supabase: Client = get_supabase_sync_client()
         self.table_name = table_name
         self.logger = logging.getLogger(self.__class__.__name__)
     
@@ -106,11 +104,7 @@ class SupabaseClient:
     """
     
     def __init__(self):
-        self.settings = get_settings()
-        self.client: Client = create_client(
-            self.settings.SUPABASE_URL,
-            self.settings.SUPABASE_ANON_KEY
-        )
+        self.client: Client = get_supabase_sync_client()
         self.logger = logging.getLogger(self.__class__.__name__)
     
     def get_client(self) -> Client:
@@ -128,12 +122,21 @@ class SupabaseClient:
             return False
 
 
-# Singleton instance for dependency injection
-_supabase_client = None
+# Singleton instances for dependency injection
+_supabase_sync_client = None
+_supabase_async_client = None
 
-def get_supabase_client() -> SupabaseClient:
-    """Get singleton Supabase client instance"""
-    global _supabase_client
-    if _supabase_client is None:
-        _supabase_client = SupabaseClient()
-    return _supabase_client
+def get_supabase_sync_client() -> Client:
+    """Get singleton synchronous Supabase client instance"""
+    global _supabase_sync_client
+    if _supabase_sync_client is None:
+        _supabase_sync_client = create_client(
+            supabase_url=InterviewConfig.SUPABASE_URL,
+            supabase_key=InterviewConfig.SUPABASE_KEY
+        )
+    return _supabase_sync_client
+
+def get_supabase_client():
+    """Get async Supabase client (backwards compatibility)"""
+    from .client import get_supabase_client as get_async_client
+    return get_async_client()
