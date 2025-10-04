@@ -1,6 +1,6 @@
 import supabase
 from config import Config
-from automated_tagger import AutomatedTagger
+from .automated_tagger import AutomatedTagger
 
 def update_all_jobs_with_new_tags():
     """Update all jobs in database with improved automated tags"""

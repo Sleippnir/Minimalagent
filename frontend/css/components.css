@@ -1,0 +1,355 @@
+/* Auth components */
+.auth-container {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 2rem;
+    background: var(--glass-bg);
+    border-radius: 16px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+.auth-container h1 {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.auth-container p {
+    text-align: center;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}
+
+.auth-state {
+    text-align: center;
+    padding: 2rem;
+}
+
+.auth-state svg {
+    width: 3rem;
+    height: 3rem;
+    margin: 0 auto 1rem;
+}
+
+.auth-state h2 {
+    margin-bottom: 1rem;
+}
+
+/* Manager login form */
+#login-form .space-y-6 > * + * {
+    margin-top: 1.5rem;
+}
+
+#login-form label {
+    color: var(--text-secondary);
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+#login-form input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: transparent;
+    border: 1px solid #4b5563;
+    border-radius: 6px;
+    color: white;
+    transition: border-color 0.2s ease;
+}
+
+#login-form input:focus {
+    outline: none;
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 0 2px rgba(100, 255, 218, 0.2);
+}
+
+#login-form input::placeholder {
+    color: #9ca3af;
+}
+
+/* Interview creation components */
+.creation-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    background: var(--background-dark-blue);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow: auto;
+}
+
+.creation-container body {
+    overflow: visible;
+}
+
+.step {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    padding: 1.5rem;
+    border-radius: 16px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.step:hover {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 30px rgba(100, 255, 218, 0.2);
+}
+
+.step h2 {
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    color: var(--accent-cyan);
+}
+
+.activity-log {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 1rem;
+    border-radius: 16px;
+    max-height: 300px;
+    overflow-y: auto;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+.activity-log h3 {
+    color: var(--accent-cyan);
+    margin-bottom: 0.75rem;
+}
+
+.log-item {
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    font-family: monospace;
+    font-size: 0.875rem;
+}
+
+.log-info { background-color: rgba(6, 182, 212, 0.1); color: #06b6d4; border: 1px solid rgba(6, 182, 212, 0.2); }
+.log-success { background-color: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2); }
+.log-error { background-color: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+
+/* Form elements for interview creation */
+.creation-container input,
+.creation-container select,
+.creation-container textarea {
+    background: rgba(10, 25, 47, 0.6);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.creation-container input:focus,
+.creation-container select:focus,
+.creation-container textarea:focus {
+    outline: none;
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 0 2px rgba(100, 255, 218, 0.2);
+}
+
+.creation-container input::placeholder,
+.creation-container select::placeholder,
+.creation-container textarea::placeholder {
+    color: var(--text-secondary);
+}
+
+.creation-container label {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.creation-container button {
+    background: transparent;
+    border: 1px solid var(--accent-cyan);
+    color: var(--accent-cyan);
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.creation-container button:hover:not(:disabled) {
+    background: rgba(100, 255, 218, 0.1);
+    box-shadow: 0 0 10px rgba(100, 255, 218, 0.3);
+}
+
+.creation-container button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    border-color: var(--text-secondary);
+    color: var(--text-secondary);
+}
+
+.connect-button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.primary-button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Question checkboxes styling */
+.creation-container .space-y-2 label {
+    display: flex;
+    align-items: flex-start;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+}
+
+.creation-container .space-y-2 label:hover {
+    background: rgba(100, 255, 218, 0.05);
+}
+
+.creation-container .space-y-2 input[type="checkbox"] {
+    margin-top: 0.125rem;
+    margin-right: 0.5rem;
+    accent-color: var(--accent-cyan);
+}
+
+.creation-container .space-y-2 span {
+    color: var(--text-primary);
+    font-size: 0.875rem;
+}
+
+/* Form elements */
+.form-label {
+    display: block;
+    color: var(--text-primary);
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: rgba(10, 25, 47, 0.6);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    margin-bottom: 1rem;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 0 2px rgba(100, 255, 218, 0.2);
+}
+
+.form-input::placeholder {
+    color: var(--text-secondary);
+}
+
+.file-input {
+    padding: 0.25rem;
+}
+
+.file-input::file-selector-button {
+    background: var(--accent-cyan);
+    color: var(--background-dark-blue);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-right: 1rem;
+    font-weight: 500;
+}
+
+.file-input::file-selector-button:hover {
+    background: rgba(100, 255, 218, 0.8);
+}
+
+/* Radio buttons */
+.radio-input {
+    width: 1rem;
+    height: 1rem;
+    accent-color: var(--accent-cyan);
+    margin-right: 0.5rem;
+}
+
+/* Text utilities */
+.text-secondary {
+    color: var(--text-secondary);
+}
+
+.text-primary {
+    color: var(--text-primary);
+}
+
+.text-sm {
+    font-size: 0.875rem;
+}
+
+.text-xs {
+    font-size: 0.75rem;
+}
+
+.font-medium {
+    font-weight: 500;
+}
+
+.mb-1 {
+    margin-bottom: 0.25rem;
+}
+
+.mb-2 {
+    margin-bottom: 0.5rem;
+}
+
+.mb-4 {
+    margin-bottom: 1rem;
+}
+
+.mt-1 {
+    margin-top: 0.25rem;
+}
+
+.mt-4 {
+    margin-top: 1rem;
+}
+
+.ml-2 {
+    margin-left: 0.5rem;
+}
+
+/* Outro components */
+.outro-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    text-align: center;
+}
+
+.outro-container h1 {
+    margin: 0;
+}
+
+.outro-container p {
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+}
+
+.outro-container video {
+    width: 80vw;
+    max-width: 960px;
+    height: auto;
+    border-radius: 16px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.7);
+}

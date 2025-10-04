@@ -3,446 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Interview Session</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .chat-message {
-            max-width: 80%;
-            margin-bottom: 1rem;
-            padding: 0.75rem 1rem;
-            border-radius: 0.5rem;
-        }
-        .message-user {
-            background-color: #3b82f6;
-            color: white;
-            margin-left: auto;
-            text-align: right;
-        }
-        .message-bot {
-            background-color: #f3f4f6;
-            color: #374151;
-        }
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3b82f6;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .video-container {
-            position: relative;
-            width: 100%;
-            height: 300px;
-            background-color: #1f2937;
-            border-radius: 0.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .video-element {
-            width: 100%;
-            height: 100%;
-            border-radius: 0.5rem;
-            object-fit: cover;
-        }
-    </style>
+    <title>AI Avatar Session</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="icon" type="image/svg+xml" sizes="16x16" href="favicon-16.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/main.css">
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body>
 
-    <!-- Header -->
-    <header class="bg-white shadow-sm border-b">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center py-4">
-                <div>
-                    <h1 class="text-xl font-semibold text-gray-900">AI Interview Session</h1>
-                    <p id="job-title" class="text-sm text-gray-600">Loading interview details...</p>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <div class="text-sm text-gray-600">
-                        <span id="question-counter">Question 1 of 10</span>
-                    </div>
-                    <button id="end-interview-btn" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors hidden">
-                        End Interview
-                    </button>
-                </div>
-            </div>
+    <!-- Screen 1: The Intro -->
+    <div id="intro-screen" class="screen">
+        <div id="start-content">
+            <h1>Welcome</h1>
+            <p>Click the button below to begin the session.</p>
+            <button id="startButton">Start Interview</button>
         </div>
-    </header>
+        <video id="introVideo" class="hidden" playsinline>
+            <source src="video/intro.mp4" type="video/mp4">
+        </video>
+    </div>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-            <!-- Video/Chat Section -->
-            <div class="space-y-6">
-                <!-- Video Container -->
-                <div class="bg-white rounded-lg shadow-sm p-6">
-                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Video Interview</h2>
-                    <div id="video-container" class="video-container">
-                        <div class="text-center text-white">
-                            <div class="loader mb-4"></div>
-                            <p>Initializing video...</p>
-                        </div>
-                    </div>
-                    <div class="mt-4 flex justify-center space-x-4">
-                        <button id="start-video-btn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
-                            Start Video
-                        </button>
-                        <button id="mute-btn" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors">
-                            Mute
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Chat Interface -->
-                <div class="bg-white rounded-lg shadow-sm p-6">
-                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Interview Chat</h2>
-                    <div id="chat-messages" class="h-64 overflow-y-auto mb-4 p-4 border rounded-md bg-gray-50">
-                        <div class="text-center text-gray-500 text-sm">
-                            Interview will begin shortly...
-                        </div>
-                    </div>
-                    <div class="flex space-x-2">
-                        <input type="text" id="message-input" class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Type your response..." disabled>
-                        <button id="send-btn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors" disabled>
-                            Send
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Interview Info Sidebar -->
-            <div class="space-y-6">
-                <!-- Interview Details -->
-                <div class="bg-white rounded-lg shadow-sm p-6">
-                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Interview Details</h2>
-                    <div class="space-y-3">
-                        <div>
-                            <label class="text-sm font-medium text-gray-700">Candidate</label>
-                            <p id="candidate-name" class="text-sm text-gray-900">Loading...</p>
-                        </div>
-                        <div>
-                            <label class="text-sm font-medium text-gray-700">Position</label>
-                            <p id="position-title" class="text-sm text-gray-900">Loading...</p>
-                        </div>
-                        <div>
-                            <label class="text-sm font-medium text-gray-700">Status</label>
-                            <p id="interview-status" class="text-sm text-green-600">Active</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Current Question -->
-                <div class="bg-white rounded-lg shadow-sm p-6">
-                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Current Question</h2>
-                    <div id="current-question" class="text-gray-700">
-                        <div class="text-center text-gray-500">
-                            Waiting for interview to begin...
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Progress -->
-                <div class="bg-white rounded-lg shadow-sm p-6">
-                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Progress</h2>
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div id="progress-bar" class="bg-blue-600 h-2 rounded-full" style="width: 0%"></div>
-                    </div>
-                    <p class="text-sm text-gray-600 mt-2" id="progress-text">0% Complete</p>
-                </div>
-
-                <!-- Debug Info -->
-                <div id="debug-panel" class="bg-gray-100 rounded-lg p-4 hidden">
-                    <h3 class="text-sm font-semibold text-gray-700 mb-2">Debug Information</h3>
-                    <div class="text-xs text-gray-600 space-y-1">
-                        <div><strong>Interview ID:</strong> <span id="debug-interview-id">-</span></div>
-                        <div><strong>Auth Token:</strong> <span id="debug-auth-token">-</span></div>
-                        <div><strong>WebRTC Status:</strong> <span id="debug-webrtc-status">Not connected</span></div>
-                        <div><strong>Bot Status:</strong> <span id="debug-bot-status">Not started</span></div>
-                    </div>
-                </div>
-            </div>
+    <!-- Screen 2: The Interview -->
+    <div id="interview-screen" class="screen hidden">
+        <div id="avatar-container">
+            <video id="avatarVideo" autoplay playsinline></video>
+        </div>
+        <div id="user-container" class="glass-ui">
+            <h3>Your Camera</h3>
+            <video id="userVideo" autoplay playsinline muted></video>
+        </div>
+        <div id="controls" class="glass-ui">
+            <div id="status-indicator"></div>
+            <p id="status-text">Status: Connecting...</p>
         </div>
     </div>
 
     <script>
-        // DOM Elements
-        const videoContainer = document.getElementById('video-container');
-        const startVideoBtn = document.getElementById('start-video-btn');
-        const muteBtn = document.getElementById('mute-btn');
-        const chatMessages = document.getElementById('chat-messages');
-        const messageInput = document.getElementById('message-input');
-        const sendBtn = document.getElementById('send-btn');
-        const endInterviewBtn = document.getElementById('end-interview-btn');
-        const questionCounter = document.getElementById('question-counter');
-        const currentQuestion = document.getElementById('current-question');
-        const progressBar = document.getElementById('progress-bar');
-        const progressText = document.getElementById('progress-text');
-        const candidateName = document.getElementById('candidate-name');
-        const positionTitle = document.getElementById('position-title');
-        const jobTitle = document.getElementById('job-title');
+        const startButton = document.getElementById('startButton');
+        const startContent = document.getElementById('start-content');
+        const introVideo = document.getElementById('introVideo');
+        const introScreen = document.getElementById('intro-screen');
+        const interviewScreen = document.getElementById('interview-screen');
+        
+        const avatarVideoElement = document.getElementById('avatarVideo');
+        const userVideoElement = document.getElementById('userVideo');
+        const statusIndicator = document.getElementById('status-indicator');
+        const statusText = document.getElementById('status-text');
 
-        // Debug elements
-        const debugPanel = document.getElementById('debug-panel');
-        const debugInterviewId = document.getElementById('debug-interview-id');
-        const debugAuthToken = document.getElementById('debug-auth-token');
-        const debugWebrtcStatus = document.getElementById('debug-webrtc-status');
-        const debugBotStatus = document.getElementById('debug-bot-status');
+        const API_URL = "http://localhost:7860/api/offer";
+        let peerConnection;
+        let userStream;
+        let isConnected = false;
 
-        // Initialize Supabase
-        const supabaseUrl = 'https://bbnbrwpkvjncdgcaoiyp.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJibmJyd3BrdmpuY2RnY2FvaXlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc0NjUzMTIsImV4cCI6MjA3MzA0MTMxMn0.FQJBdocTIIebUrgbMIWlXiQrWQsKsgOoMfimnSx8Wms';
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        const setStatus = (text, color) => {
+            statusText.innerText = text;
+            statusIndicator.style.backgroundColor = color;
+        };
 
-        // Interview state
-        let interviewId = null;
-        let authToken = null;
-        let currentQuestionIndex = 0;
-        let questions = [];
-        let interviewData = null;
-        let botConnection = null;
-        let webrtcConnection = null;
-
-        // Parse URL parameters
-        function parseUrlParams() {
-            const urlParams = new URLSearchParams(window.location.search);
-            interviewId = urlParams.get('interview_id');
-            authToken = urlParams.get('token');
-
-            debugInterviewId.textContent = interviewId || 'Not found';
-            debugAuthToken.textContent = authToken ? 'Present' : 'Not found';
-
-            return interviewId && authToken;
-        }
-
-        // Load interview data
-        async function loadInterviewData() {
-            try {
-                console.log('Loading interview data for:', interviewId);
-
-                // Call API to get interview payload and launch bot
-                const response = await fetch(`/api/interviews/${authToken}?launch_bot=true`);
-                if (!response.ok) {
-                    throw new Error(`API call failed: ${response.status}`);
-                }
-
-                const data = await response.json();
-                console.log('API response:', data);
-
-                interviewData = data.payload;
-                console.log('Interview data loaded:', interviewData);
-
-                // Update UI
-                const candidate = interviewData.candidate;
-                const job = interviewData.job;
-
-                if (candidate) {
-                    candidateName.textContent = `${candidate.first_name} ${candidate.last_name}`;
-                }
-                if (job) {
-                    positionTitle.textContent = job.title;
-                    jobTitle.textContent = `Interview for ${job.title}`;
-                }
-
-                // Load questions
-                questions = interviewData.questions || [];
-                console.log('Questions loaded:', questions);
-
-                if (questions.length > 0) {
-                    updateQuestionDisplay();
-                }
-
-                // Start WebRTC connection to bot
-                await startBotConnection();
-
-            } catch (error) {
-                console.error('Error loading interview data:', error);
-                alert('Failed to load interview data. Please refresh the page.');
-            }
-        }
-
-        // Start WebRTC connection to bot
-        async function startBotConnection() {
-            try {
-                debugBotStatus.textContent = 'Connecting...';
-
-                // For now, we'll use Daily.co WebRTC transport
-                // In a production setup, you'd use the actual WebRTC implementation
-                // that matches your bot's transport (Daily, raw WebRTC, etc.)
-
-                // This is a placeholder - you'll need to implement the actual WebRTC connection
-                // based on your bot's transport method
-
-                console.log('Bot connection initiated (placeholder)');
-
-                // Simulate connection delay
-                setTimeout(() => {
-                    debugBotStatus.textContent = 'Connected';
-                    addMessage("Hello! I'm ready to begin your interview. Please introduce yourself.", 'bot');
-                }, 2000);
-
-            } catch (error) {
-                console.error('Error starting bot connection:', error);
-                debugBotStatus.textContent = 'Error: ' + error.message;
-                alert('Failed to connect to interview bot. Please refresh the page.');
-            }
-        }
-
-        // Update question display
-        function updateQuestionDisplay() {
-            if (questions.length === 0) return;
-
-            const question = questions[currentQuestionIndex];
-            currentQuestion.innerHTML = `<p class="font-medium">${question.text}</p>`;
-
-            questionCounter.textContent = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
-            const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
-            progressBar.style.width = `${progress}%`;
-            progressText.textContent = `${Math.round(progress)}% Complete`;
-        }
-
-        // Add message to chat
-        function addMessage(text, sender = 'bot') {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `chat-message message-${sender}`;
-            messageDiv.textContent = text;
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        // Send message
-        async function sendMessage() {
-            const text = messageInput.value.trim();
-            if (!text) return;
-
-            addMessage(text, 'user');
-            messageInput.value = '';
-
-            // Here you would send the message to the bot
-            // For now, just simulate a response
-            setTimeout(() => {
-                addMessage("Thank you for your response. Let's move to the next question.", 'bot');
-                nextQuestion();
-            }, 1000);
-        }
-
-        // Move to next question
-        function nextQuestion() {
-            currentQuestionIndex++;
-            if (currentQuestionIndex < questions.length) {
-                updateQuestionDisplay();
+        const cleanupAndRedirect = () => {
+             if (isConnected) {
+                window.location.href = 'outro.html';
             } else {
-                // Interview complete
-                addMessage("Thank you for completing the interview! Your responses are being evaluated.", 'bot');
-                endInterviewBtn.classList.remove('hidden');
-                messageInput.disabled = true;
-                sendBtn.disabled = true;
+                // If connection failed, just reload to the start screen.
+                window.location.reload();
             }
-        }
+        };
 
-        // Start video
-        async function startVideo() {
+        const connect = async () => {
+            setStatus("Initializing...", "#f39c12");
             try {
-                debugWebrtcStatus.textContent = 'Connecting...';
+                userStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                userVideoElement.srcObject = userStream;
+                peerConnection = new RTCPeerConnection();
+                
+                peerConnection.onconnectionstatechange = () => {
+                    const state = peerConnection.connectionState;
+                    if (state === "connected") {
+                        setStatus("Connected", "#2ecc71");
+                        isConnected = true;
+                    } else if (["disconnected", "closed", "failed"].includes(state)) {
+                        cleanupAndRedirect();
+                    }
+                };
 
-                // Request camera/microphone access
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: true,
-                    audio: true
+                userStream.getTracks().forEach(track => peerConnection.addTrack(track, userStream));
+                peerConnection.ontrack = (event) => {
+                    const stream = event.streams[0];
+                    if (stream) {
+                        avatarVideoElement.srcObject = stream;
+                        event.track.onended = cleanupAndRedirect;
+                    }
+                };
+
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(offer)
                 });
-
-                // Create video element
-                const videoElement = document.createElement('video');
-                videoElement.className = 'video-element';
-                videoElement.srcObject = stream;
-                videoElement.autoplay = true;
-                videoElement.muted = true; // Avoid feedback
-
-                videoContainer.innerHTML = '';
-                videoContainer.appendChild(videoElement);
-
-                startVideoBtn.textContent = 'Video Started';
-                startVideoBtn.disabled = true;
-
-                debugWebrtcStatus.textContent = 'Connected';
-
-                // Here you would connect to the bot's WebRTC stream
-                // For now, just show local video
-
-            } catch (error) {
-                console.error('Error starting video:', error);
-                alert('Failed to access camera/microphone. Please check permissions.');
-                debugWebrtcStatus.textContent = 'Error: ' + error.message;
+                if (!response.ok) throw new Error(`Server error: ${response.status}`);
+                const answer = await response.json();
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+            } catch (err) {
+                console.error("Connection failed:", err);
+                cleanupAndRedirect();
             }
-        }
+        };
 
-        // Toggle mute
-        function toggleMute() {
-            // This would control the audio stream
-            muteBtn.textContent = muteBtn.textContent === 'Mute' ? 'Unmute' : 'Mute';
-        }
+        startButton.onclick = () => {
+            // 1. Start connecting in the background
+            connect();
+            
+            // 2. Hide the start button and show/play the intro video
+            startContent.classList.add('hidden');
+            introVideo.classList.remove('hidden');
+            introVideo.play().catch(e => {
+                console.error("Intro video play failed:", e);
+                // If video fails, switch view immediately
+                introScreen.classList.add('hidden');
+                interviewScreen.classList.remove('hidden');
+            });
+        };
 
-        // End interview
-        async function endInterview() {
-            if (confirm('Are you sure you want to end the interview?')) {
-                // Here you would submit the interview for evaluation
-                alert('Interview submitted for evaluation. Thank you!');
-                window.location.href = '/'; // Redirect to home
-            }
-        }
-
-        // Event listeners
-        startVideoBtn.addEventListener('click', startVideo);
-        muteBtn.addEventListener('click', toggleMute);
-        sendBtn.addEventListener('click', sendMessage);
-        endInterviewBtn.addEventListener('click', endInterview);
-
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-
-        // Initialize
-        async function init() {
-            console.log('Initializing interview page...');
-
-            // Parse URL parameters
-            if (!parseUrlParams()) {
-                alert('Invalid interview link. Missing required parameters.');
-                window.location.href = '/auth.html';
-                return;
-            }
-
-            // Show debug panel if debug parameter is present
-            if (window.location.search.includes('debug')) {
-                debugPanel.classList.remove('hidden');
-            }
-
-            // Load interview data
-            await loadInterviewData();
-
-            // Enable chat interface
-            messageInput.disabled = false;
-            sendBtn.disabled = false;
-
-            // Start with first question
-            if (questions.length > 0) {
-                addMessage("Hello! I'm ready to begin your interview. Please introduce yourself briefly.", 'bot');
-            }
-        }
-
-        // Start the interview
-        init().catch(error => {
-            console.error('Initialization error:', error);
-            alert('Failed to initialize interview. Please refresh the page.');
-        });
-    </script>
+        // 3. When the intro video ends, switch to the interview screen
+        introVideo.onended = () => {
+            introScreen.classList.add('hidden');
+            interviewScreen.classList.remove('hidden');
+        };
+    <script type="module" src="interview.js"></script>
 </body>
 </html>

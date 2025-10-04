@@ -350,7 +350,7 @@ async def submit_transcript(interview_id: str, transcript: TranscriptSubmission)
 
 
 # Content Management Endpoints
-from content_manager import ContentManager, validate_new_job_tags, validate_new_question_tags, ensure_job_question_consistency
+from scripts.content_manager import ContentManager, validate_new_job_tags, validate_new_question_tags, ensure_job_question_consistency
 
 content_manager = ContentManager()
 

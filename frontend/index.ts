@@ -141,7 +141,7 @@ serve(async (req: Request) => {
       if (!emailResponse.ok) {
         console.warn('Email sending may have failed:', await emailResponse.text());
       } else {
-        console.log('Email notification triggered successfully');
+        // Email notification triggered successfully
       }
     } catch (emailErr) {
       console.warn('Failed to trigger email sending:', emailErr);

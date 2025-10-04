@@ -97,8 +97,8 @@ class AutomatedTagger:
                 if re.search(r'\b' + re.escape(keyword_lower) + r'\b', text_lower):
                     score += 3
                     matched_keywords.append(keyword)
-                # Partial substring match gets medium score (1 point)
-                elif keyword_lower in text_lower:
+                # Partial substring match gets medium score (1 point) - but only for longer keywords to avoid false positives
+                elif len(keyword_lower) > 2 and keyword_lower in text_lower:
                     score += 1
                     matched_keywords.append(keyword)
 

@@ -1,2 +1,0 @@
-question_id,text,ideal_answer,category,created_at,tags
-4887b79f-7c95-4481-9be5-658ad90c5259,How would you implement error boundaries in Spring Boot?,"The ideal answer covers the strategy implementation, best practices, performance considerations, and browser compatibility. Look for understanding of Angular patterns and modern web standards.",Frontend,2025-10-04T12:49:55.468888,"['user-interface', 'client-side', 'frontend-development', 'web-technologies']"

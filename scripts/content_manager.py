@@ -4,7 +4,7 @@ This module provides utilities to ensure jobs and questions remain properly matc
 """
 import supabase
 from config import Config
-from automated_tagger import AutomatedTagger
+from .automated_tagger import AutomatedTagger
 from typing import List, Dict, Tuple
 import logging
 
