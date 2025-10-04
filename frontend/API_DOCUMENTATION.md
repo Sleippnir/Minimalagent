@@ -42,34 +42,19 @@ http://localhost:8000
   "status": "success",
   "payload": {
     "interview_id": "uuid",
-    "auth_token": "jwt-token",
-    "candidate": {
-      "first_name": "Candidate",
-      "last_name": "A"
-    },
-    "job": {
-      "title": "UI/UX Designer",
-      "description": "Job description text..."
-    },
-    "rubric": {
-      "technical_criteria": [...],
-      "behavioral_criteria": [...]
-    },
-    "evaluation_materials": {
-      "resume_text": "parsed resume content...",
-      "job_description": "full job description..."
-    },
-    "transcript": null,
+    "candidate_name": "Marco Pantalone",
+    "job_title": "Data Scientist",
+    "job_description": "Full job description text...",
+    "resume_text": "Parsed resume content...",
     "questions": [
       {
-        "id": "uuid",
-        "type": "technical",
-        "question": "Question text...",
-        "answer": null
+        "text": "Question text...",
+        "position": 1
       }
     ],
-    "status": "in_progress"
-  }
+    "interviewer_prompt": "Complete interviewer prompt text..."
+  },
+  "bot_launched": false
 }
 ```
 
@@ -128,15 +113,55 @@ http://localhost:8000
 }
 ```
 
-## Data Structures
+## Data Access Patterns
 
-### TranscriptTurn
+### FastAPI Endpoints
+
+- **Interview Management**: Scheduling, payload retrieval, transcript submission
+- **Bot Integration**: Launching interview sessions
+
+### Direct Supabase Access
+
+- **Evaluation Results**: Frontend queries `evaluations` table directly
+- **Real-time Updates**: Subscribe to interview status changes
+- **User Authentication**: Supabase Auth for secure access
+
+## Evaluation Results Access
+
+Evaluation results are stored in the `evaluations` table and accessed directly via Supabase:
+
+```javascript
+// Query evaluations for a specific interview
+const { data: evaluations } = await supabase
+  .from('evaluations')
+  .select('*')
+  .eq('interview_id', interviewId);
+
+// Subscribe to status changes
+const channel = supabase
+  .channel('interview-updates')
+  .on('postgres_changes', {
+    event: 'UPDATE',
+    schema: 'public',
+    table: 'interviews',
+    filter: `interview_id=eq.${interviewId}`
+  }, (payload) => {
+    console.log('Interview status updated:', payload.new.status);
+  })
+  .subscribe();
+```
+
+### Evaluation Data Structure
 
 ```typescript
-interface TranscriptTurn {
-  speaker: string;        // "interviewer" or "candidate"
-  text: string;          // The spoken text
-  timestamp?: number;    // Optional Unix timestamp
+interface Evaluation {
+  evaluation_id: string;
+  interview_id: string;
+  evaluator_llm_model: string; // 'gpt-4o', 'gemini-2.5-flash', 'deepseek-chat'
+  score?: number; // 0-10 scale
+  reasoning: string;
+  raw_llm_response: any;
+  created_at: string;
 }
 ```
 
@@ -145,14 +170,12 @@ interface TranscriptTurn {
 The payload returned by `/interviews/{jwt_token}` contains:
 
 - **interview_id**: Unique identifier for the interview
-- **auth_token**: JWT token for authentication
-- **candidate**: Anonymized candidate info (always "Candidate A" for bias reduction)
-- **job**: Job title and description
-- **rubric**: Evaluation criteria (technical and behavioral)
-- **evaluation_materials**: Resume text and job description for LLM evaluation
-- **transcript**: Initially null, populated after submission
-- **questions**: Array of interview questions with answers
-- **status**: Interview status ("in_progress", "completed", etc.)
+- **candidate_name**: Full name of the candidate
+- **job_title**: Title of the position being interviewed for
+- **job_description**: Complete job description text
+- **resume_text**: Parsed and extracted resume content
+- **questions**: Array of interview questions with position numbers
+- **interviewer_prompt**: Complete prompt text for guiding the interview bot
 
 ## Frontend Integration Notes
 
