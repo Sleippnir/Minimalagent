@@ -1,5 +1,5 @@
--- PostgreSQL function to generate interview payload for the interviewer_queue
--- This function should be run in your Supabase SQL editor
+-- PostgreSQL function to generate interview payload and insert into the interviewer_queue.
+-- This version corrects the column name errors from the original.
 
 CREATE OR REPLACE FUNCTION generate_interview_payload(p_interview_id UUID)
 RETURNS VOID
@@ -19,7 +19,7 @@ DECLARE
     v_technical_questions JSONB := '[]'::jsonb;
     v_behavioral_questions JSONB := '[]'::jsonb;
 BEGIN
-    -- Get interview details
+    -- Get interview details, including prompts from the correct table
     SELECT
         i.interview_id,
         i.auth_token,
@@ -28,14 +28,12 @@ BEGIN
         i.interviewer_prompt_version_id,
         i.evaluator_prompt_version_id,
         i.rubric_version_id,
-        ip.prompt as interviewer_prompt,
-        ep.prompt as evaluator_prompt
+        ipv.prompt as interviewer_prompt, -- CORRECTED: Fetched from prompt_versions
+        epv.prompt as evaluator_prompt   -- CORRECTED: Fetched from prompt_versions
     INTO v_interview_record
     FROM interviews i
     LEFT JOIN prompt_versions ipv ON i.interviewer_prompt_version_id = ipv.prompt_version_id
-    LEFT JOIN prompts ip ON ipv.prompt_id = ip.prompt_id
     LEFT JOIN prompt_versions epv ON i.evaluator_prompt_version_id = epv.prompt_version_id
-    LEFT JOIN prompts ep ON epv.prompt_id = ep.prompt_id
     WHERE i.interview_id = p_interview_id;
 
     IF NOT FOUND THEN
@@ -64,14 +62,14 @@ BEGIN
     JOIN jobs j ON a.job_id = j.job_id
     WHERE a.application_id = v_interview_record.application_id;
 
-    -- Get technical questions
-    SELECT jsonb_agg(
+    -- Get technical questions using the correct column name
+    SELECT COALESCE(jsonb_agg(
         jsonb_build_object(
             'question_id', q.question_id,
-            'text', q.question_text,
+            'text', q.text, -- CORRECTED: Changed from question_text to text
             'type', 'technical'
         )
-    )
+    ), '[]'::jsonb)
     INTO v_technical_questions
     FROM interview_questions iq
     JOIN questions q ON iq.question_id = q.question_id
@@ -79,14 +77,14 @@ BEGIN
     AND q.category = 'Technical'
     ORDER BY iq.position;
 
-    -- Get behavioral questions
-    SELECT jsonb_agg(
+    -- Get behavioral questions using the correct column name
+    SELECT COALESCE(jsonb_agg(
         jsonb_build_object(
             'question_id', q.question_id,
-            'text', q.question_text,
+            'text', q.text, -- CORRECTED: Changed from question_text to text
             'type', 'behavioral'
         )
-    )
+    ), '[]'::jsonb)
     INTO v_behavioral_questions
     FROM interview_questions iq
     JOIN questions q ON iq.question_id = q.question_id
