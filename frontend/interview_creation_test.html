@@ -78,11 +78,39 @@
         <!-- Step 3: Interview Script -->
         <div id="step-3" class="bg-white p-6 rounded-lg shadow-md mb-6 hidden">
             <h2 class="text-xl font-semibold mb-4 border-b pb-2">3. Build Interview Script</h2>
-             <div class="mb-4">
-                <label for="resume-upload" class="block text-sm font-medium text-gray-700">Upload Resume (Simulation)</label>
-                <input type="file" id="resume-upload" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
-                <p class="text-xs text-gray-500 mt-1">This will be used to generate the `resume_path` for the Edge Function.</p>
+            
+            <!-- Resume Selection -->
+            <div class="mb-6">
+                <h3 class="font-semibold text-lg mb-3">Resume Selection</h3>
+                
+                <!-- Resume Options -->
+                <div class="mb-4">
+                    <div class="flex items-center mb-2">
+                        <input type="radio" id="use-existing-resume" name="resume-option" value="existing" class="h-4 w-4 text-blue-600 focus:ring-blue-500">
+                        <label for="use-existing-resume" class="ml-2 text-sm font-medium text-gray-700">Use existing resume</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="radio" id="upload-new-resume" name="resume-option" value="upload" checked class="h-4 w-4 text-blue-600 focus:ring-blue-500">
+                        <label for="upload-new-resume" class="ml-2 text-sm font-medium text-gray-700">Upload new resume</label>
+                    </div>
+                </div>
+                
+                <!-- Existing Resume Selector -->
+                <div id="existing-resume-section" class="mb-4 hidden">
+                    <label for="existing-resume-select" class="block text-sm font-medium text-gray-700">Select Existing Resume</label>
+                    <select id="existing-resume-select" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">Select a resume...</option>
+                    </select>
+                </div>
+                
+                <!-- Upload New Resume -->
+                <div id="upload-resume-section">
+                    <label for="resume-upload" class="block text-sm font-medium text-gray-700">Upload New Resume</label>
+                    <input type="file" id="resume-upload" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
+                    <p class="text-xs text-gray-500 mt-1">This will be used to generate the `resume_path` for the Edge Function.</p>
+                </div>
             </div>
+            
             <div id="question-lists" class="grid md:grid-cols-2 gap-6">
                 <div>
                     <h3 class="font-semibold text-lg mb-2">Technical Questions</h3>
@@ -94,6 +122,26 @@
                 </div>
             </div>
              <p id="selection-counter" class="text-sm text-gray-600 font-medium mt-4">Selected questions: 0</p>
+        </div>
+
+        <!-- Step 3.5: Select Prompts -->
+        <div id="step-3-5" class="bg-white p-6 rounded-lg shadow-md mb-6 hidden">
+            <h2 class="text-xl font-semibold mb-4 border-b pb-2">3.5. Select Prompts (Optional)</h2>
+            <p class="text-sm text-gray-600 mb-4">Choose specific prompt versions for the interviewer and evaluator. If not selected, the latest versions will be used.</p>
+            <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                    <label for="interviewer-prompt-select" class="block text-sm font-medium text-gray-700">Interviewer Prompt</label>
+                    <select id="interviewer-prompt-select" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">Use Latest</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="evaluator-prompt-select" class="block text-sm font-medium text-gray-700">Evaluator Prompt</label>
+                    <select id="evaluator-prompt-select" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">Use Latest</option>
+                    </select>
+                </div>
+            </div>
         </div>
 
         <!-- Step 4: Schedule -->
@@ -131,15 +179,24 @@
         const scheduleBtn = document.getElementById('schedule-btn');
         const scheduleBtnText = document.getElementById('schedule-btn-text');
         const scheduleLoader = document.getElementById('schedule-loader');
+        const interviewerPromptSelect = document.getElementById('interviewer-prompt-select');
+        const evaluatorPromptSelect = document.getElementById('evaluator-prompt-select');
+        const useExistingResumeRadio = document.getElementById('use-existing-resume');
+        const uploadNewResumeRadio = document.getElementById('upload-new-resume');
+        const existingResumeSection = document.getElementById('existing-resume-section');
+        const uploadResumeSection = document.getElementById('upload-resume-section');
+        const existingResumeSelect = document.getElementById('existing-resume-select');
 
         const step2 = document.getElementById('step-2');
         const step3 = document.getElementById('step-3');
+        const step35 = document.getElementById('step-3-5');
         const step4 = document.getElementById('step-4');
         
         const activityLog = document.getElementById('activity-log');
 
         let supabaseClient = null;
         let currentApplicationId = null;
+        let currentCandidateId = null;
 
         // --- Logger ---
         const log = (message, type = 'info') => {
@@ -147,6 +204,32 @@
             logItem.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
             logItem.className = `log-item log-${type}`;
             activityLog.prepend(logItem);
+        };
+
+        // --- Load Existing Resumes ---
+        const loadExistingResumes = async (candidateId) => {
+            try {
+                log(`Fetching existing resume for candidate ${candidateId}...`, 'info');
+                const { data: candidateData, error: candidateError } = await supabaseClient
+                    .from('candidates')
+                    .select('resume_path, first_name, last_name')
+                    .eq('candidate_id', candidateId)
+                    .single();
+
+                if (candidateError) throw candidateError;
+
+                if (candidateData.resume_path) {
+                    const filename = candidateData.resume_path.split('/').pop().split('%20').join(' ');
+                    existingResumeSelect.innerHTML = `<option value="${candidateData.resume_path}">${filename}</option>`;
+                    log(`Loaded existing resume: ${filename}`, 'success');
+                } else {
+                    existingResumeSelect.innerHTML = '<option value="">No existing resume</option>';
+                    log('No existing resume found for this candidate.', 'info');
+                }
+            } catch (error) {
+                log(`Failed to load existing resume: ${error.message}`, 'error');
+                existingResumeSelect.innerHTML = '<option value="">Error loading resume</option>';
+            }
         };
         
         // --- Supabase Connection ---
@@ -226,7 +309,30 @@
                 behaveQuestionsDiv.innerHTML = behavioralQuestions.map(q => createQuestionCheckbox(q)).join('');
 
                 log(`Loaded ${technicalQuestions.length} technical and ${behavioralQuestions.length} behavioral questions.`, 'success');
+
+                // Fetch prompts
+                log('Fetching available prompts...', 'info');
+                const { data: promptsData, error: promptsError } = await supabaseClient
+                    .from('prompt_versions')
+                    .select('prompt_version_id, version, prompts(name, purpose)')
+                    .order('version', { ascending: false });
+
+                if (promptsError) throw promptsError;
+
+                // Group by purpose
+                const interviewerPrompts = promptsData.filter(p => p.prompts?.purpose === 'interviewer');
+                const evaluatorPrompts = promptsData.filter(p => p.prompts?.purpose === 'evaluator');
+
+                // Populate dropdowns
+                interviewerPromptSelect.innerHTML = '<option value="">Use Latest</option>' +
+                    interviewerPrompts.map(p => `<option value="${p.prompt_version_id}">v${p.version} - ${p.prompts.name}</option>`).join('');
+                evaluatorPromptSelect.innerHTML = '<option value="">Use Latest</option>' +
+                    evaluatorPrompts.map(p => `<option value="${p.prompt_version_id}">v${p.version} - ${p.prompts.name}</option>`).join('');
+
+                log(`Loaded ${interviewerPrompts.length} interviewer and ${evaluatorPrompts.length} evaluator prompt versions.`, 'success');
+
                 step3.classList.remove('hidden');
+                step35.classList.remove('hidden');
                 step4.classList.remove('hidden');
                 
                 // Add event listeners for checkboxes to update counter
@@ -251,11 +357,36 @@
         
         const updateSelectionCount = () => {
             const selectedCount = document.querySelectorAll('input[name="question-checkbox"]:checked').length;
+            const hasResume = (uploadNewResumeRadio.checked && resumeUpload.files[0]) || (useExistingResumeRadio.checked && existingResumeSelect.value);
             selectionCounter.textContent = `Selected questions: ${selectedCount}`;
-            scheduleBtn.disabled = selectedCount === 0 || !resumeUpload.files[0];
+            scheduleBtn.disabled = selectedCount === 0 || !hasResume;
         };
         
         resumeUpload.addEventListener('change', updateSelectionCount);
+        existingResumeSelect.addEventListener('change', updateSelectionCount);
+
+        // Resume option radio buttons
+        useExistingResumeRadio.addEventListener('change', () => {
+            if (useExistingResumeRadio.checked) {
+                existingResumeSection.classList.remove('hidden');
+                uploadResumeSection.classList.add('hidden');
+            }
+        });
+
+        uploadNewResumeRadio.addEventListener('change', () => {
+            if (uploadNewResumeRadio.checked) {
+                existingResumeSection.classList.add('hidden');
+                uploadResumeSection.classList.remove('hidden');
+            }
+        });
+
+        // Candidate selection change
+        candidateSelect.addEventListener('change', async () => {
+            currentCandidateId = candidateSelect.value;
+            if (currentCandidateId && supabaseClient) {
+                await loadExistingResumes(currentCandidateId);
+            }
+        });
 
 
         // --- Schedule Interview (Invoke Edge Function) ---
@@ -266,37 +397,132 @@
             }
 
             const selectedQuestionIds = Array.from(document.querySelectorAll('input[name="question-checkbox"]:checked')).map(cb => cb.value);
-            const resumeFile = resumeUpload.files[0];
+            let resumePath;
 
-            if (selectedQuestionIds.length === 0 || !resumeFile) {
-                log('You must select at least one question and a resume file.', 'error');
-                return;
-            }
-            
-            log(`Uploading resume to storage...`, 'info');
-            scheduleLoader.classList.remove('hidden');
-            scheduleBtnText.textContent = 'Uploading...';
-            scheduleBtn.disabled = true;
+            if (uploadNewResumeRadio.checked) {
+                const resumeFile = resumeUpload.files[0];
+                if (!resumeFile) {
+                    log('You must select a resume file to upload.', 'error');
+                    return;
+                }
+                
+                // Validate file
+                if (resumeFile.size > 10 * 1024 * 1024) { // 10MB limit
+                    log('Resume file is too large. Please select a file smaller than 10MB.', 'error');
+                    return;
+                }
+                
+                if (!resumeFile.type.includes('pdf') && !resumeFile.name.toLowerCase().endsWith('.pdf')) {
+                    log('Please select a PDF file.', 'error');
+                    return;
+                }
+                
+                log(`Uploading ${resumeFile.name} (${(resumeFile.size / 1024).toFixed(1)} KB)...`, 'info');
+                scheduleLoader.classList.remove('hidden');
+                scheduleBtnText.textContent = 'Uploading...';
+                scheduleBtn.disabled = true;
 
-            try {
-                // Upload resume to Supabase storage
-                const resumePath = `resumes/${Date.now()}-${resumeFile.name}`;
-                const { data: uploadData, error: uploadError } = await supabaseClient
-                    .storage
+                // Upload resume to Supabase storage with timeout and better error handling
+                resumePath = `resumes/${Date.now()}-${resumeFile.name}`;
+                
+                // Check if file already exists (unlikely but good practice)
+                try {
+                    const { data: existingFiles } = await supabaseClient.storage
+                        .from('resumes')
+                        .list('', { search: resumePath });
+                    
+                    if (existingFiles && existingFiles.length > 0) {
+                        resumePath = `resumes/${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${resumeFile.name}`;
+                        log('Adjusted resume path to avoid conflicts.', 'info');
+                    }
+                } catch (listError) {
+                    // Ignore list errors, proceed with upload
+                }
+                
+                // Create upload promise with timeout
+                const uploadPromise = supabaseClient.storage
                     .from('resumes')
-                    .upload(resumePath, resumeFile);
+                    .upload(resumePath, resumeFile, {
+                        cacheControl: '3600',
+                        upsert: false
+                    });
+                
+                // Add timeout to upload
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('Upload timeout after 30 seconds')), 30000);
+                });
+                
+                try {
+                    const { data: uploadData, error: uploadError } = await Promise.race([uploadPromise, timeoutPromise]);
+                    
+                    if (uploadError) {
+                        // Check for specific error types
+                        if (uploadError.message?.includes('Bucket not found')) {
+                            throw new Error('Resumes storage bucket does not exist. Please contact administrator.');
+                        } else if (uploadError.message?.includes('Unauthorized')) {
+                            throw new Error('Not authorized to upload files. Please check permissions.');
+                        } else {
+                            throw new Error(`Upload failed: ${uploadError.message}`);
+                        }
+                    }
+                    
+                    log(`Resume uploaded successfully to: ${resumePath}`, 'success');
+                } catch (uploadErr) {
+                    log(`Resume upload failed: ${uploadErr.message}`, 'error');
+                    throw uploadErr;
+                }
 
                 if (uploadError) throw uploadError;
                 
-                log('Resume uploaded successfully. Invoking Edge Function...', 'success');
+                log('Resume uploaded successfully.', 'success');
+                
+                // Save resume metadata to database - update candidate's resume_path
+                const { error: resumeUpdateError } = await supabaseClient
+                    .from('candidates')
+                    .update({ resume_path: resumePath })
+                    .eq('candidate_id', currentCandidateId);
+                
+                if (resumeUpdateError) {
+                    log(`Warning: Failed to update candidate resume path: ${resumeUpdateError.message}`, 'error');
+                } else {
+                    log('Candidate resume path updated successfully.', 'success');
+                }
+            } else {
+                // Use existing resume
+                resumePath = existingResumeSelect.value;
+                if (!resumePath) {
+                    log('You must select an existing resume.', 'error');
+                    return;
+                }
+                
+                log('Using existing resume.', 'info');
+                scheduleLoader.classList.remove('hidden');
                 scheduleBtnText.textContent = 'Scheduling...';
+                scheduleBtn.disabled = true;
+            }
+
+            if (selectedQuestionIds.length === 0) {
+                log('You must select at least one question.', 'error');
+                return;
+            }
+
+            try {
+                log('Invoking Edge Function...', 'info');
+
+                const body = {
+                    application_id: currentApplicationId,
+                    question_ids: selectedQuestionIds,
+                    resume_path: resumePath
+                };
+
+                const interviewerPromptId = interviewerPromptSelect.value;
+                const evaluatorPromptId = evaluatorPromptSelect.value;
+
+                if (interviewerPromptId) body.interviewer_prompt_version_id = interviewerPromptId;
+                if (evaluatorPromptId) body.evaluator_prompt_version_id = evaluatorPromptId;
 
                 const { data, error } = await supabaseClient.functions.invoke('schedule-interview', {
-                    body: {
-                        application_id: currentApplicationId,
-                        question_ids: selectedQuestionIds,
-                        resume_path: resumePath
-                    }
+                    body
                 });
 
                 if (error) throw error;

@@ -1,0 +1,145 @@
+[
+  {
+    "job_id": "a786c18a-ffa6-433d-a4a4-62c7ea135ca6",
+    "title": "UI/UX Designer",
+    "description_preview": "## About the Role\nAs a UI/UX Designer, you will be the advocate for our users. You will be responsible for creating intuitive, accessible, and beautif...",
+    "current_tags": "['design-process', 'user-research', 'wireframing', 'usability-testing', 'design-system']",
+    "semantic_tags": [
+      "design-process",
+      "user-research",
+      "wireframing",
+      "usability-testing",
+      "design-system"
+    ]
+  },
+  {
+    "job_id": "936743a3-50d5-45da-9c6c-56bb83bd03d7",
+    "title": "QA Automation Engineer",
+    "description_preview": "## About the Role\nWe are seeking a QA Automation Engineer to help us ensure the quality and reliability of our software. You will be responsible for d...",
+    "current_tags": "[]",
+    "semantic_tags": [
+      "backend-services",
+      "cross-functional-work",
+      "data-science",
+      "solution-architecture",
+      "software-testing",
+      "system-design",
+      "backend-development",
+      "frontend-development"
+    ]
+  },
+  {
+    "job_id": "b168e44b-92f7-4bd8-a954-6c2ccbaf6b3e",
+    "title": "Senior Backend Engineer",
+    "description_preview": "## About the Role\nWe are looking for a Senior Backend Engineer to join our core services team. You will be responsible for designing, building, and ma...",
+    "current_tags": "['system-design', 'microservices', 'database', 'api', 'scalability', 'caching', 'mentorship']",
+    "semantic_tags": [
+      "system-design",
+      "microservices",
+      "database",
+      "api",
+      "scalability",
+      "caching",
+      "mentorship"
+    ]
+  },
+  {
+    "job_id": "8ba8ad5e-2509-48e7-b826-a10d142a4cf3",
+    "title": "Frontend Engineer (React)",
+    "description_preview": "## About the Role\nOur product team is seeking a passionate Frontend Engineer who is an expert in React and modern web technologies. You will be respon...",
+    "current_tags": "[]",
+    "semantic_tags": [
+      "ui-ux-design",
+      "ci-cd",
+      "backend-services",
+      "performance-optimization",
+      "graphql",
+      "system-design",
+      "frontend-development",
+      "frontend-backend-integration"
+    ]
+  },
+  {
+    "job_id": "8f01eb20-658b-46ef-93cd-84ebe72a8503",
+    "title": "Full-Stack Software Engineer",
+    "description_preview": "## About the Role\nAs a Full-Stack Software Engineer, you will work on both the client-side and server-side of our application. You are a generalist wh...",
+    "current_tags": "[]",
+    "semantic_tags": [
+      "database-management",
+      "backend-services",
+      "performance-optimization",
+      "cross-functional-work",
+      "system-design",
+      "data-management",
+      "ci-cd",
+      "data-modeling"
+    ]
+  },
+  {
+    "job_id": "02e327eb-2d81-4fe4-8ebb-55ed93b83a16",
+    "title": "DevOps Engineer",
+    "description_preview": "## About the Role\nWe are looking for a DevOps Engineer to help us build and maintain our cloud infrastructure, automate our deployment pipelines, and ...",
+    "current_tags": "['ci-cd', 'kubernetes', 'docker', 'iac', 'monitoring']",
+    "semantic_tags": [
+      "ci-cd",
+      "kubernetes",
+      "docker",
+      "iac",
+      "monitoring"
+    ]
+  },
+  {
+    "job_id": "0ffb736d-d704-431b-9c45-b538d2a19edb",
+    "title": "Product Manager",
+    "description_preview": "## About the Role\nAs a Product Manager, you will be responsible for the \"what\" and \"why\" of our product. You will own the product roadmap for a key ar...",
+    "current_tags": "['product-roadmap', 'prioritization', 'stakeholder-management', 'market-research', 'user-feedback']",
+    "semantic_tags": [
+      "product-roadmap",
+      "prioritization",
+      "stakeholder-management",
+      "market-research",
+      "user-feedback"
+    ]
+  },
+  {
+    "job_id": "bae936de-437d-4e81-932c-04d6cc35cf23",
+    "title": "Data Scientist",
+    "description_preview": "## About the Role\nWe are looking for a Data Scientist to join our team and help us leverage our vast datasets to make smarter decisions and build inno...",
+    "current_tags": "['machine-learning', 'statistics', 'data-visualization', 'feature-engineering', 'sql']",
+    "semantic_tags": [
+      "machine-learning",
+      "statistics",
+      "data-visualization",
+      "feature-engineering",
+      "sql"
+    ]
+  },
+  {
+    "job_id": "74850ccf-35cb-4181-a302-e087c3806155",
+    "title": "Senior Data Engineer",
+    "description_preview": "## About the Role\nAs a Senior Data Engineer, you will be responsible for building and maintaining the data infrastructure that powers our analytics an...",
+    "current_tags": "[]",
+    "semantic_tags": [
+      "database-management",
+      "apache-spark",
+      "performance-optimization",
+      "solution-architecture",
+      "data-processing",
+      "big-data",
+      "data-pipelines",
+      "streaming-data"
+    ]
+  },
+  {
+    "job_id": "e82f31ce-ef5c-41a4-9a99-a9cc3deb93e1",
+    "title": "Technical Program Manager (TPM)",
+    "description_preview": "## About the Role\nWe are looking for an experienced Technical Program Manager to lead our most complex, cross-functional engineering initiatives. As a...",
+    "current_tags": "[]",
+    "semantic_tags": [
+      "system-design",
+      "cross-functional-work",
+      "solution-architecture",
+      "team-collaboration"
+    ]
+  }
+]

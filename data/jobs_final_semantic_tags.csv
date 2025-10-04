@@ -1,0 +1,167 @@
+job_id,title,description,created_at,required_tags
+a786c18a-ffa6-433d-a4a4-62c7ea135ca6,UI/UX Designer,"## About the Role
+As a UI/UX Designer, you will be the advocate for our users. You will be responsible for creating intuitive, accessible, and beautiful user experiences across our web and mobile platforms. You will work on the entire design process, from user research and wireframing to creating pixel-perfect mockups and interactive prototypes.
+
+### Responsibilities
+- Conduct user research to understand user behaviors, needs, and motivations.
+- Create user flows, wireframes, prototypes, and high-fidelity mockups.
+- Collaborate with Product Managers to define and solve user problems.
+- Work closely with Engineers to ensure the final implementation matches the design vision.
+- Maintain and contribute to our design system.
+
+### Qualifications
+- 4+ years of experience as a UI/UX Designer or Product Designer.
+- A strong portfolio showcasing your work on web and mobile applications.
+- Proficiency in design and prototyping tools, especially Figma.
+- Deep understanding of user-centered design principles and methodologies.
+- Excellent visual design skills with a keen eye for typography, color, and layout.",2025-09-30T17:53:23.260141+00:00,"['design-process', 'user-research', 'wireframing', 'usability-testing', 'design-system']"
+936743a3-50d5-45da-9c6c-56bb83bd03d7,QA Automation Engineer,"## About the Role
+We are seeking a QA Automation Engineer to help us ensure the quality and reliability of our software. You will be responsible for designing, developing, and executing automated tests for our web application. You will play a crucial role in our CI/CD process, helping us to ship features faster and with greater confidence.
+
+### Responsibilities
+- Design and develop automated test scripts for UI, API, and integration testing.
+- Integrate automated tests into our CI/CD pipeline.
+- Identify, document, and track software defects.
+- Collaborate with developers and product managers to understand new features and define testing strategies.
+- Maintain and improve our test automation framework.
+
+### Qualifications
+- 3+ years of experience in software quality assurance and test automation.
+- Proficiency in a programming language such as JavaScript, TypeScript, or Python.
+- Hands-on experience with test automation frameworks like Cypress, Playwright, or Selenium.
+- Experience with API testing tools like Postman or REST Assured.
+- Understanding of the software development lifecycle and Agile methodologies.",2025-09-30T17:53:23.260141+00:00,"['test-automation', 'qa', 'javascript', 'playwright', 'cypress']"
+b168e44b-92f7-4bd8-a954-6c2ccbaf6b3e,Senior Backend Engineer,"## About the Role
+We are looking for a Senior Backend Engineer to join our core services team. You will be responsible for designing, building, and maintaining the scalable, high-performance microservices that power our entire platform. You will work with a modern tech stack and have a significant impact on our architecture and product direction.
+
+### Responsibilities
+- Design, develop, and deploy robust, scalable microservices using Go and Python.
+- Own the entire lifecycle of your services, from initial design to production monitoring.
+- Design and optimize database schemas (PostgreSQL) and write efficient queries.
+- Collaborate with frontend engineers, product managers, and other stakeholders to deliver new features.
+- Mentor junior engineers and contribute to our engineering culture and best practices.
+- Implement and maintain CI/CD pipelines for your services.
+
+### Qualifications
+- 5+ years of professional backend development experience.
+- Strong proficiency in Go or Python.
+- Deep understanding of distributed systems, API design (REST, gRPC), and microservices architecture.
+- Experience with relational databases like PostgreSQL.
+- Experience with containerization (Docker) and orchestration (Kubernetes).
+- Familiarity with cloud platforms (AWS, GCP, or Azure).",2025-09-30T17:53:23.260141+00:00,"['system-design', 'microservices', 'database', 'api', 'scalability', 'caching', 'mentorship']"
+8f01eb20-658b-46ef-93cd-84ebe72a8503,Full-Stack Software Engineer,"## About the Role
+As a Full-Stack Software Engineer, you will work on both the client-side and server-side of our application. You are a generalist who is comfortable working across the entire stack, from database and API development to building responsive user interfaces. You thrive in a collaborative environment and enjoy tackling a wide variety of technical challenges.
+
+### Responsibilities
+- Build and maintain both server-side logic (Node.js/TypeScript) and client-side features (React).
+- Design and implement RESTful APIs to be consumed by our web and mobile clients.
+- Manage and optimize our database (PostgreSQL).
+- Participate in the full software development lifecycle: design, development, testing, deployment, and maintenance.
+- Work closely with our product and design teams to build features from concept to launch.
+
+### Qualifications
+- 4+ years of software engineering experience.
+- Proficiency in a backend language (e.g., Node.js/TypeScript, Python, Go) and a frontend framework (e.g., React, Vue, Angular).
+- Experience building and consuming REST APIs.
+- Solid understanding of relational databases and SQL.
+- Experience with modern DevOps practices (CI/CD, containers) is a plus.",2025-09-30T17:53:23.260141+00:00,"['full-stack-development', 'quality-engineering', 'data-management', 'test-automation', 'deployment', 'type-safety', 'postgresql', 'query-optimization', 'systems-programming', 'database-management']"
+02e327eb-2d81-4fe4-8ebb-55ed93b83a16,DevOps Engineer,"## About the Role
+We are looking for a DevOps Engineer to help us build and maintain our cloud infrastructure, automate our deployment pipelines, and ensure our systems are reliable and scalable. You will be a critical part of our engineering team, working to improve our development velocity and operational excellence.
+
+### Responsibilities
+- Design, build, and maintain our CI/CD pipelines to automate testing and deployment.
+- Manage our cloud infrastructure on AWS using Infrastructure as Code (Terraform).
+- Implement and manage monitoring, logging, and alerting systems (e.g., Prometheus, Grafana, ELK stack).
+- Ensure the security, reliability, and scalability of our production environment.
+- Work closely with development teams to troubleshoot issues and improve system performance.
+
+### Qualifications
+- 4+ years of experience in a DevOps, SRE, or related role.
+- Strong experience with a major cloud provider (AWS preferred).
+- Proficiency with Infrastructure as Code tools like Terraform or CloudFormation.
+- Experience with container orchestration systems like Kubernetes or ECS.
+- Strong scripting skills (e.g., Bash, Python).
+- Experience with CI/CD tools (e.g., Jenkins, GitLab CI, CircleCI).",2025-09-30T17:53:23.260141+00:00,"['ci-cd', 'kubernetes', 'docker', 'iac', 'monitoring']"
+0ffb736d-d704-431b-9c45-b538d2a19edb,Product Manager,"## About the Role
+As a Product Manager, you will be responsible for the ""what"" and ""why"" of our product. You will own the product roadmap for a key area of our business, working closely with engineering, design, and marketing to define, build, and launch features that our users love and that drive business growth.
+
+### Responsibilities
+- Develop and maintain a product roadmap aligned with company strategy.
+- Conduct user research, market analysis, and competitive analysis to identify opportunities.
+- Write clear and concise user stories and product specifications.
+- Prioritize features and manage the product backlog.
+- Collaborate with a cross-functional team of engineers and designers to bring products to life.
+- Define and analyze metrics that inform the success of products.
+
+### Qualifications
+- 3+ years of product management experience in a tech company.
+- Proven track record of managing all aspects of a successful product throughout its lifecycle.
+- Strong problem-solving skills and willingness to roll up one's sleeves to get the job done.
+- Excellent communication and collaboration skills.
+- Experience with Agile development methodologies.",2025-09-30T17:53:23.260141+00:00,"['product-roadmap', 'prioritization', 'stakeholder-management', 'market-research', 'user-feedback']"
+bae936de-437d-4e81-932c-04d6cc35cf23,Data Scientist,"## About the Role
+We are looking for a Data Scientist to join our team and help us leverage our vast datasets to make smarter decisions and build innovative product features. You will work on a variety of problems, from building machine learning models for prediction and classification to conducting deep-dive analyses to uncover user behavior insights.
+
+### Responsibilities
+- Analyze large, complex datasets to extract actionable insights.
+- Design, build, and deploy machine learning models to solve business problems.
+- Develop and maintain data pipelines for model training and evaluation.
+- Communicate findings and recommendations to both technical and non-technical stakeholders.
+- Collaborate with engineers to integrate models into our production systems.
+
+### Qualifications
+- 3+ years of experience in a data science or machine learning role.
+- Strong proficiency in Python and its data science libraries (e.g., Pandas, NumPy, Scikit-learn).
+- Experience with machine learning frameworks like TensorFlow or PyTorch.
+- Expertise in SQL for data querying and manipulation.
+- Solid understanding of statistics and experimental design.",2025-09-30T17:53:23.260141+00:00,"['machine-learning', 'statistics', 'data-visualization', 'feature-engineering', 'sql']"
+e82f31ce-ef5c-41a4-9a99-a9cc3deb93e1,Technical Program Manager (TPM),"## About the Role
+We are looking for an experienced Technical Program Manager to lead our most complex, cross-functional engineering initiatives. As a TPM, you will be the bridge between engineering, product, and business stakeholders, driving projects from conception to launch. You will be responsible for managing timelines, identifying risks, and ensuring clear communication across all teams.
+
+### Responsibilities
+- Manage the execution of large-scale, cross-functional technical programs.
+- Create and maintain project plans, identify dependencies, and manage risks.
+- Communicate project status, issues, and risks to stakeholders at all levels.
+- Facilitate technical discussions and help teams make architectural decisions.
+- Drive process improvements to increase engineering velocity and predictability.
+
+### Qualifications
+- 5+ years of experience as a TPM, project manager, or software engineer in a tech company.
+- A strong technical background, with a deep understanding of software development, cloud infrastructure, and system architecture.
+- Excellent project management and organizational skills.
+- Proven ability to manage complex projects with multiple stakeholders.
+- Exceptional communication and interpersonal skills.",2025-09-30T17:53:23.260141+00:00,"['solution-architecture', 'experienced', 'mid-level', 'technical-architecture', 'system-design']"
+8ba8ad5e-2509-48e7-b826-a10d142a4cf3,Frontend Engineer (React),"## About the Role
+Our product team is seeking a passionate Frontend Engineer who is an expert in React and modern web technologies. You will be responsible for building beautiful, intuitive, and performant user interfaces for our customer-facing application. You will have a keen eye for detail and a passion for creating exceptional user experiences.
+
+### Responsibilities
+- Develop new user-facing features using React.js and TypeScript.
+- Build reusable components and front-end libraries for future use.
+- Translate designs and wireframes from Figma into high-quality code.
+- Optimize components for maximum performance across a vast array of web-capable devices and browsers.
+- Collaborate with product designers and backend engineers to create a seamless user experience.
+- Write and maintain unit and integration tests.
+
+### Qualifications
+- 3+ years of experience in frontend development.
+- Strong proficiency in JavaScript, TypeScript, CSS3, and HTML5.
+- In-depth knowledge of React.js and its core principles (Hooks, Context API).
+- Experience with popular React.js workflows and state management libraries (such as Redux or Zustand).
+- Familiarity with modern frontend build pipelines and tools (e.g., Webpack, Vite, Babel).
+- Experience with GraphQL is a plus.",2025-09-30T17:53:23.260141+00:00,"['quality-engineering', 'test-automation', 'deployment', 'frontend-backend-integration', 'type-safety', 'system-design', 'ui-ux-design', 'web-development', 'solution-architecture', 'service-integration']"
+74850ccf-35cb-4181-a302-e087c3806155,Senior Data Engineer,"## About the Role
+As a Senior Data Engineer, you will be responsible for building and maintaining the data infrastructure that powers our analytics and machine learning initiatives. You will design, build, and optimize robust and scalable data pipelines, ensuring that data is reliable, accurate, and available to those who need it.
+
+### Responsibilities
+- Design, build, and maintain batch and streaming data pipelines using tools like Spark, Airflow, and Kafka.
+- Develop and manage our data warehouse (Snowflake/BigQuery) to support business intelligence and analytics.
+- Implement data quality checks and monitoring to ensure data integrity.
+- Work with data scientists and analysts to understand their data needs and provide them with the right tools and data sets.
+- Optimize data storage and processing for performance and cost.
+
+### Qualifications
+- 5+ years of experience in data engineering.
+- Expertise in SQL and at least one programming language (Python preferred).
+- Hands-on experience with big data technologies (e.g., Spark, Hadoop).
+- Experience with workflow orchestration tools like Airflow.
+- Experience with cloud-based data warehousing solutions like Snowflake, BigQuery, or Redshift.",2025-09-30T17:53:23.260141+00:00,"['quality-engineering', 'test-automation', 'senior-level', 'deployment', 'ai-ml', 'query-optimization', 'data-processing', 'database-management', 'leadership', 'system-design']"

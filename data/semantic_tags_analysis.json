@@ -1,0 +1,1150 @@
+[
+  {
+    "question_id": "ff7df8ce-cad9-448c-99f6-35643f6b1f85",
+    "text": "Explain the concept of RESTful APIs.",
+    "category": "General SE",
+    "ideal_answer_preview": "REST (Representational State Transfer) is an architectural style for designing networked application...",
+    "current_tags": "['api']",
+    "semantic_tags": [
+      "system-design",
+      "performance-optimization",
+      "computer-science-fundamentals",
+      "technical-architecture",
+      "software-engineering"
+    ]
+  },
+  {
+    "question_id": "67253409-2426-49ba-91ba-97d69eda033e",
+    "text": "Tell me about a time you failed or made a significant mistake at work.",
+    "category": "Behavioral",
+    "ideal_answer_preview": "Look for honesty, accountability, and a focus on learning. Situation: What was the project and mista...",
+    "current_tags": "['behavioral', 'experience']",
+    "semantic_tags": [
+      "professional-development",
+      "organization",
+      "project-management",
+      "leadership-potential",
+      "behavioral-interview",
+      "past-experience"
+    ]
+  },
+  {
+    "question_id": "9e519fb9-719f-4349-be3b-2f37dc0b74bf",
+    "text": "How do you handle tight deadlines and high-pressure situations?",
+    "category": "Behavioral",
+    "ideal_answer_preview": "A good answer demonstrates prioritization, communication, and composure. The candidate should mentio...",
+    "current_tags": "['behavioral', 'experience']",
+    "semantic_tags": [
+      "professional-development",
+      "organization",
+      "project-management",
+      "behavioral-interview",
+      "communication",
+      "past-experience"
+    ]
+  },
+  {
+    "question_id": "5a0e2ed3-6010-4e45-b005-fa0c7f99b3ee",
+    "text": "Describe a time when you had to learn a new technology quickly.",
+    "category": "Behavioral",
+    "ideal_answer_preview": "The candidate should describe a structured learning process: starting with official documentation, b...",
+    "current_tags": "['behavioral', 'experience']",
+    "semantic_tags": [
+      "professional-development",
+      "organization",
+      "project-management",
+      "leadership-potential",
+      "behavioral-interview",
+      "past-experience"
+    ]
+  },
+  {
+    "question_id": "17956940-893d-4c67-91e1-d34335c27fcf",
+    "text": "Give an example of a goal you set and how you achieved it.",
+    "category": "Behavioral",
+    "ideal_answer_preview": "Look for answers that follow the SMART (Specific, Measurable, Achievable, Relevant, Time-bound) goal...",
+    "current_tags": "['behavioral', 'experience']",
+    "semantic_tags": [
+      "professional-development",
+      "career-development",
+      "leadership-potential",
+      "behavioral-interview",
+      "past-experience"
+    ]
+  },
+  {
+    "question_id": "7f0e685f-473e-497b-acb1-ad4427320816",
+    "text": "How do you prioritize your work when you have multiple competing tasks?",
+    "category": "Behavioral",
+    "ideal_answer_preview": "A strong answer will reference a framework, such as the Eisenhower Matrix (urgent vs. important), an...",
+    "current_tags": "['behavioral', 'experience']",
+    "semantic_tags": [
+      "professional-development",
+      "organization",
+      "project-management",
+      "behavioral-interview",
+      "communication",
+      "past-experience"
+    ]
+  },
+  {
+    "question_id": "e505cc39-0fe8-4511-b9c1-c452d598a950",
+    "text": "Describe a time you had to give difficult feedback to a colleague.",
+    "category": "Behavioral",
+    "ideal_answer_preview": "An ideal answer would describe giving feedback that was specific, actionable, and delivered privatel...",
+    "current_tags": "['behavioral', 'experience']",
+    "semantic_tags": [
+      "professional-development",
+      "behavioral-interview",
+      "conflict-resolution",
+      "communication",
+      "past-experience"
+    ]
+  },
+  {
+    "question_id": "343d5dd5-a42e-471b-8929-5a27ff4d13aa",
+    "text": "Tell me about a complex problem you solved. Walk me through your process.",
+    "category": "Behavioral",
+    "ideal_answer_preview": "The candidate should articulate a clear problem-solving methodology: 1. Deeply understand and define...",
+    "current_tags": "['behavioral', 'experience']",
+    "semantic_tags": [
+      "tdd-bdd",
+      "professional-development",
+      "troubleshooting",
+      "behavioral-interview",
+      "past-experience",
+      "problem-solving",
+      "creative-problem-solving"
+    ]
+  },
+  {
+    "question_id": "951497d3-90f9-415d-85ca-f65e1ada612b",
+    "text": "What kind of work environment do you thrive in?",
+    "category": "Cultural Fit",
+    "ideal_answer_preview": "A good answer shows self-awareness. The candidate should describe an environment that aligns with th...",
+    "current_tags": "['culture', 'motivation', 'teamwork']",
+    "semantic_tags": [
+      "company-culture",
+      "motivation",
+      "team-dynamics"
+    ]
+  },
+  {
+    "question_id": "fa646d02-d2c3-4bfa-a4eb-127263c3872e",
+    "text": "How do you prefer to collaborate with a team? What tools do you like to use?",
+    "category": "Cultural Fit",
+    "ideal_answer_preview": "Look for mentions of clear communication, active listening, and respect for others' ideas. Specific ...",
+    "current_tags": "['culture', 'motivation', 'teamwork']",
+    "semantic_tags": [
+      "company-culture",
+      "team-dynamics",
+      "code-review",
+      "work-preferences"
+    ]
+  },
+  {
+    "question_id": "1ae2c6bb-71cf-41d1-af9c-56594e36b7b9",
+    "text": "What are your long-term career goals?",
+    "category": "Cultural Fit",
+    "ideal_answer_preview": "The candidate should have a clear vision that shows ambition and a desire for growth. Ideally, their...",
+    "current_tags": "['culture', 'motivation', 'teamwork']",
+    "semantic_tags": [
+      "career-development",
+      "team-dynamics",
+      "leadership-potential",
+      "skill-development",
+      "company-culture"
+    ]
+  },
+  {
+    "question_id": "006b4d24-c802-4638-a8b3-7ae44eb44f9a",
+    "text": "What are you looking for in your next role?",
+    "category": "Cultural Fit",
+    "ideal_answer_preview": "This question helps understand the candidate's motivations. A strong answer will focus on growth opp...",
+    "current_tags": "['culture', 'motivation', 'teamwork']",
+    "semantic_tags": [
+      "career-development",
+      "team-dynamics",
+      "leadership-potential",
+      "skill-development",
+      "company-culture"
+    ]
+  },
+  {
+    "question_id": "ad22797d-5da3-479b-9d98-566c9fec9d43",
+    "text": "How do you stay up-to-date with industry trends?",
+    "category": "Cultural Fit",
+    "ideal_answer_preview": "Look for proactive habits like reading tech blogs, listening to podcasts, attending conferences or m...",
+    "current_tags": "['culture', 'motivation', 'teamwork']",
+    "semantic_tags": [
+      "company-culture",
+      "organization",
+      "project-management",
+      "team-dynamics"
+    ]
+  },
+  {
+    "question_id": "4e9cd116-bcbd-41b6-a89c-7528b5323ae7",
+    "text": "What does the ideal team look like to you?",
+    "category": "Cultural Fit",
+    "ideal_answer_preview": "A good answer will focus on team dynamics like psychological safety, open communication, shared owne...",
+    "current_tags": "['culture', 'motivation', 'teamwork']",
+    "semantic_tags": [
+      "company-culture",
+      "skill-development",
+      "team-dynamics",
+      "code-review"
+    ]
+  },
+  {
+    "question_id": "136a2b80-3f1f-4a0b-a21c-4b4496aa82d7",
+    "text": "If you were to start a company, what would its core values be?",
+    "category": "Cultural Fit",
+    "ideal_answer_preview": "This hypothetical question reveals what the candidate truly values in a professional setting. Look f...",
+    "current_tags": "['culture', 'motivation', 'teamwork']",
+    "semantic_tags": [
+      "company-culture",
+      "motivation",
+      "team-dynamics"
+    ]
+  },
+  {
+    "question_id": "f57e9e79-2f2c-42dd-a279-22ca9b1006fa",
+    "text": "What makes a good leader, in your opinion?",
+    "category": "Cultural Fit",
+    "ideal_answer_preview": "A strong answer will mention qualities like providing clear vision, empowering the team, offering me...",
+    "current_tags": "['culture', 'motivation', 'teamwork']",
+    "semantic_tags": [
+      "team-dynamics",
+      "code-review",
+      "work-preferences",
+      "company-culture",
+      "leadership"
+    ]
+  },
+  {
+    "question_id": "ed94a387-2fec-44ce-b6a0-08076319bd9c",
+    "text": "What motivates you to do your best work?",
+    "category": "Cultural Fit",
+    "ideal_answer_preview": "Look for intrinsic motivators like solving challenging problems, learning new things, collaborating ...",
+    "current_tags": "['culture', 'motivation', 'teamwork']",
+    "semantic_tags": [
+      "troubleshooting",
+      "team-dynamics",
+      "critical-thinking",
+      "company-culture",
+      "problem-solving"
+    ]
+  },
+  {
+    "question_id": "d67e4bf1-2c5c-4b82-86e5-8e99dcaa6b7c",
+    "text": "What is the difference between a process and a thread?",
+    "category": "General SE",
+    "ideal_answer_preview": "A process is an instance of a program with its own dedicated memory space. A thread is the smallest ...",
+    "current_tags": "['computer science', 'software engineering']",
+    "semantic_tags": [
+      "technical-knowledge",
+      "computer-science-fundamentals",
+      "software-engineering"
+    ]
+  },
+  {
+    "question_id": "e0b0823e-b23e-4922-a7ac-649eee643943",
+    "text": "Describe the difference between SQL and NoSQL databases.",
+    "category": "General SE",
+    "ideal_answer_preview": "SQL databases (like PostgreSQL) are relational, use a predefined schema, and store data in tables. T...",
+    "current_tags": "['sql', 'database']",
+    "semantic_tags": [
+      "query-optimization",
+      "computer-science-fundamentals",
+      "software-engineering",
+      "data-modeling"
+    ]
+  },
+  {
+    "question_id": "53d9ea2f-b850-4534-b25b-d28c93c79820",
+    "text": "What is caching and where would you implement it in a web application?",
+    "category": "General SE",
+    "ideal_answer_preview": "Caching is the process of storing copies of files or data in a temporary storage location (a cache) ...",
+    "current_tags": "['caching']",
+    "semantic_tags": [
+      "computer-science-fundamentals",
+      "software-engineering",
+      "frontend-frameworks",
+      "javascript-ecosystem"
+    ]
+  },
+  {
+    "question_id": "e8161f44-caf9-4e9f-b06d-2719f9edd6c2",
+    "text": "What is the purpose of an index in a database?",
+    "category": "General SE",
+    "ideal_answer_preview": "A database index is a data structure that improves the speed of data retrieval operations on a table...",
+    "current_tags": "['database']",
+    "semantic_tags": [
+      "query-optimization",
+      "computer-science-fundamentals",
+      "software-engineering",
+      "data-modeling"
+    ]
+  },
+  {
+    "question_id": "be90b594-9bd4-4a17-b33c-8690638921bf",
+    "text": "What are microservices and what are their pros and cons?",
+    "category": "General SE",
+    "ideal_answer_preview": "Microservices are an architectural style where an application is composed of small, independent serv...",
+    "current_tags": "['microservices']",
+    "semantic_tags": [
+      "system-design",
+      "troubleshooting",
+      "cloud-infrastructure",
+      "computer-science-fundamentals",
+      "technical-architecture",
+      "software-engineering",
+      "problem-solving"
+    ]
+  },
+  {
+    "question_id": "2f818c67-f158-45a2-9c87-d81f85ec920a",
+    "text": "What is containerization (e.g., Docker)?",
+    "category": "General SE",
+    "ideal_answer_preview": "Containerization is a form of OS-level virtualization that packages an application and its dependenc...",
+    "current_tags": "['docker']",
+    "semantic_tags": [
+      "computer-science-fundamentals",
+      "software-engineering",
+      "deployment-automation",
+      "cloud-infrastructure"
+    ]
+  },
+  {
+    "question_id": "53ec2958-853c-4f11-b8d3-ea2b7e91838e",
+    "text": "Describe a typical CI/CD pipeline.",
+    "category": "DevOps",
+    "ideal_answer_preview": "A CI/CD pipeline automates the software delivery process. It typically consists of stages: Source (c...",
+    "current_tags": "['ci-cd']",
+    "semantic_tags": [
+      "infrastructure",
+      "deployment",
+      "cloud-infrastructure",
+      "tdd-bdd"
+    ]
+  },
+  {
+    "question_id": "eda40aae-e693-4d00-a962-693317a4432d",
+    "text": "What is Infrastructure as Code (e.g., Terraform)?",
+    "category": "DevOps",
+    "ideal_answer_preview": "Infrastructure as Code (IaC) is the practice of managing and provisioning infrastructure (networks, ...",
+    "current_tags": "['iac']",
+    "semantic_tags": [
+      "infrastructure",
+      "system-design",
+      "cloud-infrastructure",
+      "technical-architecture",
+      "deployment"
+    ]
+  },
+  {
+    "question_id": "63ce1086-d2d3-4437-bac3-b53b9c89807a",
+    "text": "Explain the CSS box model.",
+    "category": "Frontend",
+    "ideal_answer_preview": "The CSS box model is a box that wraps around every HTML element. It consists of four parts, from the...",
+    "current_tags": "['css']",
+    "semantic_tags": [
+      "user-interface",
+      "javascript-ecosystem",
+      "frontend-frameworks",
+      "frontend-development"
+    ]
+  },
+  {
+    "question_id": "b4ce5411-705a-47ec-bb86-af3edfaa7435",
+    "text": "What is the virtual DOM and why is it used in frameworks like React?",
+    "category": "Frontend",
+    "ideal_answer_preview": "The Virtual DOM (VDOM) is a programming concept where a virtual representation of the UI is kept in ...",
+    "current_tags": "['react']",
+    "semantic_tags": [
+      "user-interface",
+      "javascript-ecosystem",
+      "frontend-frameworks",
+      "frontend-development"
+    ]
+  },
+  {
+    "question_id": "0e7d6a80-6b0f-465c-aac6-0348ebf52391",
+    "text": "What are CSS preprocessors and why would you use one?",
+    "category": "Frontend",
+    "ideal_answer_preview": "CSS preprocessors like SASS or Less are scripting languages that extend the default capabilities of ...",
+    "current_tags": "['css']",
+    "semantic_tags": [
+      "organization",
+      "project-management",
+      "javascript-ecosystem",
+      "frontend-development",
+      "user-interface"
+    ]
+  },
+  {
+    "question_id": "7149022a-4178-40d4-8f52-c379903b5dcb",
+    "text": "What is a race condition and how can you prevent it?",
+    "category": "General SE",
+    "ideal_answer_preview": "A race condition occurs when the behavior of a system depends on the sequence or timing of uncontrol...",
+    "current_tags": "['computer science', 'software engineering']",
+    "semantic_tags": [
+      "system-design",
+      "performance-optimization",
+      "computer-science-fundamentals",
+      "technical-architecture",
+      "software-engineering"
+    ]
+  },
+  {
+    "question_id": "4a881458-9f0f-4db8-8bb4-d165e8486b25",
+    "text": "Explain Big O notation and give an example.",
+    "category": "General SE",
+    "ideal_answer_preview": "Big O notation is used to describe the time or space complexity of an algorithm in terms of how it g...",
+    "current_tags": "['algorithm', 'computer science', 'software engineering']",
+    "semantic_tags": [
+      "technical-knowledge",
+      "computer-science-fundamentals",
+      "software-engineering",
+      "skill-development"
+    ]
+  },
+  {
+    "question_id": "94c24066-49bc-4daf-badc-c892b293887f",
+    "text": "How does DNS work?",
+    "category": "General SE",
+    "ideal_answer_preview": "DNS (Domain Name System) translates human-readable domain names (like www.google.com) into machine-r...",
+    "current_tags": "['computer science', 'software engineering']",
+    "semantic_tags": [
+      "system-design",
+      "javascript-ecosystem",
+      "frontend-frameworks",
+      "computer-science-fundamentals",
+      "technical-architecture",
+      "software-engineering"
+    ]
+  },
+  {
+    "question_id": "6764c54c-9445-4e32-afb2-cbac8ea3ff32",
+    "text": "Explain public key cryptography.",
+    "category": "General SE",
+    "ideal_answer_preview": "Also known as asymmetric cryptography, it uses a pair of keys: a public key (which can be shared wit...",
+    "current_tags": "['computer science', 'software engineering']",
+    "semantic_tags": [
+      "technical-knowledge",
+      "computer-science-fundamentals",
+      "software-engineering",
+      "authentication-authorization"
+    ]
+  },
+  {
+    "question_id": "4d2ca8f2-b7e7-4910-b210-3c6e531a4f45",
+    "text": "What is the difference between `let`, `const`, and `var` in JavaScript?",
+    "category": "Frontend",
+    "ideal_answer_preview": "`var` is function-scoped and hoisted. `let` and `const` are block-scoped. `let` allows reassignment,...",
+    "current_tags": "['frontend', 'javascript', 'ui', 'ux']",
+    "semantic_tags": [
+      "tdd-bdd",
+      "software-testing",
+      "javascript-ecosystem",
+      "frontend-development",
+      "user-interface"
+    ]
+  },
+  {
+    "question_id": "1559a6de-04f2-441c-8fa0-9c28c6880e93",
+    "text": "Describe the event loop in JavaScript.",
+    "category": "Frontend",
+    "ideal_answer_preview": "The event loop is a mechanism that allows JavaScript, a single-threaded language, to handle non-bloc...",
+    "current_tags": "['frontend', 'javascript', 'ui', 'ux']",
+    "semantic_tags": [
+      "javascript-ecosystem",
+      "frontend-frameworks",
+      "service-integration",
+      "frontend-development",
+      "user-interface"
+    ]
+  },
+  {
+    "question_id": "b0d194d8-6786-448e-8068-85d52af4a943",
+    "text": "What are JavaScript Promises?",
+    "category": "Frontend",
+    "ideal_answer_preview": "A Promise is an object that represents the eventual completion (or failure) of an asynchronous opera...",
+    "current_tags": "['frontend', 'javascript', 'ui', 'ux']",
+    "semantic_tags": [
+      "user-interface",
+      "javascript-ecosystem",
+      "frontend-frameworks",
+      "frontend-development"
+    ]
+  },
+  {
+    "question_id": "76b6c58c-63ce-4bb7-8710-47164da6c077",
+    "text": "Tell me about a time you had to deal with a difficult stakeholder. How did you handle it?",
+    "category": "Behavioral",
+    "ideal_answer_preview": "A strong answer will follow the STAR method. Situation: Describe the context and the stakeholder's c...",
+    "current_tags": "['stakeholder-management']",
+    "semantic_tags": [
+      "professional-development",
+      "troubleshooting",
+      "project-management",
+      "leadership-potential",
+      "behavioral-interview",
+      "communication",
+      "past-experience",
+      "problem-solving"
+    ]
+  },
+  {
+    "question_id": "cc99946a-607d-4b7f-83ec-2a2837612277",
+    "text": "Describe a project you are particularly proud of. What was your role and what did you accomplish?",
+    "category": "Behavioral",
+    "ideal_answer_preview": "The candidate should clearly articulate the project's goal (Situation/Task), specify their individua...",
+    "current_tags": "['behavioral', 'experience']",
+    "semantic_tags": [
+      "system-design",
+      "professional-development",
+      "organization",
+      "leadership-potential",
+      "behavioral-interview",
+      "past-experience",
+      "technical-architecture"
+    ]
+  },
+  {
+    "question_id": "796f7c16-872c-4ac7-a96f-c7c7707a8aaf",
+    "text": "What are the SOLID principles of object-oriented design?",
+    "category": "General SE",
+    "ideal_answer_preview": "Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, Dependency Inversion...",
+    "current_tags": "['ci-cd', 'computer science', 'software engineering']",
+    "semantic_tags": [
+      "system-design",
+      "performance-optimization",
+      "computer-science-fundamentals",
+      "technical-architecture",
+      "software-engineering"
+    ]
+  },
+  {
+    "question_id": "d75eb164-9f04-47e5-a4ee-77f52617468d",
+    "text": "Describe different types of HTTP status codes (2xx, 3xx, 4xx, 5xx).",
+    "category": "Backend",
+    "ideal_answer_preview": "2xx (Success): The request was successful (e.g., 200 OK). 3xx (Redirection): Further action is neede...",
+    "current_tags": "['api', 'backend', 'server']",
+    "semantic_tags": [
+      "server-side",
+      "mentorship",
+      "data-management",
+      "backend-development",
+      "leadership"
+    ]
+  },
+  {
+    "question_id": "7d46ab93-f7a5-442e-a99b-3838aa0ebceb",
+    "text": "Tell me about a time you disagreed with your manager.",
+    "category": "Behavioral",
+    "ideal_answer_preview": "The answer should demonstrate professional maturity. The candidate should explain the situation, the...",
+    "current_tags": "['behavioral', 'experience']",
+    "semantic_tags": [
+      "professional-development",
+      "behavioral-interview",
+      "data-modeling",
+      "communication",
+      "past-experience",
+      "leadership"
+    ]
+  },
+  {
+    "question_id": "34cbef75-ccaa-4c3e-95de-7c94330f9a2e",
+    "text": "How do you handle ambiguity in a project?",
+    "category": "Cultural Fit",
+    "ideal_answer_preview": "The candidate should describe a proactive approach: asking clarifying questions, making reasonable a...",
+    "current_tags": "['culture', 'motivation', 'teamwork']",
+    "semantic_tags": [
+      "troubleshooting",
+      "project-management",
+      "team-dynamics",
+      "communication",
+      "company-culture",
+      "problem-solving",
+      "leadership"
+    ]
+  },
+  {
+    "question_id": "ffa19484-53b2-4290-8b06-c471c21b0616",
+    "text": "What is the difference between authentication and authorization?",
+    "category": "General SE",
+    "ideal_answer_preview": "Authentication is the process of verifying who you are (e.g., logging in with a password). Authoriza...",
+    "current_tags": "['computer science', 'security', 'software engineering']",
+    "semantic_tags": [
+      "technical-knowledge",
+      "computer-science-fundamentals",
+      "software-engineering",
+      "authentication-authorization"
+    ]
+  },
+  {
+    "question_id": "a048c6d7-fdbb-4778-bfec-bacb76883120",
+    "text": "Describe the CAP theorem.",
+    "category": "Backend",
+    "ideal_answer_preview": "The CAP theorem states that a distributed data store can only provide two of the following three gua...",
+    "current_tags": "['api', 'backend', 'server']",
+    "semantic_tags": [
+      "system-design",
+      "performance-optimization",
+      "server-side",
+      "technical-architecture",
+      "backend-development"
+    ]
+  },
+  {
+    "question_id": "c159761b-3232-4c11-a133-7d711a2f9f38",
+    "text": "Imagine our website latency increases by 500ms. How would you investigate the cause?",
+    "category": "Situational",
+    "ideal_answer_preview": "A systematic approach is key. 1. Check monitoring tools to identify which part of the system is slow...",
+    "current_tags": "['decision making', 'problem solving']",
+    "semantic_tags": [
+      "system-design",
+      "troubleshooting",
+      "cloud-infrastructure",
+      "communication",
+      "technical-architecture",
+      "decision-making",
+      "problem-solving"
+    ]
+  },
+  {
+    "question_id": "c8be8602-ea90-499c-8813-d363001038dc",
+    "text": "Explain the concept of state in a frontend application.",
+    "category": "Frontend",
+    "ideal_answer_preview": "State is the data that describes an application at a specific point in time. It's the \"source of tru...",
+    "current_tags": "['css', 'frontend', 'ui', 'ux']",
+    "semantic_tags": [
+      "query-optimization",
+      "user-interface",
+      "data-modeling",
+      "frontend-development"
+    ]
+  },
+  {
+    "question_id": "1674161c-7f4c-4de4-8170-543e9b54bc59",
+    "text": "What is the difference between `==` and `===` in JavaScript?",
+    "category": "Frontend",
+    "ideal_answer_preview": "The `==` (loose equality) operator compares two values for equality after performing type conversion...",
+    "current_tags": "['frontend', 'javascript', 'ui', 'ux']",
+    "semantic_tags": [
+      "tdd-bdd",
+      "software-testing",
+      "javascript-ecosystem",
+      "frontend-development",
+      "user-interface"
+    ]
+  },
+  {
+    "question_id": "1f703b68-5f8b-4e93-8851-dbf9090e1e2c",
+    "text": "What is the purpose of the `useEffect` hook in React?",
+    "category": "Frontend",
+    "ideal_answer_preview": "The `useEffect` hook lets you perform side effects in function components. Common side effects inclu...",
+    "current_tags": "['react']",
+    "semantic_tags": [
+      "javascript-ecosystem",
+      "frontend-frameworks",
+      "data-modeling",
+      "frontend-development",
+      "user-interface"
+    ]
+  },
+  {
+    "question_id": "43d0d374-92f8-45ad-8c23-c7bdfc77d330",
+    "text": "How would you secure a REST API?",
+    "category": "Backend",
+    "ideal_answer_preview": "Multiple layers are needed: HTTPS/TLS for data in transit, authentication (e.g., OAuth 2.0, JWT) to ...",
+    "current_tags": "['api']",
+    "semantic_tags": [
+      "data-modeling",
+      "server-side",
+      "backend-development",
+      "authentication-authorization"
+    ]
+  },
+  {
+    "question_id": "6606481b-7c6c-41b7-87ac-341b5039c7b8",
+    "text": "Explain database transactions and the ACID properties.",
+    "category": "Backend",
+    "ideal_answer_preview": "A transaction is a single unit of work. ACID (Atomicity, Consistency, Isolation, Durability) are pro...",
+    "current_tags": "['database']",
+    "semantic_tags": [
+      "data-modeling",
+      "data-management",
+      "server-side",
+      "backend-development"
+    ]
+  },
+  {
+    "question_id": "e7854e0c-dbb9-41e1-8f38-efda1e9bc1b1",
+    "text": "How does connection pooling work in a database?",
+    "category": "Backend",
+    "ideal_answer_preview": "Connection pooling is a technique used to maintain a cache of database connections that can be reuse...",
+    "current_tags": "['database']",
+    "semantic_tags": [
+      "system-design",
+      "performance-optimization",
+      "server-side",
+      "technical-architecture",
+      "backend-development"
+    ]
+  },
+  {
+    "question_id": "acf6a2a5-efac-4c05-9b5e-6cd1c113ee6a",
+    "text": "How do you handle cross-browser compatibility issues?",
+    "category": "Frontend",
+    "ideal_answer_preview": "Strategies include using CSS resets, applying vendor prefixes (often automated with tools like Autop...",
+    "current_tags": "['frontend', 'ui', 'ux']",
+    "semantic_tags": [
+      "tdd-bdd",
+      "software-testing",
+      "javascript-ecosystem",
+      "frontend-development",
+      "user-interface"
+    ]
+  },
+  {
+    "question_id": "3554dabc-565a-41fb-8407-a359c0c89de6",
+    "text": "What is responsive web design?",
+    "category": "Frontend",
+    "ideal_answer_preview": "It is an approach to web design that makes web pages render well on a variety of devices and window ...",
+    "current_tags": "['frontend', 'ui', 'ux']",
+    "semantic_tags": [
+      "system-design",
+      "javascript-ecosystem",
+      "frontend-frameworks",
+      "frontend-development",
+      "technical-architecture",
+      "user-interface"
+    ]
+  },
+  {
+    "question_id": "480325e9-d104-4094-9b20-0c10ca5bc5d3",
+    "text": "What is webpack or Vite and what problem does it solve?",
+    "category": "Frontend",
+    "ideal_answer_preview": "They are modern frontend build tools and module bundlers. They take your source code (JS, CSS, image...",
+    "current_tags": "['frontend', 'ui', 'ux']",
+    "semantic_tags": [
+      "troubleshooting",
+      "javascript-ecosystem",
+      "frontend-frameworks",
+      "frontend-development",
+      "user-interface",
+      "problem-solving"
+    ]
+  },
+  {
+    "question_id": "e7d7d825-68b8-4556-9958-88a2666cafb1",
+    "text": "What is server-side rendering (SSR) and what are its benefits?",
+    "category": "Frontend",
+    "ideal_answer_preview": "SSR is the process of rendering a normally client-side single-page application (SPA) on the server a...",
+    "current_tags": "['frontend', 'ui', 'ux']",
+    "semantic_tags": [
+      "system-design",
+      "performance-optimization",
+      "frontend-development",
+      "technical-architecture",
+      "user-interface"
+    ]
+  },
+  {
+    "question_id": "e0ccadb6-64ee-49b0-a17f-38b7d021d965",
+    "text": "What are Web Components?",
+    "category": "Frontend",
+    "ideal_answer_preview": "Web Components are a set of web platform APIs that allow you to create new custom, reusable, encapsu...",
+    "current_tags": "['frontend', 'ui', 'ux']",
+    "semantic_tags": [
+      "javascript-ecosystem",
+      "frontend-frameworks",
+      "service-integration",
+      "frontend-development",
+      "user-interface"
+    ]
+  },
+  {
+    "question_id": "37ac4b96-d830-4442-8755-2af456e46992",
+    "text": "What is accessibility (a11y) in web development?",
+    "category": "Frontend",
+    "ideal_answer_preview": "Accessibility is the practice of making websites and applications usable by as many people as possib...",
+    "current_tags": "['frontend', 'ui', 'ux']",
+    "semantic_tags": [
+      "javascript-ecosystem",
+      "frontend-frameworks",
+      "skill-development",
+      "frontend-development",
+      "user-interface"
+    ]
+  },
+  {
+    "question_id": "3a26a7cd-aa3f-4216-a915-baf3da7e420b",
+    "text": "What is an N+1 query problem and how do you solve it?",
+    "category": "Backend",
+    "ideal_answer_preview": "The N+1 problem occurs when an ORM retrieves a list of parent objects (1 query) and then makes a sep...",
+    "current_tags": "['api', 'backend', 'database', 'server']",
+    "semantic_tags": [
+      "troubleshooting",
+      "critical-thinking",
+      "server-side",
+      "backend-development",
+      "problem-solving"
+    ]
+  },
+  {
+    "question_id": "de3b26b6-2aca-4f47-896b-75f676a793f9",
+    "text": "What is the difference between stateless and stateful applications?",
+    "category": "Backend",
+    "ideal_answer_preview": "A stateful application remembers client data (state) from one request to the next. A stateless appli...",
+    "current_tags": "['api', 'backend', 'server']",
+    "semantic_tags": [
+      "system-design",
+      "performance-optimization",
+      "server-side",
+      "technical-architecture",
+      "backend-development"
+    ]
+  },
+  {
+    "question_id": "7d781de7-11f8-4bdc-b6bf-b30802f36f7f",
+    "text": "What are message queues (like RabbitMQ or SQS) used for?",
+    "category": "Backend",
+    "ideal_answer_preview": "Message queues enable asynchronous communication between services. They are used to decouple service...",
+    "current_tags": "['api', 'backend', 'server']",
+    "semantic_tags": [
+      "server-side",
+      "service-integration",
+      "mentorship",
+      "backend-development",
+      "leadership"
+    ]
+  },
+  {
+    "question_id": "8d3b16e7-128d-43c3-a271-bd672147c065",
+    "text": "What is an ORM and what are its advantages and disadvantages?",
+    "category": "Backend",
+    "ideal_answer_preview": "An ORM (Object-Relational Mapper) is a library that automates the transfer of data between object-or...",
+    "current_tags": "['api', 'backend', 'database', 'server']",
+    "semantic_tags": [
+      "system-design",
+      "performance-optimization",
+      "skill-development",
+      "server-side",
+      "technical-architecture",
+      "backend-development"
+    ]
+  },
+  {
+    "question_id": "e62aafb1-7f90-493e-a479-28e8e726c9f8",
+    "text": "What is dependency injection?",
+    "category": "Backend",
+    "ideal_answer_preview": "Dependency Injection is a design pattern where an object or function receives its dependencies from ...",
+    "current_tags": "['api', 'backend', 'server']",
+    "semantic_tags": [
+      "tdd-bdd",
+      "system-design",
+      "software-testing",
+      "server-side",
+      "technical-architecture",
+      "backend-development"
+    ]
+  },
+  {
+    "question_id": "ebb3369e-e19a-492c-94d1-641221f180d9",
+    "text": "What is the difference between SQL injection and Cross-Site Scripting (XSS)?",
+    "category": "Backend",
+    "ideal_answer_preview": "SQL Injection (SQLi) is an attack that targets the database by injecting malicious SQL code into an ...",
+    "current_tags": "['sql']",
+    "semantic_tags": [
+      "frontend-frameworks",
+      "server-side",
+      "javascript-ecosystem",
+      "backend-development"
+    ]
+  },
+  {
+    "question_id": "addd9bbd-3eb7-4af5-800d-92e2943ef303",
+    "text": "Explain the concept of idempotency in API design.",
+    "category": "Backend",
+    "ideal_answer_preview": "An operation is idempotent if it can be called multiple times without changing the result beyond the...",
+    "current_tags": "['api']",
+    "semantic_tags": [
+      "system-design",
+      "performance-optimization",
+      "server-side",
+      "technical-architecture",
+      "backend-development"
+    ]
+  },
+  {
+    "question_id": "6b7b5c55-d44c-4044-bcc3-d6d86d4bb912",
+    "text": "What are the benefits of using an API Gateway?",
+    "category": "Backend",
+    "ideal_answer_preview": "An API Gateway acts as a single entry point for all client requests. Its benefits include simplifyin...",
+    "current_tags": "['api']",
+    "semantic_tags": [
+      "server-side",
+      "backend-development",
+      "service-integration",
+      "authentication-authorization"
+    ]
+  },
+  {
+    "question_id": "ba47dd14-c902-430a-a59c-8c6f09cd0aea",
+    "text": "You are asked to design a URL shortening service like bit.ly. How would you approach the system design?",
+    "category": "System Design",
+    "ideal_answer_preview": "The candidate should discuss data modeling (storing original and short URLs), the algorithm for gene...",
+    "current_tags": "['system-design']",
+    "semantic_tags": [
+      "system-design",
+      "distributed-systems",
+      "system-architecture",
+      "technical-architecture",
+      "scalability",
+      "leadership"
+    ]
+  },
+  {
+    "question_id": "3857bce5-09e4-48f2-9215-3a9df256dc43",
+    "text": "How would you explain a complex technical concept to a non-technical person?",
+    "category": "Situational",
+    "ideal_answer_preview": "The key is to use analogies and avoid jargon. The candidate should focus on the \"why\" and the user b...",
+    "current_tags": "['technical-writing']",
+    "semantic_tags": [
+      "service-integration",
+      "communication",
+      "microservices-architecture",
+      "decision-making",
+      "api-development",
+      "problem-solving",
+      "leadership"
+    ]
+  },
+  {
+    "question_id": "3331770f-f53e-4b88-99ae-121764df4f42",
+    "text": "What are WebSockets and when would you use them over standard HTTP?",
+    "category": "Backend",
+    "ideal_answer_preview": "WebSockets provide a persistent, full-duplex communication channel between a client and server. Unli...",
+    "current_tags": "['api', 'backend', 'server']",
+    "semantic_tags": [
+      "data-modeling",
+      "data-management",
+      "server-side",
+      "backend-development"
+    ]
+  },
+  {
+    "question_id": "9862b423-519e-44ef-b304-44a974d8534d",
+    "text": "How do you handle password storage securely?",
+    "category": "Backend",
+    "ideal_answer_preview": "Never store passwords in plaintext. Use a strong, one-way hashing algorithm like Argon2 or bcrypt wi...",
+    "current_tags": "['api', 'backend', 'server']",
+    "semantic_tags": [
+      "javascript-ecosystem",
+      "frontend-frameworks",
+      "authentication-authorization",
+      "server-side",
+      "backend-development"
+    ]
+  },
+  {
+    "question_id": "f5c4b6a8-3158-4a7e-b87a-d232aac53cd4",
+    "text": "Imagine a key feature on our application suddenly stops working. What are the first three steps you would take?",
+    "category": "Situational",
+    "ideal_answer_preview": "1. Assess the blast radius: How many users are affected? Is it a critical feature? Communicate the i...",
+    "current_tags": "['decision making', 'problem solving']",
+    "semantic_tags": [
+      "system-design",
+      "cloud-infrastructure",
+      "deployment-automation",
+      "communication",
+      "technical-architecture",
+      "decision-making",
+      "problem-solving"
+    ]
+  },
+  {
+    "question_id": "a7f602d5-8af0-40b0-bd28-ffa752e1662d",
+    "text": "If you had to refactor a large, legacy piece of code, what would your strategy be?",
+    "category": "Situational",
+    "ideal_answer_preview": "A good answer would involve: 1. First, write characterization tests to understand and lock down the ...",
+    "current_tags": "['decision making', 'problem solving']",
+    "semantic_tags": [
+      "tdd-bdd",
+      "software-testing",
+      "communication",
+      "decision-making",
+      "problem-solving",
+      "leadership"
+    ]
+  },
+  {
+    "question_id": "3a21a76a-c8d9-4f4f-a620-b1ada4f00ad9",
+    "text": "How would you design the data model for a simple social media feed?",
+    "category": "System Design",
+    "ideal_answer_preview": "A good answer would include tables for Users, Posts, and a mapping table for Followers (user_id, fol...",
+    "current_tags": "['architecture', 'ci-cd', 'system design']",
+    "semantic_tags": [
+      "system-design",
+      "distributed-systems",
+      "system-architecture",
+      "technical-architecture",
+      "scalability"
+    ]
+  },
+  {
+    "question_id": "d25f437e-82ca-4d89-97d7-9ecd8d5462a2",
+    "text": "You disagree with a technical decision made by your team lead. What do you do?",
+    "category": "Situational",
+    "ideal_answer_preview": "The candidate should suggest a private, respectful conversation. They should present their alternati...",
+    "current_tags": "['ci-cd', 'decision making', 'problem solving']",
+    "semantic_tags": [
+      "data-modeling",
+      "communication",
+      "mentorship",
+      "conflict-resolution",
+      "decision-making",
+      "problem-solving",
+      "leadership"
+    ]
+  },
+  {
+    "question_id": "88f80f0a-7ae5-44fd-b91e-3fbc2ab77962",
+    "text": "A junior developer on your team is struggling with a task. How do you help them?",
+    "category": "Situational",
+    "ideal_answer_preview": "A good response emphasizes mentorship over simply giving the answer. They should use techniques like...",
+    "current_tags": "['decision making', 'problem solving']",
+    "semantic_tags": [
+      "continuous-learning",
+      "skill-development",
+      "communication",
+      "decision-making",
+      "problem-solving",
+      "creative-problem-solving",
+      "innovation"
+    ]
+  },
+  {
+    "question_id": "edf83979-7b27-47a8-a65b-346d47c23778",
+    "text": "You are given a task with unclear requirements. What is your course of action?",
+    "category": "Situational",
+    "ideal_answer_preview": "The best course of action is to seek clarification proactively. This involves talking to the product...",
+    "current_tags": "['decision making', 'problem solving']",
+    "semantic_tags": [
+      "troubleshooting",
+      "critical-thinking",
+      "communication",
+      "mentorship",
+      "decision-making",
+      "problem-solving",
+      "leadership"
+    ]
+  },
+  {
+    "question_id": "ee6426ad-a702-40e3-bda9-3f16f627840b",
+    "text": "Design a system for real-time notifications.",
+    "category": "System Design",
+    "ideal_answer_preview": "An ideal design would likely use WebSockets for persistent client-server connections. The architectu...",
+    "current_tags": "['architecture', 'system design']",
+    "semantic_tags": [
+      "system-design",
+      "distributed-systems",
+      "system-architecture",
+      "technical-architecture",
+      "scalability"
+    ]
+  },
+  {
+    "question_id": "6a8dcb72-eae5-4244-b796-3e3394278a0b",
+    "text": "How many golf balls can fit in a school bus?",
+    "category": "Problem Solving",
+    "ideal_answer_preview": "The goal isn't a correct number, but to see the candidate's thought process. They should break the p...",
+    "current_tags": "['estimation', 'logic', 'puzzle']",
+    "semantic_tags": [
+      "career-development",
+      "troubleshooting",
+      "leadership-potential",
+      "critical-thinking",
+      "logic-puzzles",
+      "problem-solving",
+      "analytical-thinking"
+    ]
+  },
+  {
+    "question_id": "0c8292c8-7491-42a1-a398-374ce68c6009",
+    "text": "Design an algorithm to detect if a linked list has a cycle.",
+    "category": "Problem Solving",
+    "ideal_answer_preview": "The classic solution is Floyd's \"Tortoise and the Hare\" algorithm. Use two pointers, one moving one ...",
+    "current_tags": "['algorithms']",
+    "semantic_tags": [
+      "system-design",
+      "performance-optimization",
+      "technical-architecture",
+      "logic-puzzles",
+      "creative-problem-solving",
+      "analytical-thinking",
+      "innovation"
+    ]
+  },
+  {
+    "question_id": "f4f8b047-416b-41e5-831a-f3c394e48576",
+    "text": "You have a 3-gallon jug and a 5-gallon jug. How do you measure out exactly 4 gallons?",
+    "category": "Problem Solving",
+    "ideal_answer_preview": "1. Fill the 5-gallon jug. 2. Pour from the 5-gallon jug into the 3-gallon jug until it's full, leavi...",
+    "current_tags": "['estimation', 'logic', 'puzzle']",
+    "semantic_tags": [
+      "analytical-thinking",
+      "logic-puzzles",
+      "estimation"
+    ]
+  },
+  {
+    "question_id": "903f7ba2-6941-4667-9647-4ccc9d7d2bde",
+    "text": "Given a stream of data, how would you find the top K most frequent items?",
+    "category": "Problem Solving",
+    "ideal_answer_preview": "This is a classic algorithm problem. A common and efficient solution is to use a hash map to store i...",
+    "current_tags": "['estimation', 'logic', 'puzzle']",
+    "semantic_tags": [
+      "troubleshooting",
+      "critical-thinking",
+      "logic-puzzles",
+      "problem-solving",
+      "creative-problem-solving",
+      "analytical-thinking",
+      "innovation"
+    ]
+  },
+  {
+    "question_id": "840fd692-04dc-4edb-af10-3d3244269eab",
+    "text": "Estimate the number of pizzas ordered in New York City every Friday.",
+    "category": "Problem Solving",
+    "ideal_answer_preview": "This is a Fermi problem. The candidate should break it down: estimate NYC's population, estimate the...",
+    "current_tags": "['ci-cd', 'estimation', 'logic', 'puzzle']",
+    "semantic_tags": [
+      "troubleshooting",
+      "critical-thinking",
+      "logic-puzzles",
+      "problem-solving",
+      "analytical-thinking"
+    ]
+  },
+  {
+    "question_id": "628bae21-ea32-40ec-954d-b64a4da31314",
+    "text": "How would you test a traffic light system?",
+    "category": "Problem Solving",
+    "ideal_answer_preview": "A good answer covers multiple types of testing. Unit tests for the logic (e.g., timing, state transi...",
+    "current_tags": "['estimation', 'logic', 'puzzle', 'testing']",
+    "semantic_tags": [
+      "tdd-bdd",
+      "system-design",
+      "software-testing",
+      "technical-architecture",
+      "logic-puzzles",
+      "analytical-thinking"
+    ]
+  }
+]
