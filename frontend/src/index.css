@@ -5,12 +5,14 @@
 @layer base {
   body {
     @apply bg-gray-900 text-gray-100 font-sans;
+    text-size-adjust: 100%;
   }
 }
 
 @layer components {
   .glass-ui {
     @apply bg-gray-800/80 backdrop-blur-md border border-cyan-400/20 rounded-xl;
+    -webkit-backdrop-filter: blur(10px);
   }
 
   .main-background {

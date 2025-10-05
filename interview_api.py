@@ -13,11 +13,27 @@ import asyncio
 import signal
 import os
 from datetime import datetime, timedelta
+from contextlib import asynccontextmanager
 from interview import InterviewConfig, ContextService
 
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Interview API", version="1.0.0")
+# Global bot process tracking
+bot_processes: Dict[str, Dict[str, Any]] = {}  # interview_id -> {"pid": int, "start_time": datetime, "cleanup_scheduled": bool}
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Handle application startup and shutdown events"""
+    # Startup
+    logger.info("Starting bot process cleanup background task")
+    asyncio.create_task(cleanup_completed_bot_processes())
+
+    yield
+
+    # Shutdown (if needed)
+    pass
+
+app = FastAPI(title="Interview API", version="1.0.0", lifespan=lifespan)
 
 # CORS middleware
 app.add_middleware(
@@ -31,15 +47,6 @@ app.add_middleware(
 # Initialize services lazily
 interview_config = None
 context_service = None
-
-# Global bot process tracking
-bot_processes: Dict[str, Dict[str, Any]] = {}  # interview_id -> {"pid": int, "start_time": datetime, "cleanup_scheduled": bool}
-
-@app.on_event("startup")
-async def startup_event():
-    """Start background tasks when the application starts"""
-    logger.info("Starting bot process cleanup background task")
-    asyncio.create_task(cleanup_completed_bot_processes())
 
 def get_context_service():
     global context_service
@@ -84,8 +91,7 @@ async def launch_interview_bot(room_url: str, interview_id: str) -> bool:
             process = subprocess.Popen(
                 [sys.executable, bot_script],
                 env=env,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                # Remove stdout/stderr pipes to show logs in main terminal
                 cwd=os.getcwd()
             )
 

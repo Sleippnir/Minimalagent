@@ -12,10 +12,12 @@
     <style>
       body {
         font-family: 'Inter', sans-serif;
+        text-size-adjust: 100%;
       }
       .glass-ui {
         background: rgba(255, 255, 255, 0.1);
         backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.2);
       }
     </style>
@@ -74,7 +76,7 @@
 
       <div class="mt-6 text-center">
         <p class="text-xs text-gray-400">
-          Currently, only the Recruiter dashboard is fully implemented.
+          Recruiter dashboard and Candidate portal are now available. Other roles coming soon.
         </p>
       </div>
     </div>
@@ -140,14 +142,14 @@
           case 'recruiter':
             window.location.href = '/dashboards/hr/';
             break;
+          case 'candidate':
+            window.location.href = '/candidate/';
+            break;
           case 'hiring-manager':
             alert('Hiring Manager dashboard coming soon!');
             break;
           case 'administrator':
             alert('Administrator dashboard coming soon!');
-            break;
-          case 'candidate':
-            alert('Candidate portal coming soon!');
             break;
           default:
             alert('Please select a role');
