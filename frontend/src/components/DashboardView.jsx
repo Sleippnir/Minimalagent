@@ -77,6 +77,22 @@ const DashboardView = () => {
       .select(`
         interview_id,
         status,
+        created_at,
+        interviewer_prompt_version:interviewer_prompt_version_id (
+          prompt: prompt_id (
+            name
+          )
+        ),
+        evaluator_prompt_version:evaluator_prompt_version_id (
+          prompt: prompt_id (
+            name
+          )
+        ),
+        rubric_version:rubric_version_id (
+          rubric: rubric_id (
+            name
+          )
+        ),
         applications (
           candidates (
             first_name,
@@ -88,7 +104,7 @@ const DashboardView = () => {
           )
         )
       `)
-      .order('interview_id', { ascending: false })
+      .order('created_at', { ascending: false })
       .limit(10)
 
     if (error) throw error
@@ -195,6 +211,18 @@ const DashboardView = () => {
                     </div>
                     <div className="text-sm text-gray-300">
                       {interview.applications?.jobs?.title}
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      Created: {interview.created_at ? new Date(interview.created_at).toLocaleDateString() : 'N/A'}
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      Interviewer Prompt: {interview.interviewer_prompt_version?.prompt?.name || 'None'}
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      Evaluator Prompt: {interview.evaluator_prompt_version?.prompt?.name || 'None'}
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      Rubric: {interview.rubric_version?.rubric?.name || 'None'}
                     </div>
                   </div>
                 </div>
