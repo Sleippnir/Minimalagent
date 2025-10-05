@@ -209,7 +209,7 @@ const InterviewsView = () => {
   }
 
   const handleScheduleInterview = async () => {
-    if (!formData.candidate || !formData.job || !formData.questions.length || !formData.interviewerPrompt || !formData.evaluatorPrompt || !formData.rubric) {
+    if (!formData.candidate || !formData.job || !formData.resume || !formData.questions.length || !formData.interviewerPrompt || !formData.evaluatorPrompt || !formData.rubric) {
       setToast({ message: 'Please fill all required fields', type: 'error' })
       return
     }
@@ -221,12 +221,8 @@ const InterviewsView = () => {
 
     setSubmitting(true)
     try {
-      // Generate interview_id
-      const interviewId = crypto.randomUUID()
-
       const { data, error } = await supabase.functions.invoke('schedule-interview', {
         body: {
-          interview_id: interviewId,
           candidate_id: formData.candidate.candidate_id,
           job_id: formData.job.job_id,
           resume_path: formData.resume,
@@ -276,7 +272,7 @@ const InterviewsView = () => {
               label="Candidate"
               options={data.candidates}
               value={formData.candidate}
-              onChange={(candidate) => setFormData(prev => ({ ...prev, candidate }))}
+              onChange={(candidate) => setFormData(prev => ({ ...prev, candidate, resume: candidate?.resume_path || null }))}
               displayKey={(c) => `${c.first_name} ${c.last_name} (${c.email})`}
               placeholder="Select a candidate"
             />
