@@ -12,6 +12,9 @@ const InterviewsView = () => {
   const [submitting, setSubmitting] = useState(false)
   const [toast, setToast] = useState(null)
   const [showCandidateModal, setShowCandidateModal] = useState(false)
+  const [showInspectModal, setShowInspectModal] = useState(false)
+  const [inspectContent, setInspectContent] = useState('')
+  const [inspectTitle, setInspectTitle] = useState('')
   const [candidateFormData, setCandidateFormData] = useState({
     first_name: '',
     last_name: '',
@@ -128,6 +131,52 @@ const InterviewsView = () => {
     }
   }
 
+  const handleInspect = async (type, item) => {
+    if (!item) return
+
+    try {
+      let content = ''
+      let title = ''
+
+      if (type === 'prompt') {
+        title = `${item.prompts?.name} (${item.prompts?.purpose})`
+        if (!supabase) {
+          content = `Mock content for ${title}`
+        } else {
+          const { data, error } = await supabase
+            .from('prompt_versions')
+            .select('content')
+            .eq('prompt_version_id', item.prompt_version_id)
+            .single()
+
+          if (error) throw error
+          content = data.content
+        }
+      } else if (type === 'rubric') {
+        title = item.rubrics?.name
+        if (!supabase) {
+          content = `Mock rubric JSON for ${title}`
+        } else {
+          const { data, error } = await supabase
+            .from('rubric_versions')
+            .select('rubric_json')
+            .eq('rubric_version_id', item.rubric_version_id)
+            .single()
+
+          if (error) throw error
+          content = JSON.stringify(data.rubric_json, null, 2)
+        }
+      }
+
+      setInspectTitle(title)
+      setInspectContent(content)
+      setShowInspectModal(true)
+    } catch (error) {
+      console.error('Error fetching content:', error)
+      setToast({ message: 'Failed to load content', type: 'error' })
+    }
+  }
+
   const handleResumeUpload = async (event) => {
     const file = event.target.files[0]
     if (!file) return
@@ -162,16 +211,14 @@ const InterviewsView = () => {
 
       if (uploadError) throw uploadError
 
-      const { data: urlData } = supabase.storage
+      const { data: { publicUrl } } = supabase.storage
         .from('resumes')
         .getPublicUrl(filePath)
 
-      const resumeUrl = urlData.publicUrl
-
-      // Update candidate's resume_path
+      // Update candidate with resume path
       const { error: updateError } = await supabase
         .from('candidates')
-        .update({ resume_path: resumeUrl })
+        .update({ resume_path: publicUrl })
         .eq('candidate_id', formData.candidate.candidate_id)
 
       if (updateError) throw updateError
@@ -179,10 +226,10 @@ const InterviewsView = () => {
       setData(prev => ({
         ...prev,
         candidates: prev.candidates.map(c =>
-          c.candidate_id === formData.candidate.candidate_id ? { ...c, resume_path: resumeUrl } : c
+          c.candidate_id === formData.candidate.candidate_id ? { ...c, resume_path: publicUrl } : c
         )
       }))
-      setFormData(prev => ({ ...prev, resume: resumeUrl, candidate: { ...prev.candidate, resume_path: resumeUrl } }))
+      setFormData(prev => ({ ...prev, resume: publicUrl, candidate: { ...prev.candidate, resume_path: publicUrl } }))
       setToast({ message: 'Resume uploaded successfully', type: 'success' })
     } catch (error) {
       console.error('Error uploading resume:', error)
@@ -372,6 +419,21 @@ const InterviewsView = () => {
             onChange={(prompt) => setFormData(prev => ({ ...prev, interviewerPrompt: prompt }))}
             displayKey={(p) => p.prompts?.name || 'Unknown'}
             placeholder="Select interviewer prompt"
+            extraButton={
+              formData.interviewerPrompt ? (
+                <button
+                  type="button"
+                  onClick={() => handleInspect('prompt', formData.interviewerPrompt)}
+                  className="text-cyan-400 hover:text-cyan-300 p-1"
+                  title="Inspect prompt content"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </button>
+              ) : null
+            }
           />
 
           <SearchableDropdown
@@ -381,6 +443,21 @@ const InterviewsView = () => {
             onChange={(prompt) => setFormData(prev => ({ ...prev, evaluatorPrompt: prompt }))}
             displayKey={(p) => p.prompts?.name || 'Unknown'}
             placeholder="Select evaluator prompt"
+            extraButton={
+              formData.evaluatorPrompt ? (
+                <button
+                  type="button"
+                  onClick={() => handleInspect('prompt', formData.evaluatorPrompt)}
+                  className="text-cyan-400 hover:text-cyan-300 p-1"
+                  title="Inspect prompt content"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </button>
+              ) : null
+            }
           />
 
           <SearchableDropdown
@@ -390,6 +467,21 @@ const InterviewsView = () => {
             onChange={(rubric) => setFormData(prev => ({ ...prev, rubric }))}
             displayKey={(r) => r.rubrics?.name || 'Unknown'}
             placeholder="Select rubric"
+            extraButton={
+              formData.rubric ? (
+                <button
+                  type="button"
+                  onClick={() => handleInspect('rubric', formData.rubric)}
+                  className="text-cyan-400 hover:text-cyan-300 p-1"
+                  title="Inspect rubric content"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </button>
+              ) : null
+            }
           />
         </div>
 
@@ -488,6 +580,37 @@ const InterviewsView = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showInspectModal && (
+        <div className="fixed inset-0 z-10 overflow-y-auto" onClick={() => setShowInspectModal(false)}>
+          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            <div className="inline-block align-bottom glass-ui rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full" onClick={(e) => e.stopPropagation()}>
+              <div className="px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="sm:flex sm:items-start">
+                  <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                    <h3 className="text-lg leading-6 font-medium text-cyan-400 mb-4">{inspectTitle}</h3>
+                    <div className="bg-dark-blue p-4 rounded-md max-h-96 overflow-y-auto">
+                      <pre className="text-sm text-gray-300 whitespace-pre-wrap">{inspectContent}</pre>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button
+                  type="button"
+                  onClick={() => setShowInspectModal(false)}
+                  className="btn-secondary"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>

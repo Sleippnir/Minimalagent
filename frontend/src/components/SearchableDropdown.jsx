@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 
-const SearchableDropdown = ({ label, options, value, onChange, displayKey, placeholder }) => {
+const SearchableDropdown = ({ label, options, value, onChange, displayKey, placeholder, extraButton }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [search, setSearch] = useState('')
   const inputRef = useRef(null)
@@ -40,7 +40,10 @@ const SearchableDropdown = ({ label, options, value, onChange, displayKey, place
 
   return (
     <div className="relative">
-      <label className="block text-sm font-medium text-cyan-400">{label}</label>
+      <div className="flex items-center justify-between">
+        <label className="block text-sm font-medium text-cyan-400">{label}</label>
+        {extraButton}
+      </div>
       <div className="mt-1 relative">
         <input
           ref={inputRef}
