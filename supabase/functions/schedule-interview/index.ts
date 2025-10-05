@@ -5,7 +5,7 @@ import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 interface RequestPayload {
   application_id: string;
   question_ids: string[];
-  resume_path: string;
+  resume_path?: string;
   interviewer_prompt_version_id?: string;
   evaluator_prompt_version_id?: string;
 }
@@ -24,8 +24,8 @@ serve(async (req: Request) => {
     const { application_id, question_ids, resume_path, interviewer_prompt_version_id, evaluator_prompt_version_id } = payload;
 
     // Input validation
-    if (!application_id || !question_ids || !resume_path || question_ids.length === 0) {
-      return new Response(JSON.stringify({ error: 'Missing required fields: application_id, question_ids, and resume_path are required.' }), {
+    if (!application_id || !question_ids || question_ids.length === 0) {
+      return new Response(JSON.stringify({ error: 'Missing required fields: application_id and question_ids are required.' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
       });
@@ -37,33 +37,36 @@ serve(async (req: Request) => {
     );
 
     // --- 1. Resume Handling ---
-    let resumeText = "Sample resume text - PDF parsing not yet implemented for Deno";
+    let resumeText = "No resume provided - interview will proceed without resume analysis";
 
-    try {
-      // Try to download the resume - decode URL-encoded path if necessary
-      const decodedPath = decodeURIComponent(resume_path);
-      const { data: resumeData, error: downloadError } = await supabaseAdmin.storage
-        .from('resumes')
-        .download(decodedPath);
+    if (resume_path) {
+      try {
+        // Try to download the resume - decode URL-encoded path if necessary
+        const decodedPath = decodeURIComponent(resume_path);
+        const { data: resumeData, error: downloadError } = await supabaseAdmin.storage
+          .from('resumes')
+          .download(decodedPath);
 
-      if (downloadError) {
-        console.warn(`Failed to download resume from path "${decodedPath}": ${JSON.stringify(downloadError)}`);
-        // Try with original path if decoding failed
-        if (decodedPath !== resume_path) {
-          const { data: resumeData2, error: downloadError2 } = await supabaseAdmin.storage
-            .from('resumes')
-            .download(resume_path);
-          if (!downloadError2) {
-            console.log('Successfully downloaded resume with original path');
-            // Note: In a real implementation, you'd process resumeData2 here
+        if (downloadError) {
+          console.warn(`Failed to download resume from path "${decodedPath}": ${JSON.stringify(downloadError)}`);
+          // Try with original path if decoding failed
+          if (decodedPath !== resume_path) {
+            const { data: resumeData2, error: downloadError2 } = await supabaseAdmin.storage
+              .from('resumes')
+              .download(resume_path);
+            if (!downloadError2) {
+              console.log('Successfully downloaded resume with original path');
+              // Note: In a real implementation, you'd process resumeData2 here
+            }
           }
+        } else {
+          console.log(`Successfully downloaded resume from path: ${decodedPath}`);
+          // Note: In a real implementation, you'd process resumeData here
+          resumeText = "Resume downloaded successfully - PDF parsing not yet implemented for Deno";
         }
-      } else {
-        console.log(`Successfully downloaded resume from path: ${decodedPath}`);
-        // Note: In a real implementation, you'd process resumeData here
+      } catch (err) {
+        console.warn(`Error during resume download: ${err instanceof Error ? err.message : String(err)}`);
       }
-    } catch (err) {
-      console.warn(`Error during resume download: ${err instanceof Error ? err.message : String(err)}`);
     }
 
     // --- 2. Fetch Prompts & Rubric ---

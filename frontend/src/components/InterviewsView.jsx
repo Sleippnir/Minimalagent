@@ -60,25 +60,33 @@ const InterviewsView = () => {
             { question_id: '2', text: 'What are your strengths?', category: 'Behavioral', tags: ['personal'] }
           ],
           prompts: [
-            { prompt_id: '1', name: 'Friendly Interviewer', purpose: 'interviewer' },
-            { prompt_id: '2', name: 'Detailed Evaluator', purpose: 'evaluator' }
+            { prompt_version_id: '1', prompts: { name: 'Friendly Interviewer', purpose: 'interviewer' } },
+            { prompt_version_id: '2', prompts: { name: 'Detailed Evaluator', purpose: 'evaluator' } }
           ],
           rubrics: [
-            { rubric_id: '1', name: 'Technical Assessment' },
-            { rubric_id: '2', name: 'Behavioral Assessment' }
+            { rubric_version_id: '1', rubrics: { name: 'Technical Assessment' } },
+            { rubric_version_id: '2', rubrics: { name: 'Behavioral Assessment' } }
           ],
           resumes: [
             { resume_id: '1', candidate_id: '1', name: 'John_Doe_Resume.pdf', url: 'https://example.com/resumes/John_Doe_Resume.pdf' },
             { resume_id: '2', candidate_id: '2', name: 'Jane_Smith_Resume.pdf', url: 'https://example.com/resumes/Jane_Smith_Resume.pdf' }
           ],
         })
+
+        // Set latest prompt versions and rubrics as defaults for mock data
+        setFormData(prev => ({
+          ...prev,
+          interviewerPrompt: { prompt_version_id: '1', prompts: { name: 'Friendly Interviewer', purpose: 'interviewer' } },
+          evaluatorPrompt: { prompt_version_id: '2', prompts: { name: 'Detailed Evaluator', purpose: 'evaluator' } },
+          rubric: { rubric_version_id: '2', rubrics: { name: 'Behavioral Assessment' } },
+        }))
       } else {
         const [candidatesRes, jobsRes, questionsRes, promptsRes, rubricsRes] = await Promise.all([
           supabase.from('candidates').select('candidate_id, first_name, last_name, email, resume_path'),
           supabase.from('jobs').select('job_id, title'),
           supabase.from('questions').select('question_id, text, category, tags'),
-          supabase.from('prompts').select('prompt_id, name, purpose'),
-          supabase.from('rubrics').select('rubric_id, name'),
+          supabase.from('prompt_versions').select('prompt_version_id, prompts(name, purpose)').order('version', { ascending: false }),
+          supabase.from('rubric_versions').select('rubric_version_id, rubrics(name)').order('version', { ascending: false }),
         ])
 
         if (candidatesRes.error) throw candidatesRes.error
@@ -93,8 +101,24 @@ const InterviewsView = () => {
           questions: questionsRes.data,
           prompts: promptsRes.data,
           rubrics: rubricsRes.data,
-          resumes: [],
         })
+
+        // Set latest prompt versions and rubrics as defaults
+        const interviewerPrompt = promptsRes.data
+          .filter(p => p.prompts?.purpose === 'interviewer')
+          .sort((a, b) => parseInt(b.prompt_version_id) - parseInt(a.prompt_version_id))[0]
+        const evaluatorPrompt = promptsRes.data
+          .filter(p => p.prompts?.purpose === 'evaluator')
+          .sort((a, b) => parseInt(b.prompt_version_id) - parseInt(a.prompt_version_id))[0]
+        const latestRubric = rubricsRes.data
+          .sort((a, b) => parseInt(b.rubric_version_id) - parseInt(a.rubric_version_id))[0]
+
+        setFormData(prev => ({
+          ...prev,
+          interviewerPrompt: interviewerPrompt || null,
+          evaluatorPrompt: evaluatorPrompt || null,
+          rubric: latestRubric || null,
+        }))
       }
     } catch (error) {
       console.error('Error fetching form data:', error)
@@ -209,7 +233,7 @@ const InterviewsView = () => {
   }
 
   const handleScheduleInterview = async () => {
-    if (!formData.candidate || !formData.job || !formData.resume || !formData.questions.length || !formData.interviewerPrompt || !formData.evaluatorPrompt || !formData.rubric) {
+    if (!formData.candidate || !formData.job || !formData.questions.length || !formData.interviewerPrompt || !formData.evaluatorPrompt || !formData.rubric) {
       setToast({ message: 'Please fill all required fields', type: 'error' })
       return
     }
@@ -221,16 +245,32 @@ const InterviewsView = () => {
 
     setSubmitting(true)
     try {
+      // Create/find application record first
+      const { data: appData, error: appError } = await supabase
+        .from('applications')
+        .upsert({ candidate_id: formData.candidate.candidate_id, job_id: formData.job.job_id }, { onConflict: 'candidate_id,job_id' })
+        .select()
+        .single()
+
+      if (appError) throw appError
+
+      const applicationId = appData.application_id
+
+      // Invoke the edge function with application_id, question_ids, resume_path, and prompt version IDs
+      const functionBody = {
+        application_id: applicationId,
+        question_ids: formData.questions.map(q => q.question_id),
+        interviewer_prompt_version_id: formData.interviewerPrompt?.prompt_version_id,
+        evaluator_prompt_version_id: formData.evaluatorPrompt?.prompt_version_id,
+      }
+
+      // Include resume_path only if it exists
+      if (formData.resume) {
+        functionBody.resume_path = formData.resume
+      }
+
       const { data, error } = await supabase.functions.invoke('schedule-interview', {
-        body: {
-          candidate_id: formData.candidate.candidate_id,
-          job_id: formData.job.job_id,
-          resume_path: formData.resume,
-          question_ids: formData.questions.map(q => q.question_id),
-          interviewer_prompt_id: formData.interviewerPrompt.prompt_id,
-          evaluator_prompt_id: formData.evaluatorPrompt.prompt_id,
-          rubric_id: formData.rubric.rubric_id,
-        }
+        body: functionBody
       })
 
       if (error) throw error
@@ -327,19 +367,19 @@ const InterviewsView = () => {
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
           <SearchableDropdown
             label="Interviewer Prompt"
-            options={data.prompts.filter(p => p.purpose === 'interviewer')}
+            options={data.prompts.filter(p => p.prompts?.purpose === 'interviewer')}
             value={formData.interviewerPrompt}
             onChange={(prompt) => setFormData(prev => ({ ...prev, interviewerPrompt: prompt }))}
-            displayKey="name"
+            displayKey={(p) => p.prompts?.name || 'Unknown'}
             placeholder="Select interviewer prompt"
           />
 
           <SearchableDropdown
             label="Evaluator Prompt"
-            options={data.prompts.filter(p => p.purpose === 'evaluator')}
+            options={data.prompts.filter(p => p.prompts?.purpose === 'evaluator')}
             value={formData.evaluatorPrompt}
             onChange={(prompt) => setFormData(prev => ({ ...prev, evaluatorPrompt: prompt }))}
-            displayKey="name"
+            displayKey={(p) => p.prompts?.name || 'Unknown'}
             placeholder="Select evaluator prompt"
           />
 
@@ -348,7 +388,7 @@ const InterviewsView = () => {
             options={data.rubrics}
             value={formData.rubric}
             onChange={(rubric) => setFormData(prev => ({ ...prev, rubric }))}
-            displayKey="name"
+            displayKey={(r) => r.rubrics?.name || 'Unknown'}
             placeholder="Select rubric"
           />
         </div>

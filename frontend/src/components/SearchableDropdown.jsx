@@ -50,7 +50,7 @@ const SearchableDropdown = ({ label, options, value, onChange, displayKey, place
           onFocus={handleInputFocus}
           onBlur={handleInputBlur}
           placeholder={placeholder}
-          className="w-full glass-ui border border-cyan-800 rounded-md shadow-sm px-3 py-2 text-left focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm text-gray-300"
+          className="cursor-pointer w-full glass-ui border border-cyan-800 rounded-md shadow-sm px-3 py-2 text-left focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm text-gray-300"
         />
         <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
           <svg className="h-5 w-5 text-cyan-400" viewBox="0 0 20 20" fill="none" stroke="currentColor">

@@ -33,7 +33,7 @@ const QuestionManager = ({ questions, selectedQuestions, onChange }) => {
           placeholder="Search questions..."
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          className="form-input w-full px-3 py-2 border border-cyan-800 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm"
+          className="w-full px-3 py-2 glass-ui border-2 border-white rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm text-gray-300"
         />
         <SearchableDropdown
           label="Filter by Category"
