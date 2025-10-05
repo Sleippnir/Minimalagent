@@ -10,6 +10,7 @@ const CandidatesView = () => {
   const [showModal, setShowModal] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [toast, setToast] = useState(null)
+  const [editingCandidate, setEditingCandidate] = useState(null)
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -48,30 +49,65 @@ const CandidatesView = () => {
     }
   }
 
+  const handleEdit = (candidate) => {
+    setEditingCandidate(candidate)
+    setFormData({
+      first_name: candidate.first_name,
+      last_name: candidate.last_name,
+      email: candidate.email,
+      phone: candidate.phone || '',
+      linkedin_url: candidate.linkedin_url || '',
+    })
+    setShowModal(true)
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setSubmitting(true)
     try {
       if (!supabase) {
-        // Mock adding candidate
-        const newCandidate = {
-          candidate_id: Date.now().toString(),
-          ...formData
+        // Mock adding/updating candidate
+        if (editingCandidate) {
+          setCandidates(prev => prev.map(c => c.candidate_id === editingCandidate.candidate_id ? { ...c, ...formData } : c))
+          setToast({ message: 'Candidate updated successfully (mock)', type: 'success' })
+        } else {
+          const newCandidate = {
+            candidate_id: Date.now().toString(),
+            ...formData
+          }
+          setCandidates(prev => [...prev, newCandidate])
+          setToast({ message: 'Candidate added successfully (mock)', type: 'success' })
         }
-        setCandidates(prev => [...prev, newCandidate])
-        setToast({ message: 'Candidate added successfully (mock)', type: 'success' })
       } else {
-        const { data, error } = await supabase
-          .from('candidates')
-          .insert([formData])
-          .select()
+        if (editingCandidate) {
+          const { data, error } = await supabase
+            .from('candidates')
+            .update({
+              email: formData.email,
+              phone: formData.phone,
+              linkedin_url: formData.linkedin_url,
+            })
+            .eq('candidate_id', editingCandidate.candidate_id)
+            .select()
 
-        if (error) throw error
+          if (error) throw error
 
-        setCandidates(prev => [...prev, ...data])
-        setToast({ message: 'Candidate added successfully', type: 'success' })
+          setCandidates(prev => prev.map(c => c.candidate_id === editingCandidate.candidate_id ? { ...c, ...data[0] } : c))
+          setToast({ message: 'Candidate updated successfully', type: 'success' })
+        } else {
+          const { data, error } = await supabase
+            .from('candidates')
+            .insert([formData])
+            .select()
+
+          if (error) throw error
+
+          setCandidates(prev => [...prev, ...data])
+          setToast({ message: 'Candidate added successfully', type: 'success' })
+        }
       }
       setShowModal(false)
+      setEditingCandidate(null)
       setFormData({
         first_name: '',
         last_name: '',
@@ -80,8 +116,8 @@ const CandidatesView = () => {
         linkedin_url: '',
       })
     } catch (error) {
-      console.error('Error adding candidate:', error)
-      setToast({ message: 'Failed to add candidate', type: 'error' })
+      console.error('Error saving candidate:', error)
+      setToast({ message: 'Failed to save candidate', type: 'error' })
     } finally {
       setSubmitting(false)
     }
@@ -122,6 +158,9 @@ const CandidatesView = () => {
               <th className="px-6 py-3 text-left text-xs font-medium text-cyan-400 uppercase tracking-wider">
                 LinkedIn
               </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-cyan-400 uppercase tracking-wider">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="glass-ui divide-y divide-cyan-800">
@@ -143,6 +182,14 @@ const CandidatesView = () => {
                     </a>
                   ) : '-'}
                 </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                  <button
+                    onClick={() => handleEdit(candidate)}
+                    className="text-cyan-400 hover:text-cyan-300 underline"
+                  >
+                    Edit
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -160,16 +207,17 @@ const CandidatesView = () => {
                 <div className="px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                   <div className="sm:flex sm:items-start">
                     <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
-                      <h3 className="text-lg leading-6 font-medium text-cyan-400 mb-4">Add New Candidate</h3>
+                      <h3 className="text-lg leading-6 font-medium text-cyan-400 mb-4">{editingCandidate ? 'Edit Candidate' : 'Add New Candidate'}</h3>
                       <div className="grid grid-cols-1 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-cyan-400">First Name</label>
                           <input
                             type="text"
                             required
+                            disabled={!!editingCandidate}
                             value={formData.first_name}
                             onChange={(e) => setFormData(prev => ({ ...prev, first_name: e.target.value }))}
-                            className="form-input mt-1 block w-full"
+                            className="form-input mt-1 block w-full disabled:opacity-50"
                           />
                         </div>
                         <div>
@@ -177,9 +225,10 @@ const CandidatesView = () => {
                           <input
                             type="text"
                             required
+                            disabled={!!editingCandidate}
                             value={formData.last_name}
                             onChange={(e) => setFormData(prev => ({ ...prev, last_name: e.target.value }))}
-                            className="form-input mt-1 block w-full"
+                            className="form-input mt-1 block w-full disabled:opacity-50"
                           />
                         </div>
                         <div>
@@ -220,11 +269,21 @@ const CandidatesView = () => {
                     disabled={submitting}
                     className="btn-primary w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium disabled:opacity-50 sm:ml-3 sm:w-auto sm:text-sm"
                   >
-                    {submitting ? 'Adding...' : 'Add Candidate'}
+                    {submitting ? 'Saving...' : 'Save'}
                   </button>
                   <button
                     type="button"
-                    onClick={() => setShowModal(false)}
+                    onClick={() => {
+                      setShowModal(false)
+                      setEditingCandidate(null)
+                      setFormData({
+                        first_name: '',
+                        last_name: '',
+                        email: '',
+                        phone: '',
+                        linkedin_url: '',
+                      })
+                    }}
                     className="btn-secondary mt-3 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
                   >
                     Cancel
