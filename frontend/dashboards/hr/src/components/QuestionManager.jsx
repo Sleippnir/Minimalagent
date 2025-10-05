@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import SearchableDropdown from './SearchableDropdown.jsx'
 
 const QuestionManager = ({ questions, selectedQuestions, onChange }) => {
   const [filter, setFilter] = useState('')
@@ -34,16 +35,14 @@ const QuestionManager = ({ questions, selectedQuestions, onChange }) => {
           onChange={(e) => setFilter(e.target.value)}
           className="form-input w-full px-3 py-2 border border-cyan-800 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm"
         />
-        <select
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-          className="form-input w-full px-3 py-2 border border-cyan-800 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm"
-        >
-          <option value="">All Categories</option>
-          {categories.map(cat => (
-            <option key={cat} value={cat}>{cat}</option>
-          ))}
-        </select>
+        <SearchableDropdown
+          label="Filter by Category"
+          options={categories.map(cat => ({ value: cat, label: cat }))}
+          value={categoryFilter ? { value: categoryFilter, label: categoryFilter } : null}
+          onChange={(option) => setCategoryFilter(option ? option.value : '')}
+          displayKey="label"
+          placeholder="All Categories"
+        />
       </div>
 
       <div className="glass-ui border border-cyan-800 rounded-md max-h-60 overflow-y-auto">
