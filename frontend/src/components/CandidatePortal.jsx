@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useSupabase } from '../SupabaseContext.jsx'
 import Spinner from './Spinner.jsx'
 import Toast from './Toast.jsx'
+import InterviewSession from './InterviewSession.jsx'
 
 const CandidatePortal = () => {
   const supabase = useSupabase()
@@ -10,6 +11,7 @@ const CandidatePortal = () => {
   const [interviews, setInterviews] = useState([])
   const [loading, setLoading] = useState(false)
   const [toast, setToast] = useState(null)
+  const [currentInterview, setCurrentInterview] = useState(null)
 
   const handleLogout = () => {
     setCandidate(null)
@@ -111,8 +113,8 @@ const CandidatePortal = () => {
           message: `Interview started successfully! ${data.bot_launched ? 'Bot launched.' : 'Bot not launched.'}`, 
           type: 'success' 
         })
-        // Optionally refresh the interview list to update status
-        // fetchInterviews()
+        // Navigate to interview session
+        setCurrentInterview(interview)
       } else {
         setToast({ message: `Failed to start interview: ${data.detail || 'Unknown error'}`, type: 'error' })
       }
@@ -120,6 +122,15 @@ const CandidatePortal = () => {
       console.error('Error starting interview:', error)
       setToast({ message: 'Network error while starting interview', type: 'error' })
     }
+  }
+
+  const handleBackToPortal = () => {
+    setCurrentInterview(null)
+  }
+
+  // Show interview session if one is active
+  if (currentInterview) {
+    return <InterviewSession onBack={handleBackToPortal} interview={currentInterview} />
   }
 
   if (!candidate) {
