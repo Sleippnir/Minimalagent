@@ -67,16 +67,13 @@ const InterviewSession = ({ interview, onBack }) => {
     }
     setIsLoading(true);
     try {
-      // 1) Start session on your backend
-      const res = await fetch('/api/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ interview_id: interview?.id, auth_token: interview?.auth_token })
+      await pcClient.startBotAndConnect({
+        endpoint: '/api/start',
+        requestData: { 
+          interview_id: interview?.id, 
+          auth_token: interview?.auth_token 
+        }
       });
-      if (!res.ok) throw new Error(`start failed: ${res.status}`);
-      const { url, token } = await res.json();
-      // 2) Connect to Daily via transport
-      await pcClient.connect({ url, token });
     } catch (error) {
       console.error('Failed to connect to bot:', error);
       setIsLoading(false);
@@ -86,10 +83,12 @@ const InterviewSession = ({ interview, onBack }) => {
 
   // Screen transition handlers
   const handleStartInterview = async () => {
-    // Start connecting in background
-    connectToBot();
+    setIsLoading(true);
+    // Await the full connection process. The promise resolves when state is 'Ready'.
+    await connectToBot(); 
+    setIsLoading(false);
 
-    // Try to play intro video
+    // Now that we are connected and ready, play the intro video.
     if (introVideoRef.current) {
       try {
         await introVideoRef.current.play();
@@ -105,10 +104,7 @@ const InterviewSession = ({ interview, onBack }) => {
 
   const handleIntroVideoEnd = () => {
     setCurrentScreen('interview');
-    // Send signal to bot that interview can start
-    if (pcClient) {
-      pcClient.send({ type: 'input_text', text: 'START_INTERVIEW' });
-    }
+    // The bot has already started the conversation on the server.
   };
 
   // Handle video play error
@@ -127,9 +123,6 @@ const InterviewSession = ({ interview, onBack }) => {
         console.error('Manual video play failed:', error);
         // If manual play fails, skip to interview
         setCurrentScreen('interview');
-        if (pcClient) {
-          pcClient.send({ type: 'input_text', text: 'START_INTERVIEW' });
-        }
       }
     }
   };
