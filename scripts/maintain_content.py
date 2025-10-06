@@ -3,12 +3,16 @@
 Content Maintenance Script
 Run this script regularly to ensure job-question tag consistency.
 """
+
 import sys
 import logging
 from content_manager import ContentManager
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
+
 
 def main():
     """Main maintenance function."""
@@ -29,7 +33,11 @@ def main():
     print(f"   Overall health: {audit_results['overall_health']}")
 
     # Fix issues if any exist
-    total_issues = len(audit_results['job_issues']) + len(audit_results['question_issues']) + len(audit_results['relationship_issues'])
+    total_issues = (
+        len(audit_results["job_issues"])
+        + len(audit_results["question_issues"])
+        + len(audit_results["relationship_issues"])
+    )
 
     if total_issues > 0:
         logger.info(f"Found {total_issues} issues. Starting bulk fix...")
@@ -49,6 +57,7 @@ def main():
         print("\n✅ All content is consistent! No fixes needed.")
 
     logger.info("Content maintenance complete!")
+
 
 if __name__ == "__main__":
     main()

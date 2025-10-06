@@ -38,33 +38,39 @@ async def test_interview_context_retrieval(auth_token: str):
         queue_service = QueueService()
 
         # Retrieve interview context from queue
-        interview_context = await queue_service.get_interview_context_from_queue(auth_token)
+        interview_context = await queue_service.get_interview_context_from_queue(
+            auth_token
+        )
 
         if interview_context is None:
             print("No interview context found for the provided auth token")
             return
 
         # Extract fields using the EXACT same logic as simlibot.py
-        interview_id = interview_context.get('interview_id')
-        payload = interview_context.get('payload', {})
+        interview_id = interview_context.get("interview_id")
+        payload = interview_context.get("payload", {})
 
-        candidate_info = payload.get('candidate', {})
-        candidate_name = candidate_info.get('first_name', 'Candidate')
+        candidate_info = payload.get("candidate", {})
+        candidate_name = candidate_info.get("first_name", "Candidate")
 
-        job_info = payload.get('job', {})
-        job_title = job_info.get('title', 'Position')
+        job_info = payload.get("job", {})
+        job_title = job_info.get("title", "Position")
 
-        questions = payload.get('questions', [])
-        evaluation_materials = payload.get('evaluation_materials', {})
-        resume_text = evaluation_materials.get('resume_text')
-        job_description = evaluation_materials.get('job_description')
-        interviewer_prompt_raw = payload.get('interviewer_prompt')
+        questions = payload.get("questions", [])
+        evaluation_materials = payload.get("evaluation_materials", {})
+        resume_text = evaluation_materials.get("resume_text")
+        job_description = evaluation_materials.get("job_description")
+        interviewer_prompt_raw = payload.get("interviewer_prompt")
 
         # Apply EXACT same variable replacement as simlibot.py
         interviewer_prompt_processed = interviewer_prompt_raw
         if interviewer_prompt_processed and candidate_name:
-            interviewer_prompt_processed = interviewer_prompt_processed.replace('[first_name]', candidate_name)
-            interviewer_prompt_processed = interviewer_prompt_processed.replace('[job_title]', job_title)
+            interviewer_prompt_processed = interviewer_prompt_processed.replace(
+                "[first_name]", candidate_name
+            )
+            interviewer_prompt_processed = interviewer_prompt_processed.replace(
+                "[job_title]", job_title
+            )
 
         # Add ALL extracted context to the system message (exactly like test script)
         context_text = f"\n## Part 9: Interview Context Details\n"
@@ -80,7 +86,9 @@ async def test_interview_context_retrieval(auth_token: str):
             questions_text += f"{i}. {question.get('text', 'N/A')} (Type: {question.get('type', 'N/A')})\n"
 
         # Append all context to the interviewer prompt
-        full_system_prompt = interviewer_prompt_processed + context_text + questions_text
+        full_system_prompt = (
+            interviewer_prompt_processed + context_text + questions_text
+        )
 
         # Print only what the LLM receives
         print(full_system_prompt)
@@ -88,6 +96,7 @@ async def test_interview_context_retrieval(auth_token: str):
     except Exception as e:
         print(f"Error during context retrieval: {e}")
         import traceback
+
         traceback.print_exc()
 
 
@@ -102,6 +111,7 @@ async def main():
 
     # Load environment variables
     from dotenv import load_dotenv
+
     load_dotenv()
 
     # Run the test

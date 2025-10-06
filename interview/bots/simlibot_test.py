@@ -33,20 +33,18 @@ from pipecat.services.simli.video import SimliVideoService
 # Try to import Daily transport
 try:
     from pipecat.transports.daily.transport import DailyParams
+
     DAILY_AVAILABLE = True
 except ImportError:
     DAILY_AVAILABLE = False
     DailyParams = None
 
 # NEW: Pipecat Flows imports for structured conversations
-from pipecat_flows.manager import FlowManager
-from pipecat_flows.types import FlowArgs, NodeConfig
-from pipecat_flows.schemas import FlowsFunctionSchema
-from pipecat_flows.steps.actions import end_conversation as end_conversation_action
+from pipecat_flows import FlowManager, FlowArgs, NodeConfig, FlowsFunctionSchema
 
 # Import application-specific context and services
-from..context_service.services import QueueService, TranscriptService
-from..context_service.models import InterviewContext
+from ..context_service.services import QueueService, TranscriptService
+from ..context_service.models import InterviewContext
 
 # Singleton instance
 _client = None
@@ -91,7 +89,10 @@ if os.getenv("TRANSPORT") == "webrtc":
 
 # -- Function Handlers: Logic that runs when tools are called --
 
-async def handle_summarize_and_next_question(args: FlowArgs, flow_manager: FlowManager) -> tuple[str, NodeConfig]:
+
+async def handle_summarize_and_next_question(
+    args: FlowArgs, flow_manager: FlowManager
+) -> tuple[str, NodeConfig]:
     """
     This handler is called by the 'clean_context_and_summarize' tool.
     It stores the summary and dynamically creates and transitions to the next node
@@ -111,18 +112,22 @@ async def handle_summarize_and_next_question(args: FlowArgs, flow_manager: FlowM
         # If there are more questions, transition to the next question node
         logger.info(f"Transitioning to question {next_question_pos + 1}")
         next_node = create_question_node(
-            interview_context=interview_context,
-            question_position=next_question_pos
+            interview_context=interview_context, question_position=next_question_pos
         )
     else:
         # If all questions are done, transition to the candidate questions node
         logger.info("All questions answered, transitioning to candidate questions.")
         next_node = create_candidate_questions_node()
 
-    return f"Summary of question {current_question_pos + 1} has been processed.", next_node
+    return (
+        f"Summary of question {current_question_pos + 1} has been processed.",
+        next_node,
+    )
 
 
-async def handle_end_conversation(args: FlowArgs, flow_manager: FlowManager) -> tuple[str, NodeConfig]:
+async def handle_end_conversation(
+    args: FlowArgs, flow_manager: FlowManager
+) -> tuple[str, NodeConfig]:
     """
     This handler is called by the 'end_conversation' tool.
     It transitions the flow to the final "end_node".
@@ -133,29 +138,42 @@ async def handle_end_conversation(args: FlowArgs, flow_manager: FlowManager) -> 
 
 # -- Schemas: Define the tools available to the LLM in different nodes --
 
-summarize_schema = FlowsFunctionSchema(
-    name="clean_context_and_summarize",
-    description="Call after a question is sufficiently answered to clean context and store a summary.",
-    handler=handle_summarize_and_next_question,
-    properties={"summary": {"type": "string", "description": "A concise summary of the candidate's answer, capturing key evidence, strengths, and any flags."}},
-    required=["summary"]
-)
+# summarize_schema = FlowsFunctionSchema(
+#     name="clean_context_and_summarize",
+#     description="Call after a question is sufficiently answered to clean context and store a summary.",
+#     handler=handle_summarize_and_next_question,
+#     properties={
+#         "summary": {
+#             "type": "string",
+#             "description": "A concise summary of the candidate's answer, capturing key evidence, strengths, and any flags.",
+#         }
+#     },
+#     required=["summary"],
+# )
 
-end_conversation_schema = FlowsFunctionSchema(
-    name="end_conversation",
-    description="Call to end the session when the candidate has no more questions or requests to finish.",
-    handler=handle_end_conversation
-)
+# end_conversation_schema = FlowsFunctionSchema(
+#     name="end_conversation",
+#     description="Call to end the session when the candidate has no more questions or requests to finish.",
+#     handler=handle_end_conversation,
+# )
 
 
 # -- Node Creators: Functions that build the configuration for each conversational state --
+
 
 def create_end_node() -> NodeConfig:
     """This node says a final goodbye and then gracefully terminates the pipeline."""
     return NodeConfig(
         name="end",
-        task_messages=[{"role": "system", "content": "Thank you for participating in this interview. The session is now complete."}],
-        post_actions=[end_conversation_action()]  # Built-in action to stop the pipeline
+        task_messages=[
+            {
+                "role": "system",
+                "content": "Thank you for participating in this interview. The session is now complete.",
+            }
+        ],
+        post_actions=[
+            end_conversation_action()
+        ],  # Built-in action to stop the pipeline
     )
 
 
@@ -163,28 +181,42 @@ def create_candidate_questions_node() -> NodeConfig:
     """This node is for after all scripted questions are asked."""
     return NodeConfig(
         name="candidate_questions",
-        task_messages=[{"role": "system", "content": "You have completed all the prepared questions. Do you have any questions for us about the role or the company?"}],
-        functions=[end_conversation_schema]
+        task_messages=[
+            {
+                "role": "system",
+                "content": "You have completed all the prepared questions. Do you have any questions for us about the role or the company?",
+            }
+        ],
+        functions=[end_conversation_schema],
     )
 
 
-def create_question_node(interview_context: InterviewContext, question_position: int) -> NodeConfig:
+def create_question_node(
+    interview_context: InterviewContext, question_position: int
+) -> NodeConfig:
     """Creates a node for a specific interview question."""
     question = interview_context.questions[question_position]
     return NodeConfig(
         name=f"question_{question_position + 1}",
-        task_messages=[{"role": "system", "content": f"Ask the following question: {question['question']}. Listen to the candidate's full response. Once they have answered sufficiently, you MUST call the `clean_context_and_summarize` function with a concise summary of their answer."}],
+        task_messages=[
+            {
+                "role": "system",
+                "content": f"Ask the following question: {question['question']}. Listen to the candidate's full response. Once they have answered sufficiently, you MUST call the `clean_context_and_summarize` function with a concise summary of their answer.",
+            }
+        ],
         functions=[summarize_schema],
         # This strategy clears the context for each new question, matching the original prompt's requirement.
-        context_strategy="RESET"
+        context_strategy="RESET",
     )
 
 
 def create_greeting_node(interview_context: InterviewContext) -> NodeConfig:
     """Creates the initial greeting node that starts the interview flow."""
-    
+
     # This handler's only job is to transition to the first question.
-    async def start_first_question(args: FlowArgs, flow_manager: FlowManager) -> tuple[str, NodeConfig]:
+    async def start_first_question(
+        args: FlowArgs, flow_manager: FlowManager
+    ) -> tuple[str, NodeConfig]:
         logger.info("Greeting complete, transitioning to first question.")
         first_question_node = create_question_node(interview_context, 0)
         return "Greeting complete, beginning questions.", first_question_node
@@ -193,7 +225,7 @@ def create_greeting_node(interview_context: InterviewContext) -> NodeConfig:
     transition_to_first_question_schema = FlowsFunctionSchema(
         name="start_interview_questions",
         description="Call this function after delivering the greeting and the candidate is ready to begin.",
-        handler=start_first_question
+        handler=start_first_question,
     )
 
     num_questions = len(interview_context.questions)
@@ -206,7 +238,7 @@ def create_greeting_node(interview_context: InterviewContext) -> NodeConfig:
     return NodeConfig(
         name="greeting",
         task_messages=[{"role": "system", "content": greeting_prompt}],
-        functions=[transition_to_first_question_schema]
+        functions=[transition_to_first_question_schema],
     )
 
 
@@ -215,24 +247,41 @@ def create_greeting_node(interview_context: InterviewContext) -> NodeConfig:
 # The main `run_bot` function is updated to use the FlowManager.
 # ----------------------------------------------------------------------------
 
-async def run_bot(transport: BaseTransport, runner_args: RunnerArguments, auth_token: Optional[str] = None):
+
+async def run_bot(
+    transport: BaseTransport,
+    runner_args: RunnerArguments,
+    auth_token: Optional[str] = None,
+):
     logger.info("Starting bot with Pipecat Flows context management")
 
     # --- Context and Service Initialization (largely unchanged) ---
     if auth_token is None:
-        auth_token = os.getenv("AUTH_TOKEN") or (getattr(transport, 'room_url', '').split('/')[-1] if hasattr(transport, 'room_url') else None) or TEST_AUTH_TOKEN
-    
+        auth_token = (
+            os.getenv("AUTH_TOKEN")
+            or (
+                getattr(transport, "room_url", "").split("/")[-1]
+                if hasattr(transport, "room_url")
+                else None
+            )
+            or TEST_AUTH_TOKEN
+        )
+
     logger.info(f"Using auth_token: {auth_token}")
 
     queue_service = QueueService()
-    interviewer_record = await queue_service.get_interview_context_from_queue(auth_token)
+    interviewer_record = await queue_service.get_interview_context_from_queue(
+        auth_token
+    )
 
     if not interviewer_record:
         logger.error("Failed to retrieve interviewer record from queue")
         return
 
     interview_context = InterviewContext.from_supabase_record(interviewer_record)
-    logger.info(f"Retrieved interview context for {interview_context.candidate_name} (ID: {interview_context.interview_id})")
+    logger.info(
+        f"Retrieved interview context for {interview_context.candidate_name} (ID: {interview_context.interview_id})"
+    )
 
     stt = DeepgramSTTService(
         api_key=os.getenv("DEEPGRAM_API_KEY"),
@@ -253,7 +302,9 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments, auth_t
     # --- Transcript and Shutdown Logic (unchanged) ---
     transcript = TranscriptProcessor()
     session_timestamp = datetime.now(datetime.UTC)
-    transcript_path = TRANSCRIPT_BASE_DIR / f"interview-{interview_context.interview_id}.md"
+    transcript_path = (
+        TRANSCRIPT_BASE_DIR / f"interview-{interview_context.interview_id}.md"
+    )
     transcript_initialized = False
     services_shutdown = False
 
@@ -293,7 +344,7 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments, auth_t
         logger.info("Saving transcript to Supabase.")
         transcript_service = TranscriptService()
         try:
-            with open(transcript_path, 'r', encoding='utf-8') as f:
+            with open(transcript_path, "r", encoding="utf-8") as f:
                 full_text = f.read()
             transcript_json = {
                 "interview_id": interview_context.interview_id,
@@ -301,17 +352,21 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments, auth_t
                 "job_title": interview_context.job_title,
                 "questions_asked": len(interview_context.questions),
                 "transcript_length": len(full_text),
-                "session_timestamp": session_timestamp.isoformat()
+                "session_timestamp": session_timestamp.isoformat(),
             }
             success = await transcript_service.write_transcript(
                 interview_id=interview_context.interview_id,
                 full_text=full_text,
-                transcript_json=transcript_json
+                transcript_json=transcript_json,
             )
             if success:
-                logger.info(f"Transcript saved to Supabase for interview {interview_context.interview_id}")
+                logger.info(
+                    f"Transcript saved to Supabase for interview {interview_context.interview_id}"
+                )
             else:
-                logger.error(f"Failed to save transcript to Supabase for interview {interview_context.interview_id}")
+                logger.error(
+                    f"Failed to save transcript to Supabase for interview {interview_context.interview_id}"
+                )
         except FileNotFoundError:
             logger.error(f"Transcript file not found: {transcript_path}")
         except Exception as e:
@@ -321,7 +376,7 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments, auth_t
     _shutdown_services_callback = shutdown_services
 
     # --- Pipeline Construction with FlowManager ---
-    
+
     # Create the FlowManager. This will replace the LLMContextAggregatorPair.
     flow_manager = FlowManager(llm=llm)
 
@@ -338,10 +393,12 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments, auth_t
     ]
     if simli_ai:
         pipeline_components.append(simli_ai)
-    pipeline_components.extend([
-        transport.output(),
-        transcript.assistant(),
-    ])
+    pipeline_components.extend(
+        [
+            transport.output(),
+            transcript.assistant(),
+        ]
+    )
 
     pipeline = Pipeline(pipeline_components)
 
@@ -370,7 +427,7 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments, auth_t
 
     @transcript.event_handler("on_transcript_update")
     async def handle_transcript_update(processor, frame):
-        #... (transcript update logic is unchanged)
+        # ... (transcript update logic is unchanged)
         nonlocal transcript_initialized
         if not frame.messages:
             return
@@ -411,6 +468,7 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments, auth_t
 # The code for starting the bot from the CLI or Pipecat Cloud remains the same.
 # ----------------------------------------------------------------------------
 
+
 async def bot(runner_args: RunnerArguments, auth_token: Optional[str] = None):
     """Main bot entry point compatible with Pipecat Cloud."""
     transport = await create_transport(runner_args, transport_params)
@@ -420,6 +478,7 @@ async def bot(runner_args: RunnerArguments, auth_token: Optional[str] = None):
 async def main():
     """CLI entry point for testing the simlibot"""
     import sys
+
     if len(sys.argv) < 2:
         print("Usage: python -m interview.bots.simlibot <auth_token>")
         sys.exit(1)
@@ -436,8 +495,10 @@ async def main():
 
 if __name__ == "__main__":
     import sys
-    if len(sys.argv) >= 2 and not sys.argv[1].startswith('--'):
+
+    if len(sys.argv) >= 2 and not sys.argv[1].startswith("--"):
         asyncio.run(main())
     else:
         from pipecat.runner.run import main
+
         main()

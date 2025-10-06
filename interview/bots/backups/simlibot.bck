@@ -42,9 +42,7 @@ from pipecat.adapters.schemas.tools_schema import ToolsSchema
 from pipecat.adapters.schemas.function_schema import FunctionSchema
 from pipecat.processors.transcript_processor import TranscriptProcessor
 
-# Inline Supabase services to avoid import issues
-import httpx
-from typing import Optional, Dict, Any, List
+
 
 # Import Supabase client from context service
 from ..context_service.client import SupabaseClient, get_supabase_client

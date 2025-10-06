@@ -7,6 +7,7 @@ Demonstrates how to use the integrated interview system
 import asyncio
 from interview import InterviewBot, InterviewConfig
 
+
 async def main():
     """Example usage of the interview container"""
 
@@ -22,16 +23,13 @@ async def main():
     bot = InterviewBot()
 
     # Example candidate data
-    candidate_data = {
-        'first_name': 'John',
-        'last_name': 'Doe'
-    }
+    candidate_data = {"first_name": "John", "last_name": "Doe"}
 
     # Example questions
     questions = [
         "Tell me about yourself",
         "What are your strengths?",
-        "Why do you want this position?"
+        "Why do you want this position?",
     ]
 
     try:
@@ -44,7 +42,7 @@ async def main():
         responses = [
             "I'm a software engineer with 5 years experience",
             "My strengths are problem-solving and teamwork",
-            "I want this position because I'm passionate about AI"
+            "I want this position because I'm passionate about AI",
         ]
 
         # Process each response
@@ -65,6 +63,7 @@ async def main():
     finally:
         # Clean up
         await bot.close()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

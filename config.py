@@ -2,12 +2,14 @@
 Configuration settings for the Minimalagent project.
 Centralizes environment variables and provides typed configuration.
 """
+
 import os
 from typing import Optional
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv(override=True)
+
 
 class Config:
     """Application configuration"""
@@ -40,12 +42,15 @@ class Config:
             "ELEVENLABS_VOICE_ID",
             "GOOGLE_API_KEY",
             "SIMLI_API_KEY",
-            "SIMLI_FACE_ID"
+            "SIMLI_FACE_ID",
         ]
 
         missing = [var for var in required_vars if not getattr(self, var)]
         if missing:
-            raise ValueError(f"Missing required environment variables: {', '.join(missing)}")
+            raise ValueError(
+                f"Missing required environment variables: {', '.join(missing)}"
+            )
+
 
 # Global config instance
 config = Config()

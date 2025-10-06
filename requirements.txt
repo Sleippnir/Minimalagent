@@ -52,9 +52,8 @@ textblob>=0.17.1
 pipecat-ai>=0.0.85
 
 # Google AI y Cloud Services
-google-generativeai>=0.8.0
-google-cloud-speech>=2.33.0
-google-cloud-texttospeech>=2.30.0
+# Google AI y Cloud Services
+google-genai>=1.0.0
 
 # Logging with better formatting and features
 loguru>=0.7.0
@@ -72,3 +71,4 @@ pipecat-ai[deepgram]
 pipecat_ai_small_webrtc_prebuilt
 openai-whisper
 pipecat-ai[whisper]
+pipecat-ai[daily]

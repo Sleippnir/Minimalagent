@@ -20,7 +20,9 @@ from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.runner import PipelineRunner
 from pipecat.pipeline.task import PipelineParams, PipelineTask
 from pipecat.processors.aggregators.llm_context import LLMContext
-from pipecat.processors.aggregators.llm_response_universal import LLMContextAggregatorPair
+from pipecat.processors.aggregators.llm_response_universal import (
+    LLMContextAggregatorPair,
+)
 from pipecat.runner.types import RunnerArguments
 from pipecat.runner.utils import create_transport
 from pipecat.services.cartesia.tts import CartesiaTTSService
@@ -32,6 +34,7 @@ from pipecat.transports.base_transport import BaseTransport, TransportParams
 # Try to import Daily transport, fallback to WebRTC only if not available
 try:
     from pipecat.transports.daily.transport import DailyParams
+
     DAILY_AVAILABLE = True
 except ImportError:
     DAILY_AVAILABLE = False
@@ -46,30 +49,28 @@ from pipecat.services.whisper.stt import WhisperSTTService
 
 
 # Import Supabase client from context service
-from..context_service.client import SupabaseClient, get_supabase_client
-from..context_service.services import QueueService, TranscriptService
-from..context_service.models import InterviewContext
+from ..context_service.client import SupabaseClient, get_supabase_client
+from ..context_service.services import QueueService, TranscriptService
+from ..context_service.models import InterviewContext
 
 # Import interview tools
-from..tools import (
+from ..tools import (
     clean_context_and_summarize,
     end_conversation,
     get_interview_tools_schema,
-    set_context_aggregator
+    set_context_aggregator,
 )
-
 
 
 # Singleton instance
 _client = None
 
 
-
 load_dotenv(override=True)
 
 TRANSCRIPT_BASE_DIR = Path("storage")
 # Hardcoded auth token for testing
-TEST_AUTH_TOKEN = "2725a668-dc3a-4c84-94bb-9a4199c849bb"
+TEST_AUTH_TOKEN = "cac3c4ec-0542-4c3c-b6c1-3e3636fbb89a"
 _shutdown_services_callback = None
 
 # We store functions so objects (e.g. SileroVADAnalyzer) don't get
@@ -111,23 +112,35 @@ if DAILY_AVAILABLE:
 
 # For API-launched bots, force WebRTC transport
 if os.getenv("TRANSPORT") == "webrtc":
-    transport_params = {
-        "webrtc": transport_params["webrtc"]
-    }
+    transport_params = {"webrtc": transport_params["webrtc"]}
 
 
-async def run_bot(transport: BaseTransport, runner_args: RunnerArguments, auth_token: Optional[str] = None):
+async def run_bot(
+    transport: BaseTransport,
+    runner_args: RunnerArguments,
+    auth_token: Optional[str] = None,
+):
     logger.info(f"Starting bot with context management")
 
     # Use provided auth_token or extract from environment variable (for API-launched bots) or room URL
     if auth_token is None:
-        auth_token = os.getenv("AUTH_TOKEN") or (getattr(transport, 'room_url', '').split('/')[-1] if hasattr(transport, 'room_url') else None) or TEST_AUTH_TOKEN
-    
+        auth_token = (
+            os.getenv("AUTH_TOKEN")
+            or (
+                getattr(transport, "room_url", "").split("/")[-1]
+                if hasattr(transport, "room_url")
+                else None
+            )
+            or TEST_AUTH_TOKEN
+        )
+
     logger.info(f"Using auth_token: {auth_token}")
 
     # Retrieve interview context from Supabase using auth_token
     queue_service = QueueService()
-    interviewer_record = await queue_service.get_interview_context_from_queue(auth_token)
+    interviewer_record = await queue_service.get_interview_context_from_queue(
+        auth_token
+    )
 
     if not interviewer_record:
         logger.error("Failed to retrieve interviewer record from queue")
@@ -137,22 +150,25 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments, auth_t
     # Create InterviewContext from the record
     interview_context = InterviewContext.from_supabase_record(interviewer_record)
 
-    logger.info(f"Retrieved interview context for {interview_context.candidate_name} applying for {interview_context.job_title} (ID: {interview_context.interview_id})")
+    logger.info(
+        f"Retrieved interview context for {interview_context.candidate_name} applying for {interview_context.job_title} (ID: {interview_context.interview_id})"
+    )
 
     stt = DeepgramSTTService(
         api_key=os.getenv("DEEPGRAM_API_KEY"),
-        live_options=LiveOptions(model="nova-3",),
+        live_options=LiveOptions(
+            model="nova-3",
+        ),
     )
-
 
     tts = ElevenLabsTTSService(
         api_key=os.getenv("ELEVENLABS_API_KEY", ""),
         voice_id=os.getenv("ELEVENLABS_VOICE_ID", ""),
     )
 
-    
     simli_ai = SimliVideoService(
-        SimliConfig(os.getenv("SIMLI_API_KEY"), os.getenv("SIMLI_FACE_ID")),
+        SimliConfig(os.getenv("SIMLI_API_KEY"), 
+                    os.getenv("SIMLI_FACE_ID")),
     )
     # simli_ai = None  # Placeholder for now
 
@@ -192,9 +208,11 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments, auth_t
     set_context_aggregator(context_aggregator)
 
     transcript = TranscriptProcessor()
-    session_timestamp = datetime.now(datetime.UTC)
+    session_timestamp = datetime.now()
     session_transcript_dir = TRANSCRIPT_BASE_DIR
-    transcript_path = session_transcript_dir / f"interview-{interview_context.interview_id}.md"
+    transcript_path = (
+        session_transcript_dir / f"interview-{interview_context.interview_id}.md"
+    )
     transcript_initialized = False
     services_shutdown = False
 
@@ -216,7 +234,7 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments, auth_t
         transcript_service = TranscriptService()
 
         try:
-            with open(transcript_path, 'r', encoding='utf-8') as f:
+            with open(transcript_path, "r", encoding="utf-8") as f:
                 full_text = f.read()
 
             # Create transcript_json with interview metadata
@@ -226,19 +244,23 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments, auth_t
                 "job_title": interview_context.job_title,
                 "questions_asked": len(interview_context.questions),
                 "transcript_length": len(full_text),
-                "session_timestamp": session_timestamp.isoformat()
+                "session_timestamp": session_timestamp.isoformat(),
             }
 
             success = await transcript_service.write_transcript(
                 interview_id=interview_context.interview_id,
                 full_text=full_text,
-                transcript_json=transcript_json
+                transcript_json=transcript_json,
             )
 
             if success:
-                logger.info(f"Transcript saved to Supabase for interview {interview_context.interview_id}")
+                logger.info(
+                    f"Transcript saved to Supabase for interview {interview_context.interview_id}"
+                )
             else:
-                logger.error(f"Failed to save transcript to Supabase for interview {interview_context.interview_id}")
+                logger.error(
+                    f"Failed to save transcript to Supabase for interview {interview_context.interview_id}"
+                )
 
         except FileNotFoundError:
             logger.error(f"Transcript file not found: {transcript_path}")
@@ -257,16 +279,18 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments, auth_t
         llm,
         tts,
     ]
-    
+
     # Add video service if available
     if simli_ai:
         pipeline_components.append(simli_ai)
-    
-    pipeline_components.extend([
-        transport.output(),
-        transcript.assistant(),
-        context_aggregator.assistant(),
-    ])
+
+    pipeline_components.extend(
+        [
+            transport.output(),
+            transcript.assistant(),
+            context_aggregator.assistant(),
+        ]
+    )
 
     pipeline = Pipeline(pipeline_components)
 
@@ -312,15 +336,14 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments, auth_t
         lines = []
         for message in frame.messages:
             role = message.role.capitalize()
-            timestamp = message.timestamp or datetime.now(datetime.UTC).isoformat()
+            timestamp = message.timestamp or datetime.now().isoformat()
             content = message.content.strip().replace("\n", "  \n")
             lines.append(f"- **{timestamp} – {role}:** {content}")
         with transcript_path.open("a", encoding="utf-8") as md_file:
             md_file.write("\n".join(lines) + "\n")
 
-
     runner = PipelineRunner(handle_sigint=runner_args.handle_sigint)
-    
+
     try:
         await runner.run(task)
     finally:
@@ -349,13 +372,13 @@ async def main():
     try:
         # For CLI testing, set transport to webrtc
         os.environ = "webrtc"
-        
+
         # Create proper RunnerArguments for CLI testing
         runner_args = RunnerArguments()
-        
+
         # Create transport directly for CLI testing
         transport = await create_transport(runner_args, transport_params)
-        
+
         # Run the bot with the transport
         await run_bot(transport, runner_args, auth_token)
 
@@ -368,9 +391,10 @@ if __name__ == "__main__":
     import sys
 
     # Check if running with auth_token argument (CLI mode)
-    if len(sys.argv) >= 2 and not sys.argv[1].startswith('--'):
+    if len(sys.argv) >= 2 and not sys.argv[1].startswith("--"):
         asyncio.run(main())
     else:
         # Pipecat Cloud mode
         from pipecat.runner.run import main
+
         main()

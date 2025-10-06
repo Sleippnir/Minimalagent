@@ -32,7 +32,9 @@ class ContextService:
         """Get next available evaluation task"""
         return await self.queue_service.get_next_evaluation_task()
 
-    async def save_transcript(self, interview_id: str, transcript_data: Dict[str, Any]) -> bool:
+    async def save_transcript(
+        self, interview_id: str, transcript_data: Dict[str, Any]
+    ) -> bool:
         """Save interview transcript"""
         try:
             await self.interview_repo.save_transcript(interview_id, transcript_data)
@@ -50,17 +52,17 @@ class ContextService:
             print(f"Error saving evaluation: {e}")
             return False
 
-    def create_interview(self, candidate_data: Dict[str, Any], questions: List[str]) -> Interview:
+    def create_interview(
+        self, candidate_data: Dict[str, Any], questions: List[str]
+    ) -> Interview:
         """Create a new interview instance"""
         candidate = Candidate(
-            first_name=candidate_data.get('first_name', 'Unknown'),
-            last_name=candidate_data.get('last_name', 'Unknown')
+            first_name=candidate_data.get("first_name", "Unknown"),
+            last_name=candidate_data.get("last_name", "Unknown"),
         )
 
         return Interview(
-            candidate=candidate,
-            questions=questions,
-            start_time=datetime.now()
+            candidate=candidate, questions=questions, start_time=datetime.now()
         )
 
     def evaluate_response(self, question: str, response: str) -> Dict[str, Any]:

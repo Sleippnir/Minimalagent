@@ -7,6 +7,7 @@ import re
 import json
 from collections import defaultdict
 
+
 class AutomatedTagger:
     """Automated tagging system for questions and jobs."""
 
@@ -14,59 +15,412 @@ class AutomatedTagger:
         # Unified tag taxonomy - standardized tags used by both questions and jobs
         self.unified_tags = {
             # Technical Skills - expanded with more comprehensive keywords
-            'algorithms': ['algorithm', 'algorithms', 'data structures', 'complexity', 'optimization', 'sorting', 'searching', 'graph', 'tree', 'dynamic programming'],
-            'api-development': ['api', 'rest', 'graphql', 'endpoint', 'integration', 'web service', 'microservice', 'restful', 'http'],
-            'authentication-authorization': ['auth', 'authentication', 'authorization', 'security', 'oauth', 'jwt', 'login', 'access control', 'permissions'],
-            'automation': ['automate', 'automation', 'scripting', 'workflow', 'ci/cd', 'pipeline', 'deployment automation'],
-            'backend-development': ['backend', 'server', 'server-side', 'api development', 'server logic', 'business logic'],
-            'cloud-infrastructure': ['cloud', 'aws', 'azure', 'gcp', 'infrastructure', 'cloud computing', 'iaas', 'paas'],
-            'containerization': ['docker', 'kubernetes', 'container', 'orchestration', 'pod', 'cluster', 'helm'],
-            'database-management': ['database', 'sql', 'nosql', 'query', 'data modeling', 'schema', 'indexing', 'mongodb', 'postgresql', 'mysql'],
-            'deployment': ['deploy', 'deployment', 'release', 'ci/cd', 'pipeline', 'continuous integration', 'continuous deployment'],
-            'devops': ['devops', 'infrastructure', 'automation', 'monitoring', 'site reliability', 'sre', 'configuration management'],
-            'distributed-systems': ['distributed', 'scalability', 'concurrency', 'microservices', 'load balancing', 'sharding', 'consistency'],
-            'frontend-development': ['frontend', 'client-side', 'ui', 'ux', 'javascript', 'react', 'vue', 'angular', 'typescript', 'html', 'css'],
-            'infrastructure': ['infrastructure', 'servers', 'networking', 'system administration', 'monitoring', 'logging', 'alerting'],
-            'machine-learning': ['machine learning', 'ml', 'ai', 'data science', 'neural network', 'tensorflow', 'pytorch', 'scikit-learn'],
-            'mobile-development': ['mobile', 'ios', 'android', 'react native', 'flutter', 'swift', 'kotlin', 'mobile app'],
-            'performance': ['performance', 'optimization', 'scalability', 'efficiency', 'benchmarking', 'profiling', 'bottleneck'],
-            'problem-solving': ['problem solving', 'analytical', 'logic', 'debugging', 'troubleshooting', 'root cause'],
-            'programming-languages': ['python', 'javascript', 'java', 'c++', 'go', 'rust', 'typescript', 'ruby', 'php', 'c#'],
-            'quality-assurance': ['qa', 'testing', 'quality', 'automation testing', 'test case', 'regression', 'unit test', 'integration test'],
-            'scalability': ['scalability', 'performance', 'load balancing', 'high availability', 'horizontal scaling', 'vertical scaling'],
-            'security': ['security', 'encryption', 'vulnerability', 'penetration testing', 'owasp', 'ssl', 'firewall', 'authentication'],
-            'software-engineering': ['software engineering', 'development', 'coding', 'programming', 'software development', 'engineering'],
-            'system-architecture': ['architecture', 'design patterns', 'system design', 'software architecture', 'technical architecture'],
-            'technical-architecture': ['architecture', 'design', 'system design', 'technical leadership', 'solution architecture'],
-            'user-interface': ['ui', 'user interface', 'interface design', 'user experience', 'ux', 'usability', 'responsive design', 'frontend ui'],
-            'web-development': ['web', 'html', 'css', 'browser', 'responsive', 'web application', 'single page application'],
-
+            "algorithms": [
+                "algorithm",
+                "algorithms",
+                "data structures",
+                "complexity",
+                "optimization",
+                "sorting",
+                "searching",
+                "graph",
+                "tree",
+                "dynamic programming",
+            ],
+            "api-development": [
+                "api",
+                "rest",
+                "graphql",
+                "endpoint",
+                "integration",
+                "web service",
+                "microservice",
+                "restful",
+                "http",
+            ],
+            "authentication-authorization": [
+                "auth",
+                "authentication",
+                "authorization",
+                "security",
+                "oauth",
+                "jwt",
+                "login",
+                "access control",
+                "permissions",
+            ],
+            "automation": [
+                "automate",
+                "automation",
+                "scripting",
+                "workflow",
+                "ci/cd",
+                "pipeline",
+                "deployment automation",
+            ],
+            "backend-development": [
+                "backend",
+                "server",
+                "server-side",
+                "api development",
+                "server logic",
+                "business logic",
+            ],
+            "cloud-infrastructure": [
+                "cloud",
+                "aws",
+                "azure",
+                "gcp",
+                "infrastructure",
+                "cloud computing",
+                "iaas",
+                "paas",
+            ],
+            "containerization": [
+                "docker",
+                "kubernetes",
+                "container",
+                "orchestration",
+                "pod",
+                "cluster",
+                "helm",
+            ],
+            "database-management": [
+                "database",
+                "sql",
+                "nosql",
+                "query",
+                "data modeling",
+                "schema",
+                "indexing",
+                "mongodb",
+                "postgresql",
+                "mysql",
+            ],
+            "deployment": [
+                "deploy",
+                "deployment",
+                "release",
+                "ci/cd",
+                "pipeline",
+                "continuous integration",
+                "continuous deployment",
+            ],
+            "devops": [
+                "devops",
+                "infrastructure",
+                "automation",
+                "monitoring",
+                "site reliability",
+                "sre",
+                "configuration management",
+            ],
+            "distributed-systems": [
+                "distributed",
+                "scalability",
+                "concurrency",
+                "microservices",
+                "load balancing",
+                "sharding",
+                "consistency",
+            ],
+            "frontend-development": [
+                "frontend",
+                "client-side",
+                "ui",
+                "ux",
+                "javascript",
+                "react",
+                "vue",
+                "angular",
+                "typescript",
+                "html",
+                "css",
+            ],
+            "infrastructure": [
+                "infrastructure",
+                "servers",
+                "networking",
+                "system administration",
+                "monitoring",
+                "logging",
+                "alerting",
+            ],
+            "machine-learning": [
+                "machine learning",
+                "ml",
+                "ai",
+                "data science",
+                "neural network",
+                "tensorflow",
+                "pytorch",
+                "scikit-learn",
+            ],
+            "mobile-development": [
+                "mobile",
+                "ios",
+                "android",
+                "react native",
+                "flutter",
+                "swift",
+                "kotlin",
+                "mobile app",
+            ],
+            "performance": [
+                "performance",
+                "optimization",
+                "scalability",
+                "efficiency",
+                "benchmarking",
+                "profiling",
+                "bottleneck",
+            ],
+            "problem-solving": [
+                "problem solving",
+                "analytical",
+                "logic",
+                "debugging",
+                "troubleshooting",
+                "root cause",
+            ],
+            "programming-languages": [
+                "python",
+                "javascript",
+                "java",
+                "c++",
+                "go",
+                "rust",
+                "typescript",
+                "ruby",
+                "php",
+                "c#",
+            ],
+            "quality-assurance": [
+                "qa",
+                "testing",
+                "quality",
+                "automation testing",
+                "test case",
+                "regression",
+                "unit test",
+                "integration test",
+            ],
+            "scalability": [
+                "scalability",
+                "performance",
+                "load balancing",
+                "high availability",
+                "horizontal scaling",
+                "vertical scaling",
+            ],
+            "security": [
+                "security",
+                "encryption",
+                "vulnerability",
+                "penetration testing",
+                "owasp",
+                "ssl",
+                "firewall",
+                "authentication",
+            ],
+            "software-engineering": [
+                "software engineering",
+                "development",
+                "coding",
+                "programming",
+                "software development",
+                "engineering",
+            ],
+            "system-architecture": [
+                "architecture",
+                "design patterns",
+                "system design",
+                "software architecture",
+                "technical architecture",
+            ],
+            "technical-architecture": [
+                "architecture",
+                "design",
+                "system design",
+                "technical leadership",
+                "solution architecture",
+            ],
+            "user-interface": [
+                "ui",
+                "user interface",
+                "interface design",
+                "user experience",
+                "ux",
+                "usability",
+                "responsive design",
+                "frontend ui",
+            ],
+            "web-development": [
+                "web",
+                "html",
+                "css",
+                "browser",
+                "responsive",
+                "web application",
+                "single page application",
+            ],
             # Soft Skills & Behavioral - expanded
-            'analytical-thinking': ['analytical', 'analysis', 'critical thinking', 'logic', 'reasoning', 'problem analysis'],
-            'career-development': ['career', 'growth', 'development', 'learning', 'professional development', 'skill development'],
-            'communication': ['communication', 'presentation', 'collaboration', 'stakeholder', 'verbal', 'written', 'meeting'],
-            'conflict-resolution': ['conflict', 'resolution', 'negotiation', 'difficult situations', 'disagreement', 'mediation'],
-            'creative-problem-solving': ['creative', 'innovation', 'problem solving', 'thinking outside box', 'creative solution'],
-            'cultural-fit': ['culture', 'values', 'team dynamics', 'work environment', 'company culture', 'team fit'],
-            'decision-making': ['decision', 'judgment', 'prioritization', 'trade-offs', 'decision process', 'choice'],
-            'leadership': ['leadership', 'mentoring', 'team management', 'guidance', 'leading', 'coaching'],
-            'project-management': ['project management', 'planning', 'organization', 'deadlines', 'milestone', 'timeline'],
-            'team-management': ['team', 'collaboration', 'management', 'leadership', 'teamwork', 'group work'],
-            'time-management': ['time management', 'prioritization', 'efficiency', 'deadlines', 'time constraint', 'scheduling'],
-            'work-ethic': ['work ethic', 'reliability', 'commitment', 'responsibility', 'dedication', 'professionalism']
+            "analytical-thinking": [
+                "analytical",
+                "analysis",
+                "critical thinking",
+                "logic",
+                "reasoning",
+                "problem analysis",
+            ],
+            "career-development": [
+                "career",
+                "growth",
+                "development",
+                "learning",
+                "professional development",
+                "skill development",
+            ],
+            "communication": [
+                "communication",
+                "presentation",
+                "collaboration",
+                "stakeholder",
+                "verbal",
+                "written",
+                "meeting",
+            ],
+            "conflict-resolution": [
+                "conflict",
+                "resolution",
+                "negotiation",
+                "difficult situations",
+                "disagreement",
+                "mediation",
+            ],
+            "creative-problem-solving": [
+                "creative",
+                "innovation",
+                "problem solving",
+                "thinking outside box",
+                "creative solution",
+            ],
+            "cultural-fit": [
+                "culture",
+                "values",
+                "team dynamics",
+                "work environment",
+                "company culture",
+                "team fit",
+            ],
+            "decision-making": [
+                "decision",
+                "judgment",
+                "prioritization",
+                "trade-offs",
+                "decision process",
+                "choice",
+            ],
+            "leadership": [
+                "leadership",
+                "mentoring",
+                "team management",
+                "guidance",
+                "leading",
+                "coaching",
+            ],
+            "project-management": [
+                "project management",
+                "planning",
+                "organization",
+                "deadlines",
+                "milestone",
+                "timeline",
+            ],
+            "team-management": [
+                "team",
+                "collaboration",
+                "management",
+                "leadership",
+                "teamwork",
+                "group work",
+            ],
+            "time-management": [
+                "time management",
+                "prioritization",
+                "efficiency",
+                "deadlines",
+                "time constraint",
+                "scheduling",
+            ],
+            "work-ethic": [
+                "work ethic",
+                "reliability",
+                "commitment",
+                "responsibility",
+                "dedication",
+                "professionalism",
+            ],
         }
 
         # Category-specific tag priorities
         self.category_priorities = {
-            'Behavioral': ['communication', 'leadership', 'team-management', 'conflict-resolution', 'decision-making'],
-            'Cultural Fit': ['cultural-fit', 'communication', 'team-management', 'work-ethic'],
-            'General SE': ['software-engineering', 'algorithms', 'system-architecture', 'problem-solving'],
-            'DevOps': ['devops', 'automation', 'deployment', 'cloud-infrastructure', 'infrastructure'],
-            'Frontend': ['frontend-development', 'user-interface', 'web-development', 'javascript'],
-            'Backend': ['backend-development', 'api-development', 'database-management', 'scalability'],
-            'System Design': ['system-architecture', 'scalability', 'distributed-systems', 'performance'],
-            'Problem Solving': ['problem-solving', 'analytical-thinking', 'algorithms', 'decision-making'],
-            'Situational': ['decision-making', 'communication', 'leadership', 'conflict-resolution']
+            "Behavioral": [
+                "communication",
+                "leadership",
+                "team-management",
+                "conflict-resolution",
+                "decision-making",
+            ],
+            "Cultural Fit": [
+                "cultural-fit",
+                "communication",
+                "team-management",
+                "work-ethic",
+            ],
+            "General SE": [
+                "software-engineering",
+                "algorithms",
+                "system-architecture",
+                "problem-solving",
+            ],
+            "DevOps": [
+                "devops",
+                "automation",
+                "deployment",
+                "cloud-infrastructure",
+                "infrastructure",
+            ],
+            "Frontend": [
+                "frontend-development",
+                "user-interface",
+                "web-development",
+                "javascript",
+            ],
+            "Backend": [
+                "backend-development",
+                "api-development",
+                "database-management",
+                "scalability",
+            ],
+            "System Design": [
+                "system-architecture",
+                "scalability",
+                "distributed-systems",
+                "performance",
+            ],
+            "Problem Solving": [
+                "problem-solving",
+                "analytical-thinking",
+                "algorithms",
+                "decision-making",
+            ],
+            "Situational": [
+                "decision-making",
+                "communication",
+                "leadership",
+                "conflict-resolution",
+            ],
         }
 
         # Build reverse mapping for faster lookup
@@ -94,7 +448,7 @@ class AutomatedTagger:
             for keyword in keywords:
                 keyword_lower = keyword.lower()
                 # Exact word match gets highest score (3 points)
-                if re.search(r'\b' + re.escape(keyword_lower) + r'\b', text_lower):
+                if re.search(r"\b" + re.escape(keyword_lower) + r"\b", text_lower):
                     score += 3
                     matched_keywords.append(keyword)
                 # Partial substring match gets medium score (1 point) - but only for longer keywords to avoid false positives
@@ -103,10 +457,12 @@ class AutomatedTagger:
                     matched_keywords.append(keyword)
 
             if score > 0:
-                tag_scores[tag] = {'score': score, 'keywords': matched_keywords}
+                tag_scores[tag] = {"score": score, "keywords": matched_keywords}
 
         # Sort tags by score (highest first)
-        sorted_tags = sorted(tag_scores.items(), key=lambda x: x[1]['score'], reverse=True)
+        sorted_tags = sorted(
+            tag_scores.items(), key=lambda x: x[1]["score"], reverse=True
+        )
 
         # Apply category-specific prioritization if category provided
         if category and category in self.category_priorities:
@@ -130,23 +486,66 @@ class AutomatedTagger:
         content_lower = text.lower()
 
         # Context indicators for different domains
-        backend_indicators = ['database', 'server', 'api', 'backend', 'schema', 'query', 'sql', 'nosql', 'microservice']
-        frontend_indicators = ['ui', 'user interface', 'frontend', 'client', 'browser', 'responsive', 'css', 'html']
-        devops_indicators = ['infrastructure', 'deployment', 'ci/cd', 'pipeline', 'cloud', 'docker', 'kubernetes']
+        backend_indicators = [
+            "database",
+            "server",
+            "api",
+            "backend",
+            "schema",
+            "query",
+            "sql",
+            "nosql",
+            "microservice",
+        ]
+        frontend_indicators = [
+            "ui",
+            "user interface",
+            "frontend",
+            "client",
+            "browser",
+            "responsive",
+            "css",
+            "html",
+        ]
+        devops_indicators = [
+            "infrastructure",
+            "deployment",
+            "ci/cd",
+            "pipeline",
+            "cloud",
+            "docker",
+            "kubernetes",
+        ]
 
-        is_backend_context = any(indicator in content_lower for indicator in backend_indicators)
-        is_frontend_context = any(indicator in content_lower for indicator in frontend_indicators)
-        is_devops_context = any(indicator in content_lower for indicator in devops_indicators)
+        is_backend_context = any(
+            indicator in content_lower for indicator in backend_indicators
+        )
+        is_frontend_context = any(
+            indicator in content_lower for indicator in frontend_indicators
+        )
+        is_devops_context = any(
+            indicator in content_lower for indicator in devops_indicators
+        )
 
         for tag in tag_list:
             # Skip UI/frontend tags in backend/database contexts
-            if tag == 'user-interface' and is_backend_context and not is_frontend_context:
+            if (
+                tag == "user-interface"
+                and is_backend_context
+                and not is_frontend_context
+            ):
                 continue
             # Skip backend tags in pure frontend contexts (allow some overlap)
-            if tag in ['database-management', 'backend-development'] and is_frontend_context and not is_backend_context:
+            if (
+                tag in ["database-management", "backend-development"]
+                and is_frontend_context
+                and not is_backend_context
+            ):
                 continue
             # Skip infrastructure tags in pure application development contexts
-            if tag == 'infrastructure' and not (is_devops_context or is_backend_context):
+            if tag == "infrastructure" and not (
+                is_devops_context or is_backend_context
+            ):
                 continue
 
             filtered_tags.append(tag)
@@ -155,7 +554,7 @@ class AutomatedTagger:
         min_tags = 3
         if len(filtered_tags) < min_tags and len(tag_list) >= min_tags:
             essential_tags = [tag for tag in tag_list if tag not in filtered_tags]
-            filtered_tags.extend(essential_tags[:min_tags - len(filtered_tags)])
+            filtered_tags.extend(essential_tags[: min_tags - len(filtered_tags)])
 
         tag_list = filtered_tags
 
@@ -165,12 +564,26 @@ class AutomatedTagger:
             fallback_tags = []
 
             # Technical content indicators
-            if any(word in text_lower for word in ['code', 'programming', 'development', 'software', 'system']):
-                fallback_tags.append('software-engineering')
+            if any(
+                word in text_lower
+                for word in ["code", "programming", "development", "software", "system"]
+            ):
+                fallback_tags.append("software-engineering")
 
             # Problem-solving indicators
-            if any(word in text_lower for word in ['design', 'implement', 'solve', 'create', 'build', 'how would', 'approach']):
-                fallback_tags.append('problem-solving')
+            if any(
+                word in text_lower
+                for word in [
+                    "design",
+                    "implement",
+                    "solve",
+                    "create",
+                    "build",
+                    "how would",
+                    "approach",
+                ]
+            ):
+                fallback_tags.append("problem-solving")
 
             # Add fallbacks that aren't already in the list
             for fallback in fallback_tags:
@@ -200,20 +613,28 @@ class AutomatedTagger:
         """Infer job category from title."""
         title_lower = title.lower()
 
-        if any(word in title_lower for word in ['frontend', 'ui', 'ux', 'designer']):
-            return 'Frontend'
-        elif any(word in title_lower for word in ['backend', 'server', 'api']):
-            return 'Backend'
-        elif any(word in title_lower for word in ['devops', 'infrastructure', 'platform', 'site reliability']):
-            return 'DevOps'
-        elif any(word in title_lower for word in ['data', 'machine learning', 'ml', 'ai']):
-            return 'Machine Learning'
-        elif any(word in title_lower for word in ['manager', 'lead', 'principal', 'architect']):
-            return 'System Design'
-        elif any(word in title_lower for word in ['qa', 'quality', 'test']):
-            return 'Quality Assurance'
+        if any(word in title_lower for word in ["frontend", "ui", "ux", "designer"]):
+            return "Frontend"
+        elif any(word in title_lower for word in ["backend", "server", "api"]):
+            return "Backend"
+        elif any(
+            word in title_lower
+            for word in ["devops", "infrastructure", "platform", "site reliability"]
+        ):
+            return "DevOps"
+        elif any(
+            word in title_lower for word in ["data", "machine learning", "ml", "ai"]
+        ):
+            return "Machine Learning"
+        elif any(
+            word in title_lower
+            for word in ["manager", "lead", "principal", "architect"]
+        ):
+            return "System Design"
+        elif any(word in title_lower for word in ["qa", "quality", "test"]):
+            return "Quality Assurance"
         else:
-            return 'General SE'
+            return "General SE"
 
     def get_available_tags(self):
         """Get all available unified tags."""
@@ -223,6 +644,7 @@ class AutomatedTagger:
         """Validate that tags are from the unified taxonomy."""
         available_tags = set(self.unified_tags.keys())
         return [tag for tag in tags if tag in available_tags]
+
 
 def test_automated_tagger():
     """Test the automated tagger with sample content."""
@@ -234,7 +656,10 @@ def test_automated_tagger():
         ("Explain the concept of microservices and their benefits", "System Design"),
         ("Describe a time when you resolved a conflict with a colleague", "Behavioral"),
         ("How would you implement authentication in a React application?", "Frontend"),
-        ("Design a scalable database schema for a social media platform", "System Design")
+        (
+            "Design a scalable database schema for a social media platform",
+            "System Design",
+        ),
     ]
 
     print("🧪 Testing Automated Tagger:")
@@ -249,9 +674,15 @@ def test_automated_tagger():
 
     # Test jobs
     test_jobs = [
-        ("Senior Frontend Engineer", "Build responsive web applications using React and TypeScript"),
+        (
+            "Senior Frontend Engineer",
+            "Build responsive web applications using React and TypeScript",
+        ),
         ("DevOps Engineer", "Manage CI/CD pipelines and cloud infrastructure on AWS"),
-        ("Senior Backend Engineer", "Design and implement scalable APIs and database solutions")
+        (
+            "Senior Backend Engineer",
+            "Design and implement scalable APIs and database solutions",
+        ),
     ]
 
     print("💼 Testing Job Tagging:")
@@ -263,6 +694,7 @@ def test_automated_tagger():
         print(f"Description: {description[:50]}...")
         print(f"Tags: {tags}")
         print()
+
 
 if __name__ == "__main__":
     test_automated_tagger()

@@ -23,6 +23,7 @@ from interview.context_service.client import SupabaseClient, get_supabase_client
 from interview.context_service.services import QueueService
 from interview.context_service import InterviewContext
 
+
 async def test_supabase_connection():
     """Test Supabase connection and data retrieval"""
     print("🔍 Testing Supabase connection...")
@@ -40,13 +41,16 @@ async def test_supabase_connection():
         print(f"❌ Supabase connection failed: {e}")
         return False
 
+
 async def test_interview_context_loading(auth_token: str):
     """Test loading interview context from Supabase"""
     print(f"🔍 Testing interview context loading for token: {auth_token}")
 
     try:
         queue_service = QueueService()
-        interviewer_record = await queue_service.get_interview_context_from_queue(auth_token)
+        interviewer_record = await queue_service.get_interview_context_from_queue(
+            auth_token
+        )
 
         if not interviewer_record:
             print("❌ No interview record found for this token")
@@ -70,6 +74,7 @@ async def test_interview_context_loading(auth_token: str):
         print(f"❌ Interview context loading failed: {e}")
         return False
 
+
 async def test_llm_services():
     """Test LLM service initialization"""
     print("🔍 Testing LLM services...")
@@ -78,14 +83,14 @@ async def test_llm_services():
         from pipecat.services.google.llm import GoogleLLMService
 
         llm = GoogleLLMService(
-            api_key=os.getenv("GOOGLE_API_KEY"),
-            model="gemini-1.5-flash"
+            api_key=os.getenv("GOOGLE_API_KEY"), model="gemini-1.5-flash"
         )
         print("✅ Google LLM service created successfully")
         return True
     except Exception as e:
         print(f"❌ LLM service creation failed: {e}")
         return False
+
 
 async def test_tts_services():
     """Test TTS service initialization"""
@@ -104,6 +109,7 @@ async def test_tts_services():
         print(f"❌ TTS service creation failed: {e}")
         return False
 
+
 async def test_stt_services():
     """Test STT service initialization"""
     print("🔍 Testing STT services...")
@@ -118,6 +124,7 @@ async def test_stt_services():
         print(f"❌ STT service creation failed: {e}")
         return False
 
+
 async def test_tools():
     """Test interview tools"""
     print("🔍 Testing interview tools...")
@@ -126,11 +133,14 @@ async def test_tools():
         from interview.tools import get_interview_tools_schema
 
         tools = get_interview_tools_schema()
-        print(f"✅ Interview tools schema created with {len(tools.standard_tools)} tools")
+        print(
+            f"✅ Interview tools schema created with {len(tools.standard_tools)} tools"
+        )
         return True
     except Exception as e:
         print(f"❌ Tools creation failed: {e}")
         return False
+
 
 async def main():
     """Run all tests"""
@@ -142,7 +152,7 @@ async def main():
         "SUPABASE_ANON_KEY",
         "GOOGLE_API_KEY",
         "ELEVENLABS_API_KEY",
-        "ELEVENLABS_VOICE_ID"
+        "ELEVENLABS_VOICE_ID",
     ]
 
     missing_vars = [var for var in required_env_vars if not os.getenv(var)]
@@ -192,7 +202,9 @@ async def main():
     print(f"   ✅ Passed: {passed}")
     print(f"   ⏭️  Skipped: {skipped}")
     print(f"   ❌ Failed: {total - passed - skipped}")
-    print(f"   📈 Success Rate: {passed}/{total - skipped} ({(passed/(total-skipped)*100):.1f}%)")
+    print(
+        f"   📈 Success Rate: {passed}/{total - skipped} ({(passed / (total - skipped) * 100):.1f}%)"
+    )
 
     if passed == total - skipped:
         print("\n🎉 All tests passed! The simlibot components are working correctly.")
@@ -200,6 +212,7 @@ async def main():
     else:
         print("\n⚠️  Some tests failed. Check the output above for details.")
         return 1
+
 
 if __name__ == "__main__":
     exit_code = asyncio.run(main())

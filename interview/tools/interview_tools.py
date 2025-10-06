@@ -34,18 +34,16 @@ async def clean_context_and_summarize(params: FunctionCallParams):
     summary = params.arguments.get("summary", "")
 
     if not summary:
-        await params.result_callback({
-            "status": "error",
-            "message": "Summary is required"
-        })
+        await params.result_callback(
+            {"status": "error", "message": "Summary is required"}
+        )
         return
 
     # Get current context from the global context aggregator
     if not _context_aggregator:
-        await params.result_callback({
-            "status": "error",
-            "message": "Context aggregator not available"
-        })
+        await params.result_callback(
+            {"status": "error", "message": "Context aggregator not available"}
+        )
         return
 
     # Access the context from the aggregator
@@ -55,7 +53,9 @@ async def clean_context_and_summarize(params: FunctionCallParams):
     logger.info(f"Current context has {len(current_messages)} messages")
 
     # Preserve initial system prompt
-    initial_system_msg = next((msg for msg in current_messages if msg["role"] == "system"), None)
+    initial_system_msg = next(
+        (msg for msg in current_messages if msg["role"] == "system"), None
+    )
 
     # Create new cleaned context
     cleaned_messages = []
@@ -63,29 +63,34 @@ async def clean_context_and_summarize(params: FunctionCallParams):
         cleaned_messages.append(initial_system_msg)
 
     # Add the summary as a system message
-    cleaned_messages.append({
-        "role": "system",
-        "content": f"Interview Progress Summary: {summary}"
-    })
+    cleaned_messages.append(
+        {"role": "system", "content": f"Interview Progress Summary: {summary}"}
+    )
 
     # Reset context to cleaned version
     context.set_messages(cleaned_messages)
 
     messages_removed = len(current_messages) - len(cleaned_messages)
-    logger.info(f"Context cleaned: removed {messages_removed} messages, kept {len(cleaned_messages)} messages")
+    logger.info(
+        f"Context cleaned: removed {messages_removed} messages, kept {len(cleaned_messages)} messages"
+    )
 
-    await params.result_callback({
-        "status": "context_cleaned",
-        "summary": summary,
-        "messages_removed": messages_removed,
-        "remaining_messages": len(cleaned_messages)
-    })
+    await params.result_callback(
+        {
+            "status": "context_cleaned",
+            "summary": summary,
+            "messages_removed": messages_removed,
+            "remaining_messages": len(cleaned_messages),
+        }
+    )
 
 
 async def end_conversation(params: FunctionCallParams):
     """Tool for LLM to end the conversation"""
     await params.llm.push_frame(
-        TTSSpeakFrame("Okay, thank you for joining us today. I'll be ending the session now."),
+        TTSSpeakFrame(
+            "Okay, thank you for joining us today. I'll be ending the session now."
+        ),
         FrameDirection.DOWNSTREAM,
     )
     await params.llm.push_frame(EndTaskFrame(), FrameDirection.UPSTREAM)
@@ -98,17 +103,17 @@ clean_context_schema = FunctionSchema(
     properties={
         "summary": {
             "type": "string",
-            "description": "A concise summary of the key points from the recently completed Q&A exchange, including the question asked and the candidate's main responses. Focus on important insights, skills demonstrated, or red flags identified."
+            "description": "A concise summary of the key points from the recently completed Q&A exchange, including the question asked and the candidate's main responses. Focus on important insights, skills demonstrated, or red flags identified.",
         }
     },
-    required=["summary"]
+    required=["summary"],
 )
 
 end_fn_schema = FunctionSchema(
     name="end_conversation",
     description="End the current session and say goodbye",
     properties={},
-    required=[]
+    required=[],
 )
 
 

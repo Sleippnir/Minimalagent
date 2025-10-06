@@ -11,9 +11,9 @@ from ..context_service import InterviewContext
 
 # Import Gemini LLM
 try:
-    import google.generativeai as genai
+    from google import genai
 except ImportError:
-    logger.warning("google-generativeai not installed, LLM features will be disabled")
+    logger.warning("google-genai not installed, LLM features will be disabled")
     genai = None
 
 load_dotenv(override=True)
@@ -25,7 +25,7 @@ class BasicChatbot:
     def __init__(self, auth_token: str):
         self.auth_token = auth_token
         self.interview_context: Optional[InterviewContext] = None
-        self.llm_model = None
+        self.llm_client = None
         self.conversation_history = []
 
         # Initialize Gemini if available
@@ -33,25 +33,28 @@ class BasicChatbot:
             try:
                 api_key = os.getenv("GOOGLE_API_KEY")
                 if api_key:
-                    genai.configure(api_key=api_key)
-                    self.llm_model = genai.GenerativeModel('gemini-2.0-flash-exp')
+                    self.llm_client = genai.Client(api_key=api_key)
                 else:
                     logger.warning("GOOGLE_API_KEY not found")
             except Exception as e:
                 logger.error(f"Failed to initialize Gemini: {e}")
         else:
-            logger.warning("google-generativeai not available")
+            logger.warning("google-genai not available")
 
     async def initialize_context(self) -> bool:
         """Retrieve interview context from Supabase"""
         try:
             queue_service = QueueService()
-            interviewer_record = await queue_service.get_interview_context_from_queue(self.auth_token)
+            interviewer_record = await queue_service.get_interview_context_from_queue(
+                self.auth_token
+            )
 
-            if not interviewer_record or not interviewer_record.get('payload'):
+            if not interviewer_record or not interviewer_record.get("payload"):
                 return False
 
-            self.interview_context = InterviewContext.from_supabase_record(interviewer_record)
+            self.interview_context = InterviewContext.from_supabase_record(
+                interviewer_record
+            )
             return True
 
         except Exception:
@@ -62,7 +65,7 @@ class BasicChatbot:
         if not self.interview_context:
             return "Context not initialized. Please call initialize_context() first."
 
-        if not self.llm_model:
+        if not self.llm_client:
             return f"I understand you're interviewing {self.interview_context.candidate_name} for the {self.interview_context.job_title} position. You said: {message}"
 
         try:
@@ -70,27 +73,40 @@ class BasicChatbot:
             if not self.conversation_history:
                 formatted_context = self.interview_context.format_full_context()
                 self.conversation_history = [
-                    {"role": "user", "parts": [{"text": f"START_INTERVIEW\n\n{formatted_context}"}]},
+                    {
+                        "role": "user",
+                        "parts": [{"text": f"START_INTERVIEW\n\n{formatted_context}"}],
+                    },
                 ]
 
                 # Get initial response from LLM
-                response = self.llm_model.generate_content(self.conversation_history)
+                response = await self.llm_client.aio.models.generate_content(
+                    model="gemini-2.0-flash-exp", contents=self.conversation_history
+                )
                 initial_response = response.text
 
                 # Add to history
-                self.conversation_history.append({"role": "model", "parts": [{"text": initial_response}]})
+                self.conversation_history.append(
+                    {"role": "model", "parts": [{"text": initial_response}]}
+                )
 
                 return initial_response
 
             # Add user message to history
-            self.conversation_history.append({"role": "user", "parts": [{"text": message}]})
+            self.conversation_history.append(
+                {"role": "user", "parts": [{"text": message}]}
+            )
 
             # Generate response
-            response = self.llm_model.generate_content(self.conversation_history)
+            response = await self.llm_client.aio.models.generate_content(
+                model="gemini-2.0-flash-exp", contents=self.conversation_history
+            )
             bot_response = response.text
 
             # Add bot response to history
-            self.conversation_history.append({"role": "model", "parts": [{"text": bot_response}]})
+            self.conversation_history.append(
+                {"role": "model", "parts": [{"text": bot_response}]}
+            )
 
             return bot_response
 
@@ -128,7 +144,7 @@ async def main():
                 message = input("You: ").strip()
                 if not message:
                     continue
-                if message.lower() in ['quit', 'exit', 'q']:
+                if message.lower() in ["quit", "exit", "q"]:
                     print("Goodbye!")
                     break
                 response = await bot.chat(message)
