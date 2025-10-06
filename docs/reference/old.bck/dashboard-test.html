@@ -376,10 +376,14 @@
 
     <script type="module">
         // --- Supabase Setup ---
-        const SUPABASE_URL = 'YOUR_SUPABASE_URL'; 
-        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
-        if (SUPABASE_URL === 'YOUR_SUPABASE_URL') {
-            document.body.innerHTML = `<div class="h-screen w-screen flex items-center justify-center text-center p-8" style="background-color: #500; color: white;"><div class="bg-red-700 p-8 rounded-lg border border-red-500"><h1 class="text-2xl font-bold mb-4">Configuration Error</h1><p>Please update Supabase credentials in the script tag.</p></div></div>`;
+        // IMPORTANT: These values should be loaded from a secure configuration or environment variables, not hardcoded.
+        // For this example, you might create a local config.js file (and add it to .gitignore)
+        // e.g., window.SUPABASE_CONFIG = { URL: '...', ANON_KEY: '...' };
+        const SUPABASE_URL = window.SUPABASE_CONFIG?.URL; 
+        const SUPABASE_ANON_KEY = window.SUPABASE_CONFIG?.ANON_KEY;
+
+        if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+            document.body.innerHTML = `<div class="h-screen w-screen flex items-center justify-center text-center p-8" style="background-color: #500; color: white;"><div class="bg-red-700 p-8 rounded-lg border border-red-500"><h1 class="text-2xl font-bold mb-4">Configuration Error</h1><p>Supabase credentials are not configured. Please provide them via a config file or environment variables.</p></div></div>`;
             throw new Error("Supabase credentials are not configured.");
         }
         const { createClient } = supabase;

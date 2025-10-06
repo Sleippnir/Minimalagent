@@ -255,8 +255,8 @@
 
     <script type="module">
         // --- Supabase Setup ---
-        const SUPABASE_URL = 'https://bbnbrwpkvjncdgcaoiyp.supabase.co'; 
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJibmJyd3BrdmpuY2RnY2FvaXlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc0NjUzMTIsImV4cCI6MjA3MzA0MTMxMn0.FQJBdocTIIebUrgbMIWlXiQrWQsKsgOoMfimnSx8Wms';
+        const SUPABASE_URL = process.env.SUPABASE_URL; 
+        const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
         if (SUPABASE_URL === 'YOUR_SUPABASE_URL') {
             document.body.innerHTML = `<div class="h-screen w-screen flex items-center justify-center text-center p-8" style="background-color: #500; color: white;"><div class="bg-red-700 p-8 rounded-lg border border-red-500"><h1 class="text-2xl font-bold mb-4">Configuration Error</h1><p>Please update Supabase credentials in the script tag.</p></div></div>`;
             throw new Error("Supabase credentials are not configured.");

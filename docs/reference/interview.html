@@ -62,12 +62,15 @@
             statusIndicator.style.backgroundColor = color;
         };
 
-        const cleanupAndRedirect = () => {
+        const cleanupAndRedirect = (error) => {
              if (isConnected) {
                 window.location.href = 'outro.html';
             } else {
-                // If connection failed, just reload to the start screen.
-                window.location.reload();
+                // If connection failed, show an error instead of reloading.
+                console.error("Connection failed and could not be established:", error);
+                setStatus("Connection Failed. Please check permissions and refresh.", "#e74c3c");
+                // Optionally, hide video elements and show an error UI
+                interviewScreen.innerHTML = `<div class="auth-state" style="color: white; text-align: center;"><h2>Connection Failed</h2><p>Could not connect to the interview session. Please ensure you have granted camera and microphone permissions and try refreshing the page.</p></div>`;
             }
         };
 
