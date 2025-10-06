@@ -85,6 +85,17 @@ graph TD
    docker-compose up -d
    ```
 
+   This starts all core services:
+   - `api`: FastAPI server on port 8001
+   - `background-evaluator`: Continuous evaluation processing
+   - `frontend`: Nginx serving React app on port 8080
+
+   For maintenance operations:
+
+   ```bash
+   docker-compose --profile maintenance up -d
+   ```
+
 2. **Manual Startup**
 
    ```bash
@@ -96,6 +107,9 @@ graph TD
 
    # Terminal 3: Start background evaluator
    python background_evaluator.py
+
+   # Optional: Start content maintenance (run periodically)
+   python scripts/maintain_content.py
    ```
 
 3. **Access the application**
@@ -296,6 +310,51 @@ Refresh question-job relationships based on tags.
 - **Data Encryption**: All sensitive data encrypted at rest
 - **Access Control**: Role-based permissions (HR, Candidate, Admin)
 
+## ⚙️ Background Processes & Maintenance
+
+### Core Background Services
+
+#### 1. Background Evaluator (`background_evaluator.py`)
+
+- **Purpose**: Processes completed interviews with AI evaluation
+- **Trigger**: Runs continuously, polls `evaluator_queue` every 30 seconds
+- **Function**: Multi-LLM evaluation (OpenAI GPT-4o, Google Gemini, DeepSeek)
+- **Output**: Structured evaluation results stored in database
+
+#### 2. Interview Bot Processes
+
+- **Purpose**: Handle real-time AI-powered interviews
+- **Trigger**: Launched automatically when candidates access interview URLs
+- **Function**: Pipecat-based conversational AI with speech processing
+- **Management**: Monitored via `/admin/bot-processes` endpoint
+
+### Maintenance Scripts (Run Periodically)
+
+#### 3. Content Maintenance (`scripts/maintain_content.py`)
+
+- **Purpose**: Ensures tag consistency between jobs and questions
+- **Frequency**: Run daily or after bulk content updates
+- **Function**: Audits and fixes content relationships using `AutomatedTagger`
+
+#### 4. Content Manager Operations
+
+- **Purpose**: Bulk operations for content consistency
+- **Available Operations**:
+  - Tag validation for new content
+  - Bulk fixing of existing content issues
+  - Relationship optimization between jobs and questions
+  - Comprehensive content auditing
+
+### Recommended Cron Jobs
+
+```bash
+# Daily content maintenance (run at 2 AM)
+0 2 * * * /path/to/minimalagent/scripts/maintain_content.py
+
+# Weekly comprehensive audit (run Sundays at 3 AM)
+0 3 * * 0 /path/to/minimalagent/scripts/content_manager.py audit
+```
+
 ## 📊 Monitoring & Analytics
 
 - **Health Checks**: Automated service monitoring
@@ -308,16 +367,22 @@ Refresh question-job relationships based on tags.
 ### Production Setup
 
 1. **Supabase**: Deploy edge functions and configure database
-2. **Docker**: Build and deploy containers
+2. **Docker Services**: Deploy all containers with proper orchestration
+   - `api`: Main application server
+   - `background-evaluator`: Continuous evaluation processing
+   - `content-maintenance`: Scheduled content maintenance (optional)
+   - `frontend`: Static file serving
 3. **Environment**: Configure production API keys and secrets
 4. **Domain**: Set up custom domain with SSL
 5. **Monitoring**: Configure logging and alerting
 
 ### Scaling Considerations
 
-- **Horizontal Scaling**: Multiple API instances behind load balancer
+- **API Service**: Horizontal scaling with multiple instances behind load balancer
+- **Background Evaluator**: Can run multiple instances for parallel processing
+- **Content Maintenance**: Run on schedule or as needed, not continuously
 - **Database**: Supabase handles scaling automatically
-- **AI Services**: Rate limiting and cost optimization
+- **AI Services**: Rate limiting and cost optimization across all LLM providers
 - **Storage**: CDN for resume files and transcripts
 
 ## 🤝 Contributing

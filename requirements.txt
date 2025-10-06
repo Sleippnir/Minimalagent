@@ -1,74 +1,72 @@
-# Dependencias del Speech Service
-# Framework web asíncrono
+# Minimalagent Requirements
+# Core dependencies for the AI-powered HR interview platform
+
+# ========== ACTIVE DEPENDENCIES ==========
+
+# Web Framework & API
 fastapi>=0.104.1
-
-# Servidor ASGI para producción
 uvicorn[standard]>=0.24.0
-
-# Cliente HTTP asíncrono
-httpx>=0.25.2
-aiohttp>=3.9.1
-
-# Validación de datos
 pydantic>=2.5.0
 
-# Logging estructurado (opcional)
-structlog>=23.2.0
+# HTTP Client
+httpx>=0.25.2
 
-# Supabase client
+# Database & Backend Services
 supabase>=2.6.0
 
-# Variables de entorno
+# Configuration & Environment
 python-dotenv>=1.0.0
 
-# Manejo de archivos asíncronos
-aiofiles>=23.2.1
-
-# Procesamiento de media
-pillow>=10.1.0
-
-# Redis client
-redis>=5.0.1
-
-# PostgreSQL async driver
-asyncpg>=0.29.0
-
-# Dependencias para Q&A Context System
-# Machine learning para procesamiento de texto
-scikit-learn>=1.3.2
-numpy>=1.24.4
-
-# Procesamiento de lenguaje natural
-nltk>=3.8.1
-
-# Utilidades de texto
-fuzzywuzzy>=0.18.0
-python-Levenshtein>=0.23.0
-
-# Análisis de texto adicional
-textblob>=0.17.1
-
-# Pipecat AI framework para conversaciones multimodales
-pipecat-ai>=0.0.85
-
-# Google AI y Cloud Services
-# Google AI y Cloud Services
-google-genai>=1.0.0
-
-# Logging with better formatting and features
+# Logging
 loguru>=0.7.0
 
-# WebRTC implementation for real-time communication
-aiortc>=1.6.0
-#pipecat[daily]
+# AI & Conversation Framework
+pipecat-ai>=0.0.85
 pipecat-ai[silero]
 pipecat-ai[local-smart-turn-v3]
 pipecat-ai[webrtc]
-simli-ai
 pipecat-ai[cartesia]
 pipecat-ai[deepgram]
-#pipecat-ai[daily]
-pipecat_ai_small_webrtc_prebuilt
-openai-whisper
 pipecat-ai[whisper]
 pipecat-ai[daily]
+
+# AI Services
+google-genai>=0.8.0
+simli-ai
+openai-whisper
+
+# ========== LEGACY/UNUSED DEPENDENCIES ==========
+# These packages are not currently used in the codebase but kept for reference
+# They may be needed for future features or were part of earlier development iterations
+
+# # Async HTTP (replaced by httpx)
+# aiohttp>=3.9.1
+
+# # Structured logging (replaced by loguru)
+# structlog>=23.2.0
+
+# # File handling (not currently used)
+# aiofiles>=23.2.1
+
+# # Image processing (not currently used)
+# pillow>=10.1.0
+
+# # Redis client (not currently used)
+# redis>=5.0.1
+
+# # PostgreSQL async driver (using Supabase instead)
+# asyncpg>=0.29.0
+
+# # Machine Learning stack (replaced by rule-based tagging)
+# scikit-learn>=1.3.2
+# numpy>=1.24.4
+# nltk>=3.8.1
+# fuzzywuzzy>=0.18.0
+# python-Levenshtein>=0.23.0
+# textblob>=0.17.1
+
+# # WebRTC (handled by pipecat framework)
+# aiortc>=1.6.0
+
+# # Additional Pipecat components (not currently used)
+# pipecat_ai_small_webrtc_prebuilt
