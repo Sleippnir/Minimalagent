@@ -1,6 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useSupabase } from '../SupabaseContext.jsx'
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts'
+// Extracted reusable chart components - check these before creating new chart components
+import InterviewStatusChart from './charts/InterviewStatusChart.jsx'
+import ModelPerformanceChart from './charts/ModelPerformanceChart.jsx'
+import WeeklyActivityChart from './charts/WeeklyActivityChart.jsx'
+// Extracted reusable UI components - check these before creating new stat/metrics components
+import StatCard from './StatCard.jsx'
+import RecentInterviews from './RecentInterviews.jsx'
+import MetricsSummary from './MetricsSummary.jsx'
 import Spinner from './Spinner.jsx'
 
 const DashboardView = () => {
@@ -14,23 +21,6 @@ const DashboardView = () => {
     weeklyTrends: []
   })
   const [loading, setLoading] = useState(true)
-  // Color mapping for different AI providers
-  const getModelColor = (modelName) => {
-    const model = modelName.toLowerCase()
-    if (model.includes('gpt') || model.includes('openai')) {
-      return '#06b6d4' // Cyan (OpenAI blue)
-    } else if (model.includes('claude') || model.includes('anthropic')) {
-      return '#f97316' // Orange (Anthropic orange)
-    } else if (model.includes('gemini') || model.includes('google') || model.includes('bard')) {
-      return '#10b981' // Green (Google green)
-    } else if (model.includes('deepseek')) {
-      return '#8b5cf6' // Purple (DeepSeek purple)
-    } else if (model.includes('perplexity')) {
-      return '#f59e0b' // Amber (Perplexity amber)
-    } else {
-      return '#6b7280' // Gray (default)
-    }
-  }
 
   useEffect(() => {
     fetchDashboardData()
@@ -318,246 +308,33 @@ const DashboardView = () => {
 
       {stats && (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-          <div className="stat-card p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-cyan-400 rounded-md flex items-center justify-center">
-                  <span className="text-dark-blue text-sm font-medium">T</span>
-                </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-300 truncate">Total Interviews</dt>
-                  <dd className="text-lg font-medium text-cyan-400">{stats.total}</dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-          <div className="stat-card p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-yellow-400 rounded-md flex items-center justify-center">
-                  <span className="text-dark-blue text-sm font-medium">S</span>
-                </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-300 truncate">Scheduled</dt>
-                  <dd className="text-lg font-medium text-yellow-400">{stats.scheduled}</dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-          <div className="stat-card p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-blue-400 rounded-md flex items-center justify-center">
-                  <span className="text-dark-blue text-sm font-medium">C</span>
-                </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-300 truncate">Completed</dt>
-                  <dd className="text-lg font-medium text-blue-400">{stats.completed}</dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-          <div className="stat-card p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-green-400 rounded-md flex items-center justify-center">
-                  <span className="text-dark-blue text-sm font-medium">E</span>
-                </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-300 truncate">Evaluated</dt>
-                  <dd className="text-lg font-medium text-green-400">{stats.evaluated}</dd>
-                </dl>
-              </div>
-            </div>
-          </div>
+          <StatCard icon="T" color="cyan" title="Total Interviews" value={stats.total} />
+          <StatCard icon="S" color="yellow" title="Scheduled" value={stats.scheduled} />
+          <StatCard icon="C" color="blue" title="Completed" value={stats.completed} />
+          <StatCard icon="E" color="green" title="Evaluated" value={stats.evaluated} />
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left side: Recent Interviews */}
         <div className="lg:col-span-2">
-          <div className="table-container overflow-hidden sm:rounded-md">
-            <div className="px-4 py-5 sm:px-6">
-              <h3 className="text-lg leading-6 font-medium text-cyan-400">Recent Interviews</h3>
-              <p className="mt-1 max-w-2xl text-sm text-gray-300">Latest interview activities</p>
-            </div>
-            <ul className="divide-y divide-cyan-800">
-              {recentInterviews.map((interview) => (
-                <li key={interview.interview_id} className="table-row px-4 py-4 sm:px-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10">
-                        <div className="h-10 w-10 rounded-full bg-cyan-400 flex items-center justify-center">
-                          <span className="text-dark-blue text-sm font-medium">
-                            {interview.applications?.candidates?.first_name?.[0]}{interview.applications?.candidates?.last_name?.[0]}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-cyan-400">
-                          {interview.applications?.candidates?.first_name} {interview.applications?.candidates?.last_name}
-                        </div>
-                        <div className="text-sm text-gray-300">
-                          {interview.applications?.jobs?.title}
-                        </div>
-                        <div className="text-xs text-gray-400">
-                          Created: {interview.created_at ? new Date(interview.created_at).toLocaleDateString() : 'N/A'}
-                        </div>
-                        <div className="text-xs text-gray-400">
-                          Interviewer Prompt: {interview.interviewer_prompt_version?.prompt?.name || 'None'}
-                        </div>
-                        <div className="text-xs text-gray-400">
-                          Evaluator Prompt: {interview.evaluator_prompt_version?.prompt?.name || 'None'}
-                        </div>
-                        <div className="text-xs text-gray-400">
-                          Rubric: {interview.rubric_version?.rubric?.name || 'None'}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        interview.status === 'scheduled' ? 'bg-yellow-100 text-yellow-800' :
-                        interview.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                        interview.status === 'evaluated' ? 'bg-green-100 text-green-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {interview.status}
-                      </span>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <RecentInterviews interviews={recentInterviews} />
         </div>
 
         {/* Right side: Metrics Panel */}
         <div className="lg:col-span-1 space-y-6">
-          {/* Interview Status Distribution */}
-          {chartData.statusDistribution.length > 0 && (
-            <div className="glass-ui p-4 rounded-lg">
-              <h4 className="text-sm font-medium text-cyan-400 mb-4">Interview Status</h4>
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie
-                    data={chartData.statusDistribution}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={40}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {chartData.statusDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'rgba(31, 41, 55, 0.9)',
-                      border: '1px solid rgba(34, 197, 218, 0.2)',
-                      borderRadius: '8px',
-                      color: '#e5e7eb'
-                    }}
-                  />
-                  <Legend
-                    wrapperStyle={{ color: '#e5e7eb', fontSize: '12px' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          )}
+          <InterviewStatusChart data={chartData.statusDistribution} />
 
-          {/* AI Model Performance */}
-          {chartData.modelPerformance.length > 0 && (
-            <div className="glass-ui p-4 rounded-lg">
-              <h4 className="text-sm font-medium text-cyan-400 mb-4">AI Model Performance</h4>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={chartData.modelPerformance}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(34, 197, 218, 0.1)" />
-                  <XAxis
-                    dataKey="model"
-                    stroke="#9ca3af"
-                    fontSize={10}
-                    angle={-45}
-                    textAnchor="end"
-                    height={60}
-                  />
-                  <YAxis stroke="#9ca3af" fontSize={10} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'rgba(31, 41, 55, 0.9)',
-                      border: '1px solid rgba(34, 197, 218, 0.2)',
-                      borderRadius: '8px',
-                      color: '#e5e7eb'
-                    }}
-                  />
-                  <Bar dataKey="avgScore" radius={[4, 4, 0, 0]}>
-                    {chartData.modelPerformance.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={getModelColor(entry.model)} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
+          <ModelPerformanceChart data={chartData.modelPerformance} />
 
-          {/* Weekly Activity Trends */}
-          {chartData.weeklyTrends.length > 0 && (
-            <div className="glass-ui p-4 rounded-lg">
-              <h4 className="text-sm font-medium text-cyan-400 mb-4">Weekly Activity</h4>
-              <ResponsiveContainer width="100%" height={150}>
-                <LineChart data={chartData.weeklyTrends}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(34, 197, 218, 0.1)" />
-                  <XAxis dataKey="day" stroke="#9ca3af" fontSize={10} />
-                  <YAxis stroke="#9ca3af" fontSize={10} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'rgba(31, 41, 55, 0.9)',
-                      border: '1px solid rgba(34, 197, 218, 0.2)',
-                      borderRadius: '8px',
-                      color: '#e5e7eb'
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="interviews"
-                    stroke="#06b6d4"
-                    strokeWidth={2}
-                    dot={{ fill: '#06b6d4', strokeWidth: 2, r: 4 }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="evaluations"
-                    stroke="#10b981"
-                    strokeWidth={2}
-                    dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          )}
+          <WeeklyActivityChart data={chartData.weeklyTrends} />
 
           {/* Key Metrics Cards */}
           {metrics && (
-            <div className="grid grid-cols-2 gap-3">
-              <div className="glass-ui p-3 rounded-lg text-center">
-                <div className="text-lg font-bold text-cyan-400">{metrics?.completionRate || 0}%</div>
-                <div className="text-xs text-gray-300">Completion Rate</div>
-              </div>
-              <div className="glass-ui p-3 rounded-lg text-center">
-                <div className="text-lg font-bold text-yellow-400">{metrics?.pendingEvaluations || 0}</div>
-                <div className="text-xs text-gray-300">Pending Reviews</div>
-              </div>
-            </div>
+            <MetricsSummary
+              completionRate={metrics.completionRate}
+              pendingEvaluations={metrics.pendingEvaluations}
+            />
           )}
         </div>
       </div>
