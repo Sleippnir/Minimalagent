@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSupabase } from '../SupabaseContext.jsx'
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts'
 import Spinner from './Spinner.jsx'
 
 const DashboardView = () => {
@@ -7,6 +8,11 @@ const DashboardView = () => {
   const [stats, setStats] = useState(null)
   const [recentInterviews, setRecentInterviews] = useState([])
   const [metrics, setMetrics] = useState(null)
+  const [chartData, setChartData] = useState({
+    statusDistribution: [],
+    modelPerformance: [],
+    weeklyTrends: []
+  })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -38,6 +44,26 @@ const DashboardView = () => {
             "claude-3": { avgScore: 7.8, count: 8 }
           }
         })
+        setChartData({
+          statusDistribution: [
+            { name: 'Scheduled', value: 5, color: '#fbbf24' },
+            { name: 'Completed', value: 7, color: '#3b82f6' },
+            { name: 'Evaluated', value: 3, color: '#10b981' }
+          ],
+          modelPerformance: [
+            { model: 'gpt-4-turbo', avgScore: 8.2, evaluations: 12 },
+            { model: 'claude-3', avgScore: 7.8, evaluations: 8 }
+          ],
+          weeklyTrends: [
+            { day: 'Mon', interviews: 3, evaluations: 2 },
+            { day: 'Tue', interviews: 5, evaluations: 3 },
+            { day: 'Wed', interviews: 2, evaluations: 4 },
+            { day: 'Thu', interviews: 6, evaluations: 3 },
+            { day: 'Fri', interviews: 4, evaluations: 5 },
+            { day: 'Sat', interviews: 1, evaluations: 2 },
+            { day: 'Sun', interviews: 0, evaluations: 1 }
+          ]
+        })
         setRecentInterviews([
           {
             interview_id: '1',
@@ -57,7 +83,7 @@ const DashboardView = () => {
           }
         ])
       } else {
-        await Promise.all([fetchDashboardStats(), fetchRecentInterviews(), fetchMetricsData()])
+        await Promise.all([fetchDashboardStats(), fetchRecentInterviews(), fetchMetricsData(), fetchChartData()])
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
@@ -125,6 +151,64 @@ const DashboardView = () => {
     if (error) throw error
 
     setRecentInterviews(data)
+  }
+
+  const fetchChartData = async () => {
+    // Status distribution for pie chart
+    const { data: interviews } = await supabase
+      .from('interviews')
+      .select('status')
+
+    const statusCounts = interviews.reduce((acc, interview) => {
+      acc[interview.status] = (acc[interview.status] || 0) + 1
+      return acc
+    }, {})
+
+    const statusDistribution = [
+      { name: 'Scheduled', value: statusCounts.scheduled || 0, color: '#fbbf24' },
+      { name: 'Completed', value: statusCounts.completed || 0, color: '#3b82f6' },
+      { name: 'Evaluated', value: statusCounts.evaluated || 0, color: '#10b981' }
+    ]
+
+    // Model performance for bar chart
+    const { data: evaluations } = await supabase
+      .from('evaluations')
+      .select('evaluator_llm_model, score')
+
+    const modelStats = evaluations.reduce((acc, evaluation) => {
+      const model = evaluation.evaluator_llm_model
+      if (!acc[model]) {
+        acc[model] = { total: 0, count: 0 }
+      }
+      acc[model].total += evaluation.score || 0
+      acc[model].count += 1
+      return acc
+    }, {})
+
+    const modelPerformance = Object.entries(modelStats)
+      .map(([model, stats]) => ({
+        model: model.length > 15 ? model.substring(0, 15) + '...' : model,
+        avgScore: Math.round((stats.total / stats.count) * 10) / 10,
+        evaluations: stats.count
+      }))
+      .sort((a, b) => b.avgScore - a.avgScore)
+
+    // Mock weekly trends (in real app, would query by date)
+    const weeklyTrends = [
+      { day: 'Mon', interviews: 3, evaluations: 2 },
+      { day: 'Tue', interviews: 5, evaluations: 3 },
+      { day: 'Wed', interviews: 2, evaluations: 4 },
+      { day: 'Thu', interviews: 6, evaluations: 3 },
+      { day: 'Fri', interviews: 4, evaluations: 5 },
+      { day: 'Sat', interviews: 1, evaluations: 2 },
+      { day: 'Sun', interviews: 0, evaluations: 1 }
+    ]
+
+    setChartData({
+      statusDistribution,
+      modelPerformance,
+      weeklyTrends
+    })
   }
 
   const fetchMetricsData = async () => {
@@ -336,84 +420,117 @@ const DashboardView = () => {
 
         {/* Right side: Metrics Panel */}
         <div className="lg:col-span-1 space-y-6">
-          {/* Completion Funnel */}
-          {metrics && (
+          {/* Interview Status Distribution */}
+          {chartData.statusDistribution.length > 0 && (
             <div className="glass-ui p-4 rounded-lg">
-              <h4 className="text-sm font-medium text-cyan-400 mb-3">Completion Funnel</h4>
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs">
-                  <span className="text-gray-300">Scheduled → Completed</span>
-                  <span className="text-cyan-400 font-medium">{metrics.completionRate}%</span>
-                </div>
-                <div className="w-full bg-gray-700 rounded-full h-2">
-                  <div
-                    className="bg-cyan-400 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${metrics.completionRate}%` }}
-                  ></div>
-                </div>
-                <div className="text-xs text-gray-400">
-                  {stats?.completed || 0} of {stats?.total || 0} interviews completed
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* System Health */}
-          {metrics && (
-            <div className="glass-ui p-4 rounded-lg">
-              <h4 className="text-sm font-medium text-cyan-400 mb-3">System Health</h4>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-300">Pending Evaluations</span>
-                  <span className={`text-xs font-medium ${metrics.pendingEvaluations > 0 ? 'text-yellow-400' : 'text-green-400'}`}>
-                    {metrics.pendingEvaluations}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-300">Active Models</span>
-                  <span className="text-xs font-medium text-cyan-400">
-                    {Object.keys(metrics.modelPerformance).length}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Top Questions */}
-          {metrics && metrics.topQuestions.length > 0 && (
-            <div className="glass-ui p-4 rounded-lg">
-              <h4 className="text-sm font-medium text-cyan-400 mb-3">Top Questions</h4>
-              <div className="space-y-2">
-                {metrics.topQuestions.map((question, index) => (
-                  <div key={index} className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="text-xs text-gray-300 leading-tight">{question.text}</div>
-                    </div>
-                    <span className="text-xs text-cyan-400 font-medium ml-2">{question.count}x</span>
-                  </div>
-                ))}
-              </div>
+              <h4 className="text-sm font-medium text-cyan-400 mb-4">Interview Status</h4>
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie
+                    data={chartData.statusDistribution}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={40}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {chartData.statusDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'rgba(31, 41, 55, 0.9)',
+                      border: '1px solid rgba(34, 197, 218, 0.2)',
+                      borderRadius: '8px',
+                      color: '#e5e7eb'
+                    }}
+                  />
+                  <Legend
+                    wrapperStyle={{ color: '#e5e7eb', fontSize: '12px' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
           )}
 
           {/* AI Model Performance */}
-          {metrics && Object.keys(metrics.modelPerformance).length > 0 && (
+          {chartData.modelPerformance.length > 0 && (
             <div className="glass-ui p-4 rounded-lg">
-              <h4 className="text-sm font-medium text-cyan-400 mb-3">AI Model Performance</h4>
-              <div className="space-y-2">
-                {Object.entries(metrics.modelPerformance)
-                  .sort(([,a], [,b]) => b.avgScore - a.avgScore)
-                  .map(([model, stats]) => (
-                  <div key={model} className="flex justify-between items-center">
-                    <span className="text-xs text-gray-300 truncate mr-2" title={model}>
-                      {model.length > 12 ? model.substring(0, 12) + '...' : model}
-                    </span>
-                    <div className="flex items-center space-x-1">
-                      <span className="text-xs text-cyan-400 font-medium">{stats.avgScore}</span>
-                      <span className="text-xs text-gray-400">({stats.count})</span>
-                    </div>
-                  </div>
-                ))}
+              <h4 className="text-sm font-medium text-cyan-400 mb-4">AI Model Performance</h4>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={chartData.modelPerformance}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(34, 197, 218, 0.1)" />
+                  <XAxis
+                    dataKey="model"
+                    stroke="#9ca3af"
+                    fontSize={10}
+                    angle={-45}
+                    textAnchor="end"
+                    height={60}
+                  />
+                  <YAxis stroke="#9ca3af" fontSize={10} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'rgba(31, 41, 55, 0.9)',
+                      border: '1px solid rgba(34, 197, 218, 0.2)',
+                      borderRadius: '8px',
+                      color: '#e5e7eb'
+                    }}
+                  />
+                  <Bar dataKey="avgScore" fill="#06b6d4" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {/* Weekly Activity Trends */}
+          {chartData.weeklyTrends.length > 0 && (
+            <div className="glass-ui p-4 rounded-lg">
+              <h4 className="text-sm font-medium text-cyan-400 mb-4">Weekly Activity</h4>
+              <ResponsiveContainer width="100%" height={150}>
+                <LineChart data={chartData.weeklyTrends}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(34, 197, 218, 0.1)" />
+                  <XAxis dataKey="day" stroke="#9ca3af" fontSize={10} />
+                  <YAxis stroke="#9ca3af" fontSize={10} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'rgba(31, 41, 55, 0.9)',
+                      border: '1px solid rgba(34, 197, 218, 0.2)',
+                      borderRadius: '8px',
+                      color: '#e5e7eb'
+                    }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="interviews"
+                    stroke="#06b6d4"
+                    strokeWidth={2}
+                    dot={{ fill: '#06b6d4', strokeWidth: 2, r: 4 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="evaluations"
+                    stroke="#10b981"
+                    strokeWidth={2}
+                    dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {/* Key Metrics Cards */}
+          {metrics && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="glass-ui p-3 rounded-lg text-center">
+                <div className="text-lg font-bold text-cyan-400">{metrics?.completionRate || 0}%</div>
+                <div className="text-xs text-gray-300">Completion Rate</div>
+              </div>
+              <div className="glass-ui p-3 rounded-lg text-center">
+                <div className="text-lg font-bold text-yellow-400">{metrics?.pendingEvaluations || 0}</div>
+                <div className="text-xs text-gray-300">Pending Reviews</div>
               </div>
             </div>
           )}
