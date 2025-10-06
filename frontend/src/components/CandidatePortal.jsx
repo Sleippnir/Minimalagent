@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { useSupabase } from '../SupabaseContext.jsx'
 import Spinner from './Spinner.jsx'
 import Toast from './Toast.jsx'
-// import InterviewSession from './InterviewSession.jsx' // Temporarily disabled due to Pipecat dependencies
 
 const CandidatePortal = () => {
   const supabase = useSupabase()
@@ -130,7 +129,6 @@ const CandidatePortal = () => {
 
   // Show interview session if one is active
   if (currentInterview) {
-    // return <InterviewSession onBack={handleBackToPortal} interview={currentInterview} />
     return (
       <div className="min-h-screen main-background flex items-center justify-center">
         <div className="glass-ui rounded-2xl p-8 max-w-md w-full mx-4">

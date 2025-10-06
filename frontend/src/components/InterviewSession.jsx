@@ -1,12 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Play, RotateCcw, CheckCircle, Loader2 } from 'lucide-react';
-// Temporarily commented out Pipecat imports due to packaging issues
-// import {
-//   usePipecatClient,
-//   PipecatClientVideo,
-//   PipecatClientAudio
-// } from '@pipecat-ai/client-react';
-// import { RTVIEvent } from '@pipecat-ai/client-js';
 
 // Transport state constants
 const TS = {
@@ -30,60 +23,19 @@ const InterviewSession = ({ interview, onBack }) => {
   const introVideoRef = useRef(null);
   const outroVideoRef = useRef(null);
 
-  // Temporarily commented out Pipecat client due to packaging issues
-  // const pcClient = usePipecatClient();
-  const pcClient = null; // Stub for now
+  // Pipecat client temporarily disabled - will be replaced with separate video interview app
+  const pcClient = null;
 
-  // Debug logging
-  console.log('Pipecat client:', pcClient);
-  console.log('Transport state:', pcClient?.state);
-
-  // Set up event listeners
+  // Pipecat event listeners temporarily disabled - video interview will be separate app
   useEffect(() => {
-    if (!pcClient) return;
+    // Video interview functionality moved to separate application
+  }, []);
 
-    const handleTransportStateChange = (state) => {
-      console.log('Transport state changed:', state);
-      if (state === TS.Ready || state === TS.Connected) {
-        setIsLoading(false);
-      } else if ([TS.Disconnected, TS.Error].includes(state)) {
-        setIsLoading(false);
-        // Go to outro on disconnect
-        setTimeout(() => {
-          setCurrentScreen('outro');
-        }, 1000);
-      }
-    };
-
-    // pcClient.on(RTVIEvent.TransportStateChanged, handleTransportStateChange);
-    // Temporarily disabled due to Pipecat packaging issues
-
-    return () => {
-      // pcClient.off(RTVIEvent.TransportStateChanged, handleTransportStateChange);
-    };
-  }, [pcClient]);
-
-  // Connect to bot when starting interview
+  // Video interview connection - will be implemented in separate app
   const connectToBot = useCallback(async () => {
-    if (!pcClient) {
-      console.error('Pipecat client not available');
-      return;
-    }
-    setIsLoading(true);
-    try {
-      await pcClient.startBotAndConnect({
-        endpoint: '/api/start',
-        requestData: { 
-          interview_id: interview?.id, 
-          auth_token: interview?.auth_token 
-        }
-      });
-    } catch (error) {
-      console.error('Failed to connect to bot:', error);
-      setIsLoading(false);
-      setTimeout(() => { setCurrentScreen('outro'); }, 2000);
-    }
-  }, [pcClient, interview?.id, interview?.auth_token]);
+    // Video interview functionality moved to separate application
+    console.log('Video interview will be handled by separate application');
+  }, []);
 
   // Screen transition handlers
   const handleStartInterview = async () => {

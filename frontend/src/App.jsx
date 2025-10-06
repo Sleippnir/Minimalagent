@@ -22,7 +22,6 @@ function App() {
 
   return (
     <SupabaseProvider>
-      {/* PipecatClientProvider temporarily removed due to dependency issues */}
       <div className="min-h-screen main-background">
         <nav className="glass-ui shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
