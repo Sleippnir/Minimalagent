@@ -129,7 +129,6 @@ celerybeat.pid
 
 # Environments
 .env
-.env.local
 .venv
 env/
 venv/
@@ -185,3 +184,4 @@ cython_debug/
 .env.local
 .env.development
 .env.production
+node_modules/

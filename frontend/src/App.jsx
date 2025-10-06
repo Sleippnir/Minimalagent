@@ -1,23 +1,11 @@
 import { useState } from 'react'
 import { SupabaseProvider } from './SupabaseContext.jsx'
-import { PipecatClientProvider } from '@pipecat-ai/client-react'
 import DashboardView from './components/DashboardView.jsx'
 import InterviewsView from './components/InterviewsView.jsx'
 import CandidatesView from './components/CandidatesView.jsx'
 
 function App() {
   const [currentView, setCurrentView] = useState('dashboard')
-
-  // Initialize Pipecat client
-  const pcClient = new PipecatClient({
-    transport: 'webrtc',
-    params: {
-      serverUrl: 'http://localhost:7860',
-      endpoints: {
-        connect: '/api/start'
-      }
-    }
-  })
 
   const renderView = () => {
     switch (currentView) {
@@ -34,8 +22,8 @@ function App() {
 
   return (
     <SupabaseProvider>
-      <PipecatClientProvider client={pcClient}>
-        <div className="min-h-screen main-background">
+      {/* PipecatClientProvider temporarily removed due to dependency issues */}
+      <div className="min-h-screen main-background">
         <nav className="glass-ui shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16">
@@ -83,7 +71,6 @@ function App() {
           {renderView()}
         </main>
       </div>
-      </PipecatClientProvider>
     </SupabaseProvider>
   )
 }

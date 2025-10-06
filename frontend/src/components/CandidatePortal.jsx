@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useSupabase } from '../SupabaseContext.jsx'
 import Spinner from './Spinner.jsx'
 import Toast from './Toast.jsx'
-import InterviewSession from './InterviewSession.jsx'
+// import InterviewSession from './InterviewSession.jsx' // Temporarily disabled due to Pipecat dependencies
 
 const CandidatePortal = () => {
   const supabase = useSupabase()
@@ -130,7 +130,23 @@ const CandidatePortal = () => {
 
   // Show interview session if one is active
   if (currentInterview) {
-    return <InterviewSession onBack={handleBackToPortal} interview={currentInterview} />
+    // return <InterviewSession onBack={handleBackToPortal} interview={currentInterview} />
+    return (
+      <div className="min-h-screen main-background flex items-center justify-center">
+        <div className="glass-ui rounded-2xl p-8 max-w-md w-full mx-4">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-white mb-4">Interview Session</h2>
+            <p className="text-gray-300 mb-6">Interview functionality is temporarily disabled due to technical issues.</p>
+            <button
+              onClick={handleBackToPortal}
+              className="bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+            >
+              Back to Portal
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (!candidate) {
