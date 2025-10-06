@@ -14,6 +14,23 @@ const DashboardView = () => {
     weeklyTrends: []
   })
   const [loading, setLoading] = useState(true)
+  // Color mapping for different AI providers
+  const getModelColor = (modelName) => {
+    const model = modelName.toLowerCase()
+    if (model.includes('gpt') || model.includes('openai')) {
+      return '#06b6d4' // Cyan (OpenAI blue)
+    } else if (model.includes('claude') || model.includes('anthropic')) {
+      return '#f97316' // Orange (Anthropic orange)
+    } else if (model.includes('gemini') || model.includes('google') || model.includes('bard')) {
+      return '#10b981' // Green (Google green)
+    } else if (model.includes('deepseek')) {
+      return '#8b5cf6' // Purple (DeepSeek purple)
+    } else if (model.includes('perplexity')) {
+      return '#f59e0b' // Amber (Perplexity amber)
+    } else {
+      return '#6b7280' // Gray (default)
+    }
+  }
 
   useEffect(() => {
     fetchDashboardData()
@@ -41,7 +58,9 @@ const DashboardView = () => {
           ],
           modelPerformance: {
             "gpt-4-turbo": { avgScore: 8.2, count: 12 },
-            "claude-3": { avgScore: 7.8, count: 8 }
+            "claude-3": { avgScore: 7.8, count: 8 },
+            "gemini-pro": { avgScore: 7.5, count: 6 },
+            "deepseek-chat": { avgScore: 7.2, count: 4 }
           }
         })
         setChartData({
@@ -52,7 +71,9 @@ const DashboardView = () => {
           ],
           modelPerformance: [
             { model: 'gpt-4-turbo', avgScore: 8.2, evaluations: 12 },
-            { model: 'claude-3', avgScore: 7.8, evaluations: 8 }
+            { model: 'claude-3', avgScore: 7.8, evaluations: 8 },
+            { model: 'gemini-pro', avgScore: 7.5, evaluations: 6 },
+            { model: 'deepseek-chat', avgScore: 7.2, evaluations: 4 }
           ],
           weeklyTrends: [
             { day: 'Mon', interviews: 3, evaluations: 2 },
@@ -479,7 +500,11 @@ const DashboardView = () => {
                       color: '#e5e7eb'
                     }}
                   />
-                  <Bar dataKey="avgScore" fill="#06b6d4" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="avgScore" radius={[4, 4, 0, 0]}>
+                    {chartData.modelPerformance.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={getModelColor(entry.model)} />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
