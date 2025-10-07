@@ -31,7 +31,7 @@ graph TD
     J --> K[HR Review & Decision]
 ```
 <summary>Architecture Diagram</summary>
-
+<details>
 
 ## 🚀 Quick Start
 
