@@ -73,7 +73,7 @@ This creates optimized production assets in the `dist/` directory, served by Ngi
 
 ## Application Structure
 
-### HR Dashboard (`/`)
+### HR Dashboard (`/dashboards/hr/`)
 
 The main HR interface provides:
 - Interview creation and management
@@ -130,7 +130,7 @@ POST /api/interviews/{interview_id}/transcript
 
 ### 1. Admin Setup (HR Dashboard)
 
-- HR users access the React dashboard at `http://localhost:8080`
+- HR users access the React dashboard at `http://localhost:8080/dashboards/hr/`
 - Create interviews through the web interface
 - Data stored in Supabase `interviewer_queue` table
 - JWT tokens generated for secure candidate access

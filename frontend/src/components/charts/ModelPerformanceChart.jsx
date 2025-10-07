@@ -2,6 +2,9 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell, ResponsiveCo
 
 // Color mapping for different AI providers
 const getModelColor = (modelName) => {
+  if (!modelName || typeof modelName !== 'string') {
+    return '#6b7280' // Gray (default)
+  }
   const model = modelName.toLowerCase()
   if (model.includes('gpt') || model.includes('openai')) {
     return '#06b6d4' // Cyan (OpenAI blue)

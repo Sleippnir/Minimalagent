@@ -9,6 +9,7 @@ import StatCard from './StatCard.jsx'
 import RecentInterviews from './RecentInterviews.jsx'
 import MetricsSummary from './MetricsSummary.jsx'
 import Spinner from './Spinner.jsx'
+import Toast from './Toast.jsx'
 
 const DashboardView = () => {
   const supabase = useSupabase()
@@ -21,6 +22,7 @@ const DashboardView = () => {
     weeklyTrends: []
   })
   const [loading, setLoading] = useState(true)
+  const [toast, setToast] = useState(null)
 
   useEffect(() => {
     fetchDashboardData()
@@ -28,6 +30,7 @@ const DashboardView = () => {
 
   const fetchDashboardData = async () => {
     setLoading(true)
+    setToast(null)
     try {
       if (!supabase) {
         // Mock data for development
@@ -94,21 +97,39 @@ const DashboardView = () => {
           }
         ])
       } else {
-        await Promise.all([fetchDashboardStats(), fetchRecentInterviews(), fetchMetricsData(), fetchChartData()])
+        const { data: interviewStatuses, error: statusError } = await supabase
+          .from('interviews')
+          .select('status')
+
+        if (statusError) throw statusError
+
+        const statuses = interviewStatuses || []
+
+        await Promise.all([
+          fetchDashboardStats(statuses),
+          fetchRecentInterviews(),
+          fetchMetricsData(statuses),
+          fetchChartData(statuses)
+        ])
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
+      setToast({ message: 'Failed to load dashboard data. Please try again.', type: 'error' })
     } finally {
       setLoading(false)
     }
   }
 
-  const fetchDashboardStats = async () => {
-    const { data, error } = await supabase
-      .from('interviews')
-      .select('status')
+  const fetchDashboardStats = async (statusData) => {
+    let data = statusData
+    if (!data) {
+      const { data: fetchedData, error } = await supabase
+        .from('interviews')
+        .select('status')
 
-    if (error) throw error
+      if (error) throw error
+      data = fetchedData || []
+    }
 
     const statusCounts = data.reduce((acc, interview) => {
       acc[interview.status] = (acc[interview.status] || 0) + 1
@@ -164,11 +185,14 @@ const DashboardView = () => {
     setRecentInterviews(data)
   }
 
-  const fetchChartData = async () => {
-    // Status distribution for pie chart
-    const { data: interviews } = await supabase
-      .from('interviews')
-      .select('status')
+  const fetchChartData = async (statusData) => {
+    let interviews = statusData
+    if (!interviews) {
+      const { data: fetchedStatuses } = await supabase
+        .from('interviews')
+        .select('status')
+      interviews = fetchedStatuses || []
+    }
 
     const statusCounts = interviews.reduce((acc, interview) => {
       acc[interview.status] = (acc[interview.status] || 0) + 1
@@ -222,13 +246,16 @@ const DashboardView = () => {
     })
   }
 
-  const fetchMetricsData = async () => {
-    // Completion rate calculation
-    const { data: interviews, error: interviewsError } = await supabase
-      .from('interviews')
-      .select('status')
+  const fetchMetricsData = async (statusData) => {
+    let interviews = statusData
+    if (!interviews) {
+      const { data: fetchedInterviews, error: interviewsError } = await supabase
+        .from('interviews')
+        .select('status')
 
-    if (interviewsError) throw interviewsError
+      if (interviewsError) throw interviewsError
+      interviews = fetchedInterviews || []
+    }
 
     const total = interviews.length
     const completed = interviews.filter(i => i.status === 'completed' || i.status === 'evaluated').length
@@ -296,7 +323,12 @@ const DashboardView = () => {
   }
 
   if (loading) {
-    return <Spinner />
+    return (
+      <>
+        <Spinner />
+        {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      </>
+    )
   }
 
   return (
@@ -338,6 +370,8 @@ const DashboardView = () => {
           )}
         </div>
       </div>
+
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   )
 }
