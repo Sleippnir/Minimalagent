@@ -30,8 +30,8 @@ graph TD
     I --> J[Results Dashboard]
     J --> K[HR Review & Decision]
 ```
-<summary>Architecture Diagram</summary>
-<end>
+</details>
+
 
 ## 🚀 Quick Start
 
