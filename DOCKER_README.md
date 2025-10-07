@@ -75,7 +75,7 @@ The docker-compose.yml defines several services:
 
 - **8001**: API server (FastAPI)
 - **8080**: Frontend HR dashboard (Nginx)
-- **7860**: WebRTC bot client (when launched)
+- **7861**: WebRTC bot client (when launched)
 
 ## Service Management
 
@@ -147,7 +147,7 @@ docker-compose run --rm api python scripts/content_manager.py audit
 - **Background Evaluator** (No port): Continuous processing service for AI evaluation
 - **Content Maintenance** (Optional): Scheduled service for data consistency
 - **Frontend Service** (Port 8080): Nginx serving the React HR dashboard
-- **Bot Service** (Port 7860): WebRTC interview bots launched on-demand
+- **Bot Service** (Port 7861): WebRTC interview bots launched on-demand
 
 ## Development
 
