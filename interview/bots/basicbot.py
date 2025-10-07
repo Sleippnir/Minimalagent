@@ -23,6 +23,14 @@ class BasicChatbot:
     """Basic chatbot that retrieves and formats interview context like simlibot"""
 
     def __init__(self, auth_token: str):
+        """
+        Create a BasicChatbot bound to the given authentication token and prepare its runtime state.
+        
+        Initializes instance attributes used by the chatbot (authentication token, interview context placeholder, optional LLM client, and conversation history). If the Google Gemini client library is available and a GOOGLE_API_KEY environment variable is present, attempts to initialize an LLM client; otherwise leaves the client unset and records an appropriate warning.
+         
+        Parameters:
+        	auth_token (str): Authentication token used to fetch interview context for this chat session.
+        """
         self.auth_token = auth_token
         self.interview_context: Optional[InterviewContext] = None
         self.llm_client = None
@@ -42,7 +50,14 @@ class BasicChatbot:
             logger.warning("google-genai not available")
 
     async def initialize_context(self) -> bool:
-        """Retrieve interview context from Supabase"""
+        """
+        Fetches the interview context from the queue service (Supabase) and stores it on the instance.
+        
+        Attempts to retrieve a record using the instance's auth token and convert it into an InterviewContext assigned to `self.interview_context`. Returns whether the operation succeeded.
+        
+        Returns:
+            True if the interview context was retrieved and assigned to `self.interview_context`, False otherwise.
+        """
         try:
             queue_service = QueueService()
             interviewer_record = await queue_service.get_interview_context_from_queue(
@@ -61,7 +76,21 @@ class BasicChatbot:
             return False
 
     async def chat(self, message: str) -> str:
-        """Chat using Gemini LLM with the formatted interview context"""
+        """
+        Send a user message to the interview chatbot and return the bot's reply.
+        
+        Processes the provided message using the stored interview context and the optional Gemini LLM client, maintaining a per-session conversation history. If the interview context is not initialized, returns an instruction to call initialize_context(). If the LLM client is not available, returns a deterministic fallback string that references the candidate and job title and echoes the user's message. On unexpected errors, returns a brief apology that includes the original user message.
+        
+        Parameters:
+            message (str): The user's chat message to send to the bot.
+        
+        Returns:
+            str: The chatbot's reply. This may be:
+                - "Context not initialized. Please call initialize_context() first." if context is missing,
+                - a deterministic fallback mentioning the candidate and job title when the LLM client is unavailable,
+                - the model-generated response when the LLM is used,
+                - or an apology message containing the original user message if an error occurs.
+        """
         if not self.interview_context:
             return "Context not initialized. Please call initialize_context() first."
 
@@ -116,7 +145,11 @@ class BasicChatbot:
 
 # CLI usage
 async def main():
-    """CLI entry point for testing the basic chatbot"""
+    """
+    Run an interactive command-line session that loads interview context and chats with BasicChatbot.
+    
+    This CLI expects an authentication token as the first command-line argument. It initializes a BasicChatbot with that token, loads interview context, prints a brief summary of the retrieved context (interview ID, candidate, job title, question count), and enters a REPL-style loop reading user messages and printing bot responses until the user types a quit command or triggers an interrupt. Exits with a non-zero status on initialization failure or unhandled errors.
+    """
     import sys
 
     if len(sys.argv) < 2:

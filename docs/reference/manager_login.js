@@ -40,7 +40,12 @@ const authForm = new AuthForm(loginForm, {
     }
 });
 
-// Handle forgot password
+/**
+ * Handle the forgot-password link click by validating the email and initiating a password-reset flow.
+ *
+ * Prevents the default link behavior, reads and trims the '#email' input, shows an inline error if the email is empty, and otherwise triggers the password-reset notification/flow (currently a placeholder alert).
+ * @param {Event} event - Click event from the forgot-password link. 
+ */
 function handleForgotPassword(event) {
     event.preventDefault();
     const email = document.getElementById('email').value.trim();
@@ -57,7 +62,11 @@ function handleForgotPassword(event) {
     // authService.resetPassword(email, window.location.origin + '/reset-password');
 }
 
-// Check if user is already logged in
+/**
+ * Verifies the current authentication state and performs role-based redirection.
+ *
+ * If the user is authenticated, updates the debug status and navigates to 'hr/dashboard.html' when the user's role is 'hr' or 'recruiter' (determined from user_metadata.role or the user's email containing 'hr' or 'recruiter'); otherwise navigates to 'interview_creation.html'. If not authenticated, updates the debug status accordingly.
+ */
 function checkAuthState() {
     if (authState.isAuthenticated()) {
         debugAuthState.textContent = 'Already authenticated';

@@ -9,7 +9,11 @@ from interview import InterviewBot, InterviewConfig
 
 
 async def main():
-    """Example usage of the interview container"""
+    """
+    Run an example interview flow that validates configuration, drives an InterviewBot with sample candidate data and questions, processes simulated responses, completes the interview, and ensures resources are cleaned up.
+    
+    This coroutine performs a demonstration sequence: it validates InterviewConfig, instantiates an InterviewBot, starts an interview, processes a set of example responses for each question, completes the interview to obtain a final evaluation, and finally closes the bot. Progress and results are printed to stdout.
+    """
 
     # Validate configuration
     try:
