@@ -95,6 +95,16 @@ serve(async (req: Request) => {
 
     if (queueError) throw new Error(`Failed to upsert payload into queue: ${queueError.message}`);
 
+    // ---  PATCH STARTS HERE ---
+    // 5. Reset the interview status to 'scheduled'
+    const { error: updateStatusError } = await supabaseAdmin
+      .from('interviews')
+      .update({ status: 'scheduled' })
+      .eq('interview_id', interview_id);
+      
+    if (updateStatusError) throw new Error(`Failed to update interview status: ${updateStatusError.message}`);
+    // --- PATCH ENDS HERE ---
+
     return new Response(JSON.stringify({ success: true, message: `Successfully reprocessed and queued interview ${interview_id}.` }), {
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
       status: 200,
