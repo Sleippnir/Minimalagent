@@ -5,6 +5,12 @@ import { envLoader } from './env.js';
 let supabaseConfig = null;
 let supabaseClient = null;
 
+/**
+ * Initialize and cache the Supabase configuration and client.
+ *
+ * Ensures environment variables are loaded, validates required Supabase variables, caches the configuration, and creates the Supabase client for subsequent calls.
+ * @returns {{url: string, key: string}} The loaded Supabase configuration object.
+ * @throws {Error} If `VITE_SUPABASE_URL` or `VITE_SUPABASE_ANON_KEY` are missing.
 export async function initializeSupabase() {
     if (supabaseConfig) return supabaseConfig;
 
@@ -33,7 +39,10 @@ export async function initializeSupabase() {
     return supabaseConfig;
 }
 
-// Export getters that ensure initialization
+/**
+ * Return the cached Supabase configuration, initializing it if necessary.
+ * @returns {Promise<{url: string, key: string}>} The Supabase configuration object containing `url` and `key`.
+ */
 export async function getSupabaseConfig() {
     if (!supabaseConfig) {
         await initializeSupabase();
@@ -41,6 +50,10 @@ export async function getSupabaseConfig() {
     return supabaseConfig;
 }
 
+/**
+ * Retrieve the initialized Supabase client, initializing and caching it first if necessary.
+ * @returns {any} The Supabase client instance.
+ */
 export async function getSupabaseClient() {
     if (!supabaseClient) {
         await initializeSupabase();
