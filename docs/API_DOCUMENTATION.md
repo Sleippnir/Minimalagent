@@ -1,11 +1,11 @@
 # Interview API Documentation
 
-The interview system uses a FastAPI server running on port 8000. Here are the relevant endpoints:
+The interview system uses a FastAPI server running on port 8001. Here are the relevant endpoints:
 
 ## Base URL
 
 ```
-http://localhost:8000
+http://localhost:8001
 ```
 
 ## Endpoints

@@ -4,7 +4,7 @@ services:
     build: .
     ports:
       - "8001:8001"  # API server
-      - "7860:7860"  # WebRTC bot (when launched)
+      - "7861:7861"  # WebRTC bot (when launched)
     environment:
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_KEY=${SUPABASE_ANON_KEY}

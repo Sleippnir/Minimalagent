@@ -94,10 +94,15 @@ async def launch_interview_bot(room_url: str, interview_id: str) -> bool:
         )
 
         # Launch the bot in the background
-        # Use WebRTC transport which runs on port 7860
+        # Use WebRTC transport which runs on port 7861 (to avoid conflict with API on 7860)
+        env["PORT"] = "7861"  # Configure Pipecat to use port 7861 instead of default 7860
+        env["PIPECAT_PORT"] = "7861"  # Alternative environment variable for Pipecat
+        env["HOST"] = "0.0.0.0"  # Bind to all interfaces
         try:
+            # Convert script path to module format for proper relative imports
+            module_path = bot_script.replace("/", ".").replace(".py", "")
             process = subprocess.Popen(
-                [sys.executable, bot_script],
+                [sys.executable, "-m", module_path, "--host", "0.0.0.0", "--port", "7861"],
                 env=env,
                 # Remove stdout/stderr pipes to show logs in main terminal
                 cwd=os.getcwd(),

@@ -89,6 +89,7 @@ graph TD
    - `api`: FastAPI server on port 8001
    - `background-evaluator`: Continuous evaluation processing
    - `frontend`: Nginx serving React app on port 8080
+   - `bot`: WebRTC interview bot on port 7861 (when launched)
 
    For maintenance operations:
 
@@ -113,11 +114,50 @@ graph TD
    ```
 
 3. **Access the application**
-   - HR Dashboard: `http://localhost:5173` (frontend dev server)
+   - **Production (Docker)**: HR Dashboard at `http://localhost:8080`
+   - **Development**: HR Dashboard at `http://localhost:5173` (Vite dev server)
    - API Documentation: `http://localhost:8001/docs`
    - Health Check: `http://localhost:8001/health`
+   - Interview Bot: `http://localhost:7861/client` (when active)
 
-## 📋 API Endpoints
+## � Development Configuration
+
+### Frontend Development Server
+
+The frontend uses Vite for development with automatic API proxying:
+
+```javascript
+// frontend/vite.config.js
+server: {
+  proxy: {
+    '/api': {
+      target: 'http://localhost:8001',  // Proxies to API container
+      changeOrigin: true,
+      rewrite: (path) => path.replace(/^\/api/, '')
+    }
+  }
+}
+```
+
+**Important**: Ensure the Vite proxy targets port `8001` (API container), not `8000`.
+
+### Bot Launching
+
+Interview bots are launched as Python modules for proper relative imports:
+
+```python
+# Correct: Module execution
+process = subprocess.Popen([
+    sys.executable, "-m", "interview.bots.simlibot"
+], ...)
+
+# Incorrect: Direct script execution (causes import errors)
+process = subprocess.Popen([
+    sys.executable, "interview/bots/simlibot.py"
+], ...)
+```
+
+## �📋 API Endpoints
 
 ### Core Interview Management
 
@@ -393,7 +433,77 @@ Refresh question-job relationships based on tags.
 4. Add tests for new functionality
 5. Submit a pull request
 
-## 📝 License
+## � Troubleshooting
+
+### Common Issues
+
+#### Interview Bot Import Errors
+**Error**: `ImportError: attempted relative import with no known parent package`
+
+**Solution**: Ensure bots are launched as modules, not scripts:
+```bash
+# Correct
+python -m interview.bots.simlibot
+
+# Incorrect  
+python interview/bots/simlibot.py
+```
+
+#### Frontend API Connection Issues
+**Error**: `500 Internal Server Error` when starting interviews
+
+**Cause**: Vite dev server proxy misconfiguration
+
+**Solution**: Verify `frontend/vite.config.js` proxies to correct port:
+```javascript
+proxy: {
+  '/api': {
+    target: 'http://localhost:8001',  // Must be 8001, not 8000
+    changeOrigin: true
+  }
+}
+```
+
+#### Button Loading State Stuck
+**Error**: Buttons remain in loading state after navigation
+
+**Solution**: Added `pageshow` event handler in `frontend/index.html` to force page reload on browser back navigation.
+
+#### CUDA Dependencies in Container
+**Error**: Container build fails with CUDA installation
+
+**Solution**: Removed unused `openai-whisper` dependency that pulled in CUDA. Use `uv` for faster, cleaner dependency management.
+
+#### Chart Visualization Issues
+**Error**: Interview status charts don't display full circles
+
+**Solution**: Filter chart data to only include valid status values before rendering.
+
+### Container Management
+
+```bash
+# View logs
+docker logs -f minimalagent-api-1
+docker logs -f minimalagent-background-evaluator-1
+
+# Restart services
+docker compose restart
+
+# Rebuild after code changes
+docker compose up --build -d
+
+# Clean rebuild
+docker compose down
+docker compose up --build -d
+```
+
+### Development Workflow
+
+1. **Frontend changes**: `cd frontend && npm run build` then `docker compose up --build -d`
+2. **Backend changes**: `docker compose up --build -d`
+3. **Environment variables**: Copy `.env.example` to `.env` and configure API keys
+
+## �📝 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
