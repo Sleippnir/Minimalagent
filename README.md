@@ -11,7 +11,7 @@ An end-to-end AI-powered interview platform that automates the entire recruitmen
 - **Database**: Supabase PostgreSQL with real-time capabilities
 - **AI Services**: Pipecat conversational bots, Google Cloud Speech, multiple LLM evaluators
 - **Video**: Daily.co WebRTC for real-time video interviews
-- **Infrastructure**: Docker containerization with Redis caching
+- **Infrastructure**: Docker containerization for API, evaluator, and frontend services
 
 ### Data Flow Architecture
 
@@ -74,7 +74,7 @@ graph TD
 
    ```bash
    # Run database migrations (via Supabase dashboard or CLI)
-   # Import the schema from docs/guidelines/supabase tables.md
+   # Reference the schema in docs/supabase_tables.md
    ```
 
 ### Running the Application
@@ -114,8 +114,8 @@ graph TD
    ```
 
 3. **Access the application**
-   - **Production (Docker)**: HR Dashboard at `http://localhost:8080`
-   - **Development**: HR Dashboard at `http://localhost:5173` (Vite dev server)
+   - **Production (Docker)**: HR Dashboard at `http://localhost:8080/dashboards/hr/`
+   - **Development**: HR Dashboard at `http://localhost:5173/dashboards/hr/` (Vite dev server)
    - API Documentation: `http://localhost:8001/docs`
    - Health Check: `http://localhost:8001/health`
    - Interview Bot: `http://localhost:7861/client` (when active)
@@ -293,6 +293,7 @@ Refresh question-job relationships based on tags.
 4. Returns success confirmation
 
 **Use Cases**:
+
 - Retry interviews that failed during initial processing
 - Re-queue interviews that got stuck in the system
 - Manually trigger interview processing for debugging
@@ -321,6 +322,7 @@ select cron.schedule('reprocess-stuck-interviews', '*/30 * * * *', 'select repro
 ```
 
 **Requirements**:
+
 - `pg_net` extension enabled in Supabase
 - Service role key configured
 - `created_at` column in `interviews` table
@@ -561,7 +563,12 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🆘 Support
 
-- **Documentation**: Check the `docs/` directory for detailed guides
+- **Documentation**: Start with:
+  - `docs/config.md` – environment variables, Supabase secrets, and worker setup
+  - `docs/pipeline.mc` – end-to-end backend + Supabase pipeline walkthrough
+  - `docs/APIs.md` – live API surface and edge functions
+  - `docs/queries.md` – database operations grouped by pipeline stage
+  - `docs/supabase_tables.md` – current schema and normalization roadmap
 - **Issues**: Report bugs and request features on GitHub
 - **Discussions**: Join community discussions for questions
 
