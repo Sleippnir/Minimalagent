@@ -2,13 +2,22 @@
 
 ## Overview
 
-The interview system frontend is currently served by an Nginx container that provides both static file serving and API proxying to the backend FastAPI service. This setup enables a clean separation between frontend presentation and backend business logic.
+The interview system frontend is a modern React 18 application built with Vite, featuring HR dashboards and candidate portals. The production setup uses Nginx for static file serving with API proxying to the FastAPI backend.
 
 ## Current Architecture
 
+### Technology Stack
+
+- **React 18** with modern hooks and functional components
+- **Vite** for fast development and optimized production builds
+- **Tailwind CSS** for responsive styling and design system
+- **React Router** for client-side navigation
+- **Axios** for API communication
+
 ### Services
 
-- **Frontend Service** (Port 8080): Nginx container serving static HTML/CSS/JS and proxying API calls
+- **Frontend Service** (Port 8080): Nginx container serving React SPA and proxying API calls
+- **Development Server** (Port 5173): Vite dev server with hot reload and API proxying
 - **API Service** (Port 8001): FastAPI server handling interview management and bot launching
 - **Database**: Supabase for interview data and user management
 
@@ -16,34 +25,76 @@ The interview system frontend is currently served by an Nginx container that pro
 
 ```text
 frontend/
-├── nginx.conf                 # Nginx configuration with API proxying
-├── interview_creation_test.html  # Current test interface (admin/orchestrator)
-├── API_DOCUMENTATION.md       # Backend API endpoint documentation
-├── PIPELINE_DOCUMENTATION.md  # Interview flow and pipeline documentation
-└── index.ts                   # TypeScript definitions (future use)
+├── src/
+│   ├── App.jsx                 # Main application component
+│   ├── main-candidate.jsx      # Candidate portal entry point
+│   ├── components/             # Reusable React components
+│   ├── pages/                  # Page-level components
+│   └── index.css               # Global styles and Tailwind imports
+├── public/                     # Static assets
+├── package.json                # Dependencies and scripts
+├── vite.config.js              # Vite configuration with API proxying
+├── tailwind.config.js          # Tailwind CSS configuration
+└── nginx.conf                  # Production Nginx configuration
 ```
 
-## Current Test Interface
+## Development Setup
 
-The `interview_creation_test.html` file provides an admin interface for:
+### Prerequisites
 
-1. **Supabase Configuration**: Connect to Supabase project
-2. **Application Creation**: Select candidates and jobs, create applications
-3. **Question Curation**: Load and select interview questions
-4. **Interview Scheduling**: Invoke Supabase Edge Functions to schedule interviews
+- Node.js 18+
+- npm or yarn
 
-### Key Features
+### Installation
 
-- **Real-time Logging**: Activity log showing all operations
-- **Supabase Integration**: Direct database operations for interview setup
-- **Edge Function Calls**: Triggers interview scheduling via Supabase functions
+```bash
+cd frontend
+npm install
+```
+
+### Development Server
+
+```bash
+npm run dev
+```
+
+This starts the Vite development server on `http://localhost:5173` with:
+- Hot module replacement
+- API proxying to `http://localhost:8001`
+- Automatic browser refresh on changes
+
+### Production Build
+
+```bash
+npm run build
+```
+
+This creates optimized production assets in the `dist/` directory, served by Nginx in production.
+
+## Application Structure
+
+### HR Dashboard (`/`)
+
+The main HR interface provides:
+- Interview creation and management
+- Candidate tracking and status updates
+- Analytics and reporting dashboards
+- Real-time interview monitoring
+
+### Candidate Portal (`/candidate`)
+
+The candidate-facing interface for:
+- Interview scheduling and confirmation
+- Pre-interview preparation
+- Video call access with Daily.co integration
+- Post-interview feedback
 
 ## API Integration
 
 ### Base URLs
 
-- **Direct API**: `http://localhost:8001` (for development/testing)
-- **Proxied API**: `http://localhost:8080/api` (production - through nginx)
+- **Development**: `http://localhost:5173/api` (proxied to `http://localhost:8001`)
+- **Production**: `http://localhost:8080/api` (proxied through Nginx to API container)
 
 ### Available Endpoints
 
@@ -77,26 +128,33 @@ POST /api/interviews/{interview_id}/transcript
 
 ## Interview Flow
 
-### 1. Admin Setup (Current Test Interface)
+### 1. Admin Setup (HR Dashboard)
 
-- Admin uses `interview_creation_test.html` to create interviews
+- HR users access the React dashboard at `http://localhost:8080`
+- Create interviews through the web interface
 - Data stored in Supabase `interviewer_queue` table
-- JWT tokens generated for secure access
+- JWT tokens generated for secure candidate access
 
-### 2. Candidate Experience (To Be Built)
+### 2. Candidate Experience (React Portal)
 
-- Candidate receives magic link: `https://yourdomain.com/interview/{jwt_token}`
-- Frontend loads interview context via API
-- Video call initializes with Daily.co
+- Candidate receives magic link: `https://yourdomain.com/candidate/{jwt_token}`
+- React application loads interview context via API
+- Video call initializes with Daily.co WebRTC
 - AI interviewer bot joins automatically
 
 ### 3. Interview Session
 
-- Real-time video/audio via WebRTC
+- Real-time video/audio via WebRTC (Daily.co)
 - AI interviewer asks questions from curated list
-- Responses recorded and transcribed
+- Responses recorded and transcribed automatically
+- Interview bot accessible at `http://localhost:7861/client`
 
-### 4. Post-Interview
+### 4. Post-Interview Processing
+
+- Transcripts submitted to API for evaluation
+- Multi-LLM evaluation runs in background
+- Results available in HR dashboard
+- Candidate receives feedback via email/magic link
 
 - Transcript submitted to API for evaluation
 - Automated scoring using LLM evaluation
@@ -207,20 +265,6 @@ const submitTranscript = async (interviewId, transcript) => {
   }
 };
 ```
-
-## Development Setup
-
-### Local Development
-
-1. **Start services**: `docker-compose up -d`
-2. **Access frontend**: `http://localhost:8080`
-3. **API proxy**: All `/api/*` calls automatically proxied to backend
-
-### Building Production Frontend
-
-1. **Replace static HTML** with your framework build output
-2. **Update nginx.conf** to serve your built assets
-3. **Maintain API proxy** configuration for backend communication
 
 ### Nginx Configuration Notes
 

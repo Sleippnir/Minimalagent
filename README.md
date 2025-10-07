@@ -89,7 +89,7 @@ graph TD
    - `api`: FastAPI server on port 8001
    - `background-evaluator`: Continuous evaluation processing
    - `frontend`: Nginx serving React app on port 8080
-   - `bot`: WebRTC interview bot on port 7861 (when launched)
+   - Interview bots launched on-demand on port 7861
 
    For maintenance operations:
 
@@ -272,6 +272,58 @@ Refresh question-job relationships based on tags.
 1. Generates Supabase Auth magic links
 2. Sends HTML emails with secure login URLs
 3. Updates notification status
+
+### `reprocess-interview`
+
+**Purpose**: Re-queue existing interviews for processing (retry failed interviews, fix stuck interviews)
+
+**Input**:
+
+```json
+{
+  "interview_id": "uuid"
+}
+```
+
+**Process**:
+
+1. Fetches complete interview data from database (candidate, job, questions, prompts)
+2. Reconstructs the interview payload
+3. Safely upserts payload back into `interviewer_queue`
+4. Returns success confirmation
+
+**Use Cases**:
+- Retry interviews that failed during initial processing
+- Re-queue interviews that got stuck in the system
+- Manually trigger interview processing for debugging
+- Fix orphaned interviews missing from the queue
+
+### Automated Stuck Interview Recovery
+
+**Database Function**: `reprocess_stuck_interviews()`
+
+**Purpose**: Automatically detect and fix stuck interviews
+
+**Process**:
+
+1. Scans for interviews created >5 minutes ago missing from `interviewer_queue`
+2. Calls `reprocess-interview` edge function for each stuck interview
+3. Logs all recovery attempts
+
+**Usage**:
+
+```sql
+-- Manual execution
+select reprocess_stuck_interviews();
+
+-- Schedule with pg_cron (if available)
+select cron.schedule('reprocess-stuck-interviews', '*/30 * * * *', 'select reprocess_stuck_interviews();');
+```
+
+**Requirements**:
+- `pg_net` extension enabled in Supabase
+- Service role key configured
+- `created_at` column in `interviews` table
 
 ## 🗄️ Database Schema
 
