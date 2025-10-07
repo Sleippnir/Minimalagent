@@ -188,6 +188,29 @@
             this.disabled = true;
           });
         });
+
+        // Reset button states when page becomes visible (fixes back button issue)
+        document.addEventListener('visibilitychange', function() {
+          if (!document.hidden) {
+            // Reset all buttons to their original state
+            const buttons = document.querySelectorAll('button[onclick]');
+            buttons.forEach(button => {
+              if (button.disabled) {
+                button.disabled = false;
+                // Reset button content based on its onclick attribute
+                if (button.onclick.toString().includes('dashboards/hr')) {
+                  button.innerHTML = '<span class="mr-2">🏢</span>HR Dashboard';
+                } else if (button.onclick.toString().includes('candidate')) {
+                  button.innerHTML = '<span class="mr-2">👤</span>Candidate Portal';
+                } else if (button.onclick.toString().includes('Hiring Manager')) {
+                  button.innerHTML = '<span class="mr-2">👔</span>Hiring Manager<span class="ml-2 text-xs bg-gray-700 px-2 py-1 rounded-full">Soon</span>';
+                } else if (button.onclick.toString().includes('Administrator')) {
+                  button.innerHTML = '<span class="mr-2">⚙️</span>Administrator<span class="ml-2 text-xs bg-gray-700 px-2 py-1 rounded-full">Soon</span>';
+                }
+              }
+            });
+          }
+        });
       });
     </script>
   </body>
