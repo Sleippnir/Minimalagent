@@ -13,7 +13,10 @@ An end-to-end AI-powered interview platform that automates the entire recruitmen
 - **Video**: Daily.co WebRTC for real-time video interviews
 - **Infrastructure**: Docker containerization for API, evaluator, and frontend services
 
-### Data Flow Architecture
+### 🔄 Data Flow Architecture
+
+This diagram illustrates the end-to-end flow of data and interactions across the Minimalagent platform—from HR initiation to final decision-making.
+
 <details>
 <summary>Architecture Diagram</summary>
 
