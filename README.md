@@ -14,6 +14,8 @@ An end-to-end AI-powered interview platform that automates the entire recruitmen
 - **Infrastructure**: Docker containerization for API, evaluator, and frontend services
 
 ### Data Flow Architecture
+<details>
+<summary>Architecture Diagram</summary>
 
 ```mermaid
 graph TD
