@@ -7,6 +7,15 @@ This Docker setup runs the complete AI-powered HR interview platform with all ba
 - Docker and Docker Compose installed
 - Environment variables configured (see .env.example)
 
+## Performance & Reliability
+
+This Docker setup uses `uv` for Python dependency management, which provides:
+
+- **Faster installation**: 10-100x faster than pip
+- **Better dependency resolution**: More reliable than pip's resolver
+- **Reproducible builds**: Uses `uv.lock` for exact version pinning
+- **Modern packaging**: Follows current Python packaging standards
+
 ## Environment Variables
 
 Copy `.env.example` to `.env` and fill in your API keys:
@@ -145,13 +154,18 @@ docker-compose run --rm api python scripts/content_manager.py audit
 For development without Docker:
 
 ```bash
-# Install dependencies
+# Install uv (if not already installed)
+pip install uv
+
+# Install dependencies using uv (recommended)
+uv sync
+
+# Or use pip with requirements.txt (legacy)
 pip install -r requirements.txt
-cd frontend && npm install
 
 # Start services
 python -m uvicorn interview_api:app --host 0.0.0.0 --port 8001 &
-python background_evaluator.py &
+python -m interview.evaluator.background_evaluator &
 cd frontend && npm run dev
 ```
 

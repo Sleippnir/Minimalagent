@@ -45,7 +45,7 @@ from pipecat.services.llm_service import FunctionCallParams
 from pipecat.adapters.schemas.tools_schema import ToolsSchema
 from pipecat.adapters.schemas.function_schema import FunctionSchema
 from pipecat.processors.transcript_processor import TranscriptProcessor
-from pipecat.services.whisper.stt import WhisperSTTService
+# from pipecat.services.whisper.stt import WhisperSTTService  # Removed - not used, pulls in CUDA
 
 
 # Import Supabase client from context service

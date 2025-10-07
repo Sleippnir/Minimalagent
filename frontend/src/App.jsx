@@ -3,6 +3,7 @@ import { SupabaseProvider } from './SupabaseContext.jsx'
 import DashboardView from './components/DashboardView.jsx'
 import InterviewsView from './components/InterviewsView.jsx'
 import CandidatesView from './components/CandidatesView.jsx'
+import EvaluationsView from './components/EvaluationsView.jsx'
 
 function App() {
   const [currentView, setCurrentView] = useState('dashboard')
@@ -15,6 +16,8 @@ function App() {
         return <InterviewsView />
       case 'candidates':
         return <CandidatesView />
+      case 'evaluations':
+        return <EvaluationsView />
       default:
         return <DashboardView />
     }
@@ -60,6 +63,16 @@ function App() {
                     } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
                   >
                     Candidates
+                  </button>
+                  <button
+                    onClick={() => setCurrentView('evaluations')}
+                    className={`${
+                      currentView === 'evaluations'
+                        ? 'border-cyan-400 text-cyan-400'
+                        : 'border-transparent text-gray-300 hover:border-gray-300 hover:text-white'
+                    } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+                  >
+                    Evaluations
                   </button>
                 </div>
               </div>

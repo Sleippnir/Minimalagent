@@ -106,7 +106,7 @@ graph TD
    cd frontend && npm run dev
 
    # Terminal 3: Start background evaluator
-   python background_evaluator.py
+   python -m interview.evaluator.background_evaluator
 
    # Optional: Start content maintenance (run periodically)
    python scripts/maintain_content.py
@@ -314,7 +314,7 @@ Refresh question-job relationships based on tags.
 
 ### Core Background Services
 
-#### 1. Background Evaluator (`background_evaluator.py`)
+#### 1. Background Evaluator (`interview/evaluator/background_evaluator.py`)
 
 - **Purpose**: Processes completed interviews with AI evaluation
 - **Trigger**: Runs continuously, polls `evaluator_queue` every 30 seconds

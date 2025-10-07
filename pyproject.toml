@@ -20,7 +20,7 @@ dependencies = [
     "nltk>=3.8.1",
     "numpy>=1.24.4",
     "pillow>=10.1.0",
-    "pipecat-ai[cartesia,daily,deepgram,local-smart-turn-v3,silero,webrtc,whisper]>=0.0.85",
+    "pipecat-ai[cartesia,daily,deepgram,local-smart-turn-v3,silero,webrtc]>=0.0.85",
     "pipecat-ai-flows>=0.0.21",
     "pydantic>=2.5.0",
     "python-dotenv>=1.0.0",
@@ -33,6 +33,6 @@ dependencies = [
     "uvicorn[standard]>=0.24.0",
     "simli-ai>=0.1.19",
     "pipecat-ai-small-webrtc-prebuilt>=1.0.0",
-    "openai-whisper>=20250625",
+    # "openai-whisper>=20250625",  # Removed - pulls in CUDA dependencies, not currently used
     "google-genai>=1.41.0",
 ]

@@ -7,13 +7,21 @@ WORKDIR /app
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     ffmpeg \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
-COPY requirements.txt .
+# Install uv package manager
+RUN pip install uv
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy pyproject.toml and uv.lock for better dependency management
+COPY pyproject.toml uv.lock ./
+
+# Install Python dependencies using uv (creates and uses virtual environment)
+RUN uv sync --frozen
+
+# Set the virtual environment path
+ENV VIRTUAL_ENV=/app/.venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Copy the entire application
 COPY . .

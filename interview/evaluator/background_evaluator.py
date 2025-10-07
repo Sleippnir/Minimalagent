@@ -11,13 +11,13 @@ from datetime import datetime
 import time
 import uuid
 
-from interview.config import InterviewConfig
-from interview.context_service_integration import ContextService
-from interview.context_service.evaluator_repository import (
+from ..config import InterviewConfig
+from ..context_service_integration import ContextService
+from ..context_service.evaluator_repository import (
     Evaluation,
     EvaluationRepository,
 )
-from interview.evaluator.interview import (
+from .interview import (
     Interview,
     Candidate,
     Job,
@@ -27,7 +27,7 @@ from interview.evaluator.interview import (
     TranscriptEntry,
     QuestionAnswer,
 )
-from interview.evaluator.helpers import EvaluationHelper
+from .helpers import EvaluationHelper
 
 
 class BackgroundEvaluatorAgent:
@@ -260,16 +260,18 @@ class BackgroundEvaluatorAgent:
                     "transcript": interview.transcript_data.full_text_transcript,
                     "job_description": interview.job.description,
                     "rubric": interview.evaluation_materials.rubric.to_dict(),
+                    "evaluator_prompt": interview.evaluation_materials.evaluator_prompt,
                 }
             )
 
             return {
-                "evaluation_1": evaluation_result,  # OpenAI result (placeholder)
-                "evaluation_2": evaluation_result,  # Google result (placeholder)
-                "evaluation_3": evaluation_result,  # DeepSeek result (placeholder)
+                "evaluation_1": evaluation_result.get("evaluations", {}).get("evaluation_1"),  # OpenAI result
+                "evaluation_2": evaluation_result.get("evaluations", {}).get("evaluation_2"),  # Google result
+                "evaluation_3": evaluation_result.get("evaluations", {}).get("evaluation_3"),  # DeepSeek result
                 "overall_score": evaluation_result.get("overall_score", 0),
                 "recommendation": evaluation_result.get("recommendation", "Unknown"),
-                "evaluated_at": datetime.now().isoformat(),
+                "evaluated_at": evaluation_result.get("evaluated_at", datetime.now().isoformat()),
+                "combined_result": evaluation_result,  # Store full combined result for reference
             }
 
         except Exception as e:
@@ -298,38 +300,38 @@ class BackgroundEvaluatorAgent:
             # Create Evaluation objects for each evaluation
             evaluation_repo = EvaluationRepository()
 
-            # Store evaluation_1 (OpenAI GPT-4o)
+            # Store evaluation_1
             if evaluation_results.get("evaluation_1"):
                 eval_data = evaluation_results["evaluation_1"]
                 evaluation_1 = Evaluation(
                     interview_id=interview_id,
-                    evaluator_llm_model="gpt-4o",
-                    score=eval_data.get("overall_score") or eval_data.get("score"),
-                    reasoning=eval_data.get("recommendation", ""),
+                    evaluator_llm_model=eval_data.get("model"),
+                    score=eval_data.get("overall_score"),
+                    reasoning=eval_data.get("overall_reasoning") or eval_data.get("reasoning", ""),
                     raw_llm_response=eval_data,
                 )
                 await evaluation_repo.create(evaluation_1)
 
-            # Store evaluation_2 (Google Gemini)
+            # Store evaluation_2
             if evaluation_results.get("evaluation_2"):
                 eval_data = evaluation_results["evaluation_2"]
                 evaluation_2 = Evaluation(
                     interview_id=interview_id,
-                    evaluator_llm_model="gemini-2.5-flash",
-                    score=eval_data.get("overall_score") or eval_data.get("score"),
-                    reasoning=eval_data.get("recommendation", ""),
+                    evaluator_llm_model=eval_data.get("model"),
+                    score=eval_data.get("overall_score"),
+                    reasoning=eval_data.get("overall_reasoning") or eval_data.get("reasoning", ""),
                     raw_llm_response=eval_data,
                 )
                 await evaluation_repo.create(evaluation_2)
 
-            # Store evaluation_3 (DeepSeek)
+            # Store evaluation_3
             if evaluation_results.get("evaluation_3"):
                 eval_data = evaluation_results["evaluation_3"]
                 evaluation_3 = Evaluation(
                     interview_id=interview_id,
-                    evaluator_llm_model="deepseek-chat",
-                    score=eval_data.get("overall_score") or eval_data.get("score"),
-                    reasoning=eval_data.get("recommendation", ""),
+                    evaluator_llm_model=eval_data.get("model"),
+                    score=eval_data.get("overall_score"),
+                    reasoning=eval_data.get("overall_reasoning") or eval_data.get("reasoning", ""),
                     raw_llm_response=eval_data,
                 )
                 await evaluation_repo.create(evaluation_3)
@@ -356,6 +358,15 @@ async def main():
         level=logging.INFO,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
+
+    try:
+        # Validate configuration before starting
+        from ..config import InterviewConfig
+        InterviewConfig.validate()
+        logging.info("Configuration validated successfully")
+    except Exception as e:
+        logging.error(f"Configuration validation failed: {e}")
+        return
 
     agent = BackgroundEvaluatorAgent()
 

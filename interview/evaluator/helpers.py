@@ -24,13 +24,18 @@ class RealLLMEvaluator:
         self.google_key = config.GOOGLE_API_KEY
         self.deepseek_key = config.DEEPSEEK_API_KEY
         self.openrouter_key = config.OPENROUTER_API_KEY
+        
+        # Model configurations
+        self.openai_model = config.OPENAI_MODEL
+        self.google_model = config.GEMINI_MODEL
+        self.deepseek_model = config.DEEPSEEK_MODEL
 
         # Initialize clients
         if self.google_key:
             self.google_client = genai.Client(api_key=self.google_key)
 
     async def evaluate_with_openai(
-        self, transcript: str, job_description: str
+        self, transcript: str, job_description: str, evaluator_prompt: str = ""
     ) -> Dict[str, Any]:
         """Evaluate interview using OpenAI GPT-4o"""
         if not self.openai_key:
@@ -39,7 +44,11 @@ class RealLLMEvaluator:
         try:
             client = openai.AsyncOpenAI(api_key=self.openai_key)
 
-            prompt = f"""
+            # Use provided evaluator prompt or default
+            if evaluator_prompt:
+                prompt = f"{evaluator_prompt}\n\nJob Description:\n{job_description}\n\nInterview Transcript:\n{transcript}"
+            else:
+                prompt = f"""
 You are an expert technical interviewer evaluating a candidate for a position.
 
 Job Description:
@@ -59,7 +68,7 @@ Format your response as JSON with these keys: score, reasoning, strengths, impro
 """
 
             response = await client.chat.completions.create(
-                model="gpt-4o",
+                model=self.openai_model,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.3,
                 max_completion_tokens=1000,
@@ -79,14 +88,14 @@ Format your response as JSON with these keys: score, reasoning, strengths, impro
                 result = json.loads(content)
                 return {
                     "provider": "openai",
-                    "model": "gpt-4o",
+                    "model": self.openai_model,
                     "raw_response": content,
                     **result,
                 }
             except json.JSONDecodeError:
                 return {
                     "provider": "openai",
-                    "model": "gpt-4o",
+                    "model": self.openai_model,
                     "raw_response": content,
                     "error": "Failed to parse JSON response",
                 }
@@ -95,14 +104,18 @@ Format your response as JSON with these keys: score, reasoning, strengths, impro
             return {"error": f"OpenAI API error: {str(e)}"}
 
     async def evaluate_with_google(
-        self, transcript: str, job_description: str
+        self, transcript: str, job_description: str, evaluator_prompt: str = ""
     ) -> Dict[str, Any]:
         """Evaluate interview using Google Gemini"""
         if not self.google_key:
             return {"error": "Google API key not configured"}
 
         try:
-            prompt = f"""
+            # Use provided evaluator prompt or default
+            if evaluator_prompt:
+                prompt = f"{evaluator_prompt}\n\nJob Description:\n{job_description}\n\nInterview Transcript:\n{transcript}"
+            else:
+                prompt = f"""
 You are an expert technical interviewer evaluating a candidate for a position.
 
 Job Description:
@@ -122,7 +135,7 @@ Format your response as JSON with these keys: score, reasoning, strengths, impro
 """
 
             response = await self.google_client.aio.models.generate_content(
-                model="gemini-2.5-flash", contents=prompt
+                model=self.google_model, contents=prompt
             )
             content = response.text.strip()
 
@@ -137,14 +150,14 @@ Format your response as JSON with these keys: score, reasoning, strengths, impro
                 result = json.loads(content)
                 return {
                     "provider": "google",
-                    "model": "gemini-2.5-flash",
+                    "model": self.google_model,
                     "raw_response": content,
                     **result,
                 }
             except json.JSONDecodeError:
                 return {
                     "provider": "google",
-                    "model": "gemini-2.5-flash",
+                    "model": self.google_model,
                     "raw_response": content,
                     "error": "Failed to parse JSON response",
                 }
@@ -153,14 +166,18 @@ Format your response as JSON with these keys: score, reasoning, strengths, impro
             return {"error": f"Google API error: {str(e)}"}
 
     async def evaluate_with_deepseek(
-        self, transcript: str, job_description: str
+        self, transcript: str, job_description: str, evaluator_prompt: str = ""
     ) -> Dict[str, Any]:
         """Evaluate interview using DeepSeek via OpenRouter"""
         if not self.openrouter_key:
             return {"error": "OpenRouter API key not configured"}
 
         try:
-            prompt = f"""
+            # Use provided evaluator prompt or default
+            if evaluator_prompt:
+                prompt = f"{evaluator_prompt}\n\nJob Description:\n{job_description}\n\nInterview Transcript:\n{transcript}"
+            else:
+                prompt = f"""
 You are an expert technical interviewer evaluating a candidate for a position.
 
 Job Description:
@@ -186,7 +203,7 @@ Format your response as JSON with these keys: score, reasoning, strengths, impro
                     "Content-Type": "application/json",
                 },
                 json={
-                    "model": "deepseek/deepseek-chat",
+                    "model": self.deepseek_model,
                     "messages": [{"role": "user", "content": prompt}],
                     "temperature": 0.3,
                     "max_tokens": 1000,
@@ -213,14 +230,14 @@ Format your response as JSON with these keys: score, reasoning, strengths, impro
                 result = json.loads(content)
                 return {
                     "provider": "deepseek",
-                    "model": "deepseek-chat",
+                    "model": self.deepseek_model.split("/")[-1],  # Extract just the model name part
                     "raw_response": content,
                     **result,
                 }
             except json.JSONDecodeError:
                 return {
                     "provider": "deepseek",
-                    "model": "deepseek-chat",
+                    "model": self.deepseek_model.split("/")[-1],  # Extract just the model name part
                     "raw_response": content,
                     "error": "Failed to parse JSON response",
                 }
@@ -255,6 +272,7 @@ class EvaluationHelper:
             transcript = interview_data.get("transcript", "")
             job_description = interview_data.get("job_description", "")
             interview_id = interview_data.get("interview_id", "")
+            evaluator_prompt = interview_data.get("evaluator_prompt", "")
 
             if not transcript or not job_description:
                 return {
@@ -268,9 +286,9 @@ class EvaluationHelper:
 
             # Run evaluations in parallel
             tasks = [
-                evaluator.evaluate_with_openai(transcript, job_description),
-                evaluator.evaluate_with_google(transcript, job_description),
-                evaluator.evaluate_with_deepseek(transcript, job_description),
+                evaluator.evaluate_with_openai(transcript, job_description, evaluator_prompt),
+                evaluator.evaluate_with_google(transcript, job_description, evaluator_prompt),
+                evaluator.evaluate_with_deepseek(transcript, job_description, evaluator_prompt),
             ]
 
             results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -285,8 +303,8 @@ class EvaluationHelper:
                     evaluations[key] = {"error": str(result)}
                 else:
                     evaluations[key] = result
-                    if "score" in result and isinstance(result["score"], (int, float)):
-                        scores.append(result["score"])
+                    if "overall_score" in result and isinstance(result["overall_score"], (int, float)):
+                        scores.append(result["overall_score"])
 
             # Calculate overall score
             overall_score = sum(scores) / len(scores) if scores else 0

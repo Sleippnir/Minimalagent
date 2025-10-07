@@ -62,7 +62,7 @@ const SearchableDropdown = ({ label, options, value, onChange, displayKey, place
         </span>
 
         {isOpen && filteredOptions.length > 0 && (
-          <div className="absolute z-10 mt-1 w-full glass-ui shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-cyan-800 overflow-auto focus:outline-none sm:text-sm">
+          <div className="absolute z-50 mt-1 w-full glass-ui shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-cyan-800 overflow-auto focus:outline-none sm:text-sm">
             {filteredOptions.map((option, index) => (
               <div
                 key={index}

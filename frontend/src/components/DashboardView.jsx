@@ -56,7 +56,7 @@ const DashboardView = () => {
         setChartData({
           statusDistribution: [
             { name: 'Scheduled', value: 5, color: '#fbbf24' },
-            { name: 'Completed', value: 7, color: '#3b82f6' },
+            { name: 'Completed', value: 7, color: '#8b5cf6' },
             { name: 'Evaluated', value: 3, color: '#10b981' }
           ],
           modelPerformance: [
@@ -177,9 +177,9 @@ const DashboardView = () => {
 
     const statusDistribution = [
       { name: 'Scheduled', value: statusCounts.scheduled || 0, color: '#fbbf24' },
-      { name: 'Completed', value: statusCounts.completed || 0, color: '#3b82f6' },
+      { name: 'Completed', value: statusCounts.completed || 0, color: '#8b5cf6' },
       { name: 'Evaluated', value: statusCounts.evaluated || 0, color: '#10b981' }
-    ]
+    ].filter(item => item.value > 0)
 
     // Model performance for bar chart
     const { data: evaluations } = await supabase

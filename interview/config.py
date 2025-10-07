@@ -32,7 +32,11 @@ class InterviewConfig:
     # Service Configuration
     LANGUAGE = "en-US"
     SAMPLE_RATE = 16000
-    GEMINI_MODEL = "gemini-2.5-flash"
+    
+    # LLM Model Configuration
+    OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
+    GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+    DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek/deepseek-chat")
 
     @classmethod
     def validate(cls):
