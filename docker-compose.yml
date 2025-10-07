@@ -7,7 +7,7 @@ services:
       - "7861:7861"  # WebRTC bot (when launched)
     environment:
       - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
       - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY}
@@ -37,7 +37,7 @@ services:
     command: python -m interview.evaluator.background_evaluator
     environment:
       - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY}
       - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY}
@@ -70,7 +70,7 @@ services:
     command: sh -c "while true; do python scripts/maintain_content.py; sleep 86400; done"
     environment:
       - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
     volumes:
       - ./scripts:/app/scripts  # Mount scripts directory
     depends_on:

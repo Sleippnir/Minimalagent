@@ -130,7 +130,8 @@
             <button
               onclick="alert('Hiring Manager dashboard coming soon!')"
               class="glass-ui border border-gray-600/30 text-gray-500 font-semibold py-4 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center opacity-75 hover:opacity-90 cursor-not-allowed"
-              disabled
+              aria-disabled="true"
+              tabindex="-1"
             >
               <span class="mr-2">👔</span>
               Hiring Manager
@@ -140,7 +141,8 @@
             <button
               onclick="alert('Administrator dashboard coming soon!')"
               class="glass-ui border border-gray-600/30 text-gray-500 font-semibold py-4 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center opacity-75 hover:opacity-90 cursor-not-allowed"
-              disabled
+              aria-disabled="true"
+              tabindex="-1"
             >
               <span class="mr-2">⚙️</span>
               Administrator
@@ -184,6 +186,9 @@
         const buttons = document.querySelectorAll('button[onclick]');
         buttons.forEach(button => {
           button.addEventListener('click', function() {
+            if (this.getAttribute('aria-disabled') === 'true') {
+              return;
+            }
             this.innerHTML = '<span class="animate-spin mr-2">⏳</span> Loading...';
             this.disabled = true;
           });

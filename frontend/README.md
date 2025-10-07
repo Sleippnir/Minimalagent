@@ -12,7 +12,7 @@ The interview system frontend is a modern React 18 application built with Vite, 
 - **Vite** for fast development and optimized production builds
 - **Tailwind CSS** for responsive styling and design system
 - **React Router** for client-side navigation
-- **Axios** for API communication
+- **Fetch API** for API communication
 
 ### Services
 

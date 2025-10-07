@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import PropTypes from 'prop-types'
 
 const SearchableDropdown = ({ label, options, value, onChange, displayKey, placeholder, extraButton }) => {
   const [isOpen, setIsOpen] = useState(false)
@@ -30,7 +31,7 @@ const SearchableDropdown = ({ label, options, value, onChange, displayKey, place
     setTimeout(() => setIsOpen(false), 150)
   }
 
-  const displayValue = value ? (typeof displayKey === 'function' ? displayKey(value) : value[displayKey]) : ''
+  const displayValue = value ? ((typeof displayKey === 'function' ? displayKey(value) : value[displayKey]) ?? '') : ''
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
@@ -61,24 +62,40 @@ const SearchableDropdown = ({ label, options, value, onChange, displayKey, place
           </svg>
         </span>
 
-        {isOpen && filteredOptions.length > 0 && (
+        {isOpen && (
           <div className="absolute z-50 mt-1 w-full glass-ui shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-cyan-800 overflow-auto focus:outline-none sm:text-sm">
-            {filteredOptions.map((option, index) => (
-              <div
-                key={index}
-                onMouseDown={() => handleSelect(option)}
-                className="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-cyan-900 text-gray-300"
-              >
-                <span className="block truncate">
-                  {typeof displayKey === 'function' ? displayKey(option) : option[displayKey]}
-                </span>
+            {filteredOptions.length === 0 ? (
+              <div className="py-2 pl-3 pr-9 text-gray-500 italic">
+                No results found
               </div>
-            ))}
+            ) : (
+              filteredOptions.map((option, index) => (
+                <div
+                  key={index}
+                  onMouseDown={() => handleSelect(option)}
+                  className="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-cyan-900 text-gray-300"
+                >
+                  <span className="block truncate">
+                    {typeof displayKey === 'function' ? displayKey(option) : option[displayKey]}
+                  </span>
+                </div>
+              ))
+            )}
           </div>
         )}
       </div>
     </div>
   )
+}
+
+SearchableDropdown.propTypes = {
+  label: PropTypes.string.isRequired,
+  options: PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.object, PropTypes.string])).isRequired,
+  value: PropTypes.oneOfType([PropTypes.object, PropTypes.string]),
+  onChange: PropTypes.func.isRequired,
+  displayKey: PropTypes.oneOfType([PropTypes.string, PropTypes.func]).isRequired,
+  placeholder: PropTypes.string,
+  extraButton: PropTypes.node
 }
 
 export default SearchableDropdown
