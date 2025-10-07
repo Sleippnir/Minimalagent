@@ -9,7 +9,7 @@ SECURITY DEFINER
 AS $$
 DECLARE
     stuck_interview record;
-    edge_function_url text := 'https://bbnbrwpkvjncdgcaoiyp.supabase.co/functions/v1/reprocess-interview';
+    edge_function_url text := 'https://your-project.supabase.co/functions/v1/reprocess-interview';
     service_role_key text := current_setting('app.service_role_key', true);
     request_body json;
     response_status integer;

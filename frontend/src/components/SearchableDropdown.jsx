@@ -8,7 +8,7 @@ const SearchableDropdown = ({ label, options, value, onChange, displayKey, place
 
   const filteredOptions = options.filter(option => {
     const displayText = typeof displayKey === 'function' ? displayKey(option) : option[displayKey]
-    return displayText.toLowerCase().includes(search.toLowerCase())
+    return displayText?.toLowerCase().includes(search.toLowerCase())
   })
 
   const handleSelect = (option) => {
