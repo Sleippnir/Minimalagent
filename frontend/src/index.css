@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-900 text-gray-100 font-sans;
+    text-size-adjust: 100%;
+  }
+}
+
+@layer components {
+  .glass-ui {
+    @apply bg-gray-800/80 backdrop-blur-md border border-cyan-400/20 rounded-xl;
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .main-background {
+    @apply bg-gradient-to-br from-gray-900 via-gray-900 to-gray-900;
+  }
+
+  .stat-card {
+    @apply bg-gray-800/80 backdrop-blur-md rounded-xl border border-cyan-400/20;
+  }
+
+  .btn-primary {
+    @apply bg-cyan-400 text-gray-900 rounded-lg px-4 py-2 font-semibold hover:bg-cyan-300 transition-colors;
+  }
+}
+
+/* Form Inputs */
+.form-input {
+    background: var(--glass-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    padding: 0.5rem;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 10px var(--glow-color);
+}
+
+/* Tables */
+.table-container {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+}
+
+.table-header {
+    background: rgba(10, 25, 47, 0.6);
+    color: var(--accent-cyan);
+}
+
+.table-row {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.table-row:hover {
+    background: rgba(100, 255, 218, 0.05);
+}

@@ -7,9 +7,4 @@ from .evaluator_service import InterviewEvaluator
 from .context_service_integration import ContextService
 
 __version__ = "1.0.0"
-__all__ = [
-    'InterviewConfig',
-    'InterviewBot', 
-    'InterviewEvaluator',
-    'ContextService'
-]
+__all__ = ["InterviewConfig", "InterviewBot", "InterviewEvaluator", "ContextService"]

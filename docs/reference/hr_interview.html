@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Dashboard</title>
+    <link rel="icon" href="https://placehold.co/32x32/64FFDA/0A192F?text=HR">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* --- Design System Implementation --- */
+        :root {
+            --background-dark-blue: #0A192F;
+            --accent-cyan: #64FFDA;
+            --glow-color: rgba(100, 255, 218, 0.75);
+            --text-primary: #e0e0e0;
+            --text-secondary: #8892b0;
+            --glass-bg: rgba(10, 25, 47, 0.85);
+            --border-color: rgba(100, 255, 218, 0.2);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-dark-blue);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .main-background {
+            background-image: linear-gradient(to-br, var(--background-dark-blue), rgba(10, 25, 47, 0.8), var(--background-dark-blue));
+        }
+
+        /* Glass Morphism Container */
+        .glass-ui {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+        }
+
+        /* Stat Cards */
+        .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 30px rgba(100, 255, 218, 0.1);
+        }
+
+        /* Buttons */
+        .action-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid var(--accent-cyan);
+            background-color: transparent;
+            color: var(--accent-cyan);
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .action-btn:hover:not(:disabled) {
+            background-color: rgba(100, 255, 218, 0.1);
+            box-shadow: 0 0 15px rgba(100, 255, 218, 0.1);
+        }
+        .details-btn {
+            color: var(--accent-cyan);
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+        .details-btn:hover {
+            text-decoration: underline;
+            color: white;
+        }
+        
+        /* Form Elements */
+        input, select, textarea {
+            background: rgba(10, 25, 47, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 0 2px rgba(100, 255, 218, 0.2);
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        .file-input-label {
+             background: rgba(10, 25, 47, 0.6); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.5rem 0.75rem; color: var(--text-secondary); transition: all 0.2s ease; cursor: pointer; display: block;
+        }
+        .file-input-label:hover { border-color: var(--accent-cyan); color: var(--text-primary); }
+
+        /* Tab styling */
+        .main-tab-btn, .sub-tab-btn { padding: 0.75rem 0.25rem; font-weight: 600; color: var(--text-secondary); border-bottom: 3px solid transparent; transition: all 0.2s ease-in-out; }
+        .main-tab-btn:hover, .sub-tab-btn:hover { color: var(--text-primary); }
+        .active-main-tab, .active-sub-tab { color: var(--accent-cyan); border-bottom-color: var(--accent-cyan); }
+        .modal-tab-btn { padding: 0.75rem 0.25rem; font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); border-bottom: 2px solid transparent; transition: all 0.2s ease-in-out; }
+        .modal-tab-btn:hover { color: var(--text-primary); }
+        .active-modal-tab { color: var(--accent-cyan); border-bottom-color: var(--accent-cyan); }
+
+        /* Status Badges */
+        .status-badge { display: inline-flex; padding: 0.25rem 0.75rem; font-size: 0.75rem; font-weight: 500; border-radius: 9999px; }
+        .status-scheduled { background-color: rgba(59, 130, 246, 0.1); color: #60a5fa; }
+        .status-completed { background-color: rgba(34, 197, 94, 0.1); color: #4ade80; }
+        .status-evaluated { background-color: rgba(245, 158, 11, 0.1); color: #facc15; }
+        .status-cancelled { background-color: rgba(239, 68, 68, 0.1); color: #f87171; }
+        
+        /* Question List Item */
+        .question-item { background-color: rgba(100, 255, 218, 0.05); border-left: 3px solid transparent; transition: all 0.2s ease; }
+        .question-item:hover { border-left-color: var(--accent-cyan); background-color: rgba(100, 255, 218, 0.1); }
+        
+        /* Content Tooltip */
+        #content-tooltip {
+            position: fixed; z-index: 50; padding: 0.75rem; border-radius: 8px; max-width: 400px;
+            font-size: 0.875rem; line-height: 1.5; pointer-events: none; opacity: 0;
+            transition: opacity 0.2s ease; background: var(--glass-bg); backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color); box-shadow: 0 4px 30px rgba(0,0,0,0.2);
+        }
+        #content-tooltip pre { white-space: pre-wrap; word-wrap: break-word; }
+
+
+        /* --- Utility & Existing Styles --- */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(100, 255, 218, 0.05); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: rgba(100, 255, 218, 0.3); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(100, 255, 218, 0.5); }
+        .modal { transition: opacity 0.3s ease; }
+        .modal-content { transition: transform 0.3s ease; }
+        .loader {
+            border: 4px solid rgba(100, 255, 218, 0.2);
+            border-left-color: var(--accent-cyan);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen main-background">
+        <!-- Header -->
+        <header class="sticky top-0 z-30" style="background: rgba(10, 25, 47, 0.7); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-color);">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center py-4">
+                    <h1 class="text-2xl font-bold text-white">HR Dashboard</h1>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="glass-ui p-6">
+                <h2 class="text-xl font-bold text-white mb-6">Create New Interview</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Left Column: Configuration -->
+                    <div class="lg:col-span-1 space-y-6">
+                        <!-- Candidate Searchable Dropdown -->
+                        <div class="relative">
+                            <label for="candidate-search">Candidate</label>
+                            <input type="text" id="candidate-search" placeholder="Search by name or email...">
+                            <div id="candidate-search-results" class="absolute z-20 w-full mt-1 hidden"></div>
+                        </div>
+                        <!-- Job Searchable Dropdown -->
+                        <div class="relative">
+                            <label for="job-search">Job Position</label>
+                            <input type="text" id="job-search" placeholder="Search by title...">
+                            <div id="job-search-results" class="absolute z-20 w-full mt-1 hidden"></div>
+                        </div>
+                        <!-- Resume Upload -->
+                        <div>
+                            <label for="resume-upload">Upload Resume (PDF)</label>
+                            <input type="file" id="resume-upload" class="hidden" accept=".pdf">
+                            <label for="resume-upload" id="resume-upload-label" class="file-input-label truncate">Click to upload a new resume</label>
+                            <div id="resume-upload-status" class="text-xs mt-1"></div>
+                        </div>
+                        <!-- Prompts & Rubric -->
+                        <div><label for="interviewer-prompt-select">Interviewer Prompt</label><select id="interviewer-prompt-select"></select></div>
+                        <div><label for="evaluator-prompt-select">Evaluator Prompt</label><select id="evaluator-prompt-select"></select></div>
+                        <div><label for="rubric-select">Evaluation Rubric</label><select id="rubric-select"></select></div>
+                    </div>
+                    <!-- Middle Column: Questions -->
+                    <div class="lg:col-span-1 space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                             <div>
+                                <label for="interview-type-filter">Interview Type</label>
+                                <select id="interview-type-filter">
+                                    <option value="">All</option>
+                                    <option value="Behavioral">Behavioral</option>
+                                    <option value="Technical">Technical</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="question-search">Search Questions</label>
+                                <input type="text" id="question-search" placeholder="Filter by keyword...">
+                            </div>
+                        </div>
+                        <div id="available-questions" class="h-96 overflow-y-auto p-2 rounded-lg space-y-2" style="background:rgba(0,0,0,0.2)"></div>
+                    </div>
+                    <!-- Right Column: Summary & Action -->
+                    <div class="lg:col-span-1">
+                        <div class="glass-ui p-4 sticky top-24">
+                            <h3 class="text-lg font-bold mb-4 border-b pb-2" style="border-color:var(--border-color); color:var(--accent-cyan);">Interview Summary</h3>
+                            <div id="interview-summary" class="space-y-4 text-sm">
+                                <p><strong>Candidate:</strong> <span id="summary-candidate" class="text-secondary">Not Selected</span></p>
+                                <p><strong>Resume:</strong> <span id="summary-resume" class="text-secondary">N/A</span></p>
+                                <p><strong>Position:</strong> <span id="summary-job" class="text-secondary summary-item" data-popup-content-key="job">Not Selected</span></p>
+                                <p><strong>Interviewer:</strong> <span id="summary-interviewer-prompt" class="text-secondary summary-item" data-popup-content-key="interviewerPrompt">Not Selected</span></p>
+                                <p><strong>Evaluator:</strong> <span id="summary-evaluator-prompt" class="text-secondary summary-item" data-popup-content-key="evaluatorPrompt">Not Selected</span></p>
+                                <p><strong>Rubric:</strong> <span id="summary-rubric" class="text-secondary summary-item" data-popup-content-key="rubric">Not Selected</span></p>
+                                <div>
+                                    <strong>Questions (<span id="summary-question-count">0</span>):</strong>
+                                    <div id="summary-questions" class="mt-2 max-h-48 overflow-y-auto text-xs space-y-1 pr-2">
+                                        <em class="text-secondary">Add questions from the list.</em>
+                                    </div>
+                                </div>
+                            </div>
+                            <button id="schedule-interview-btn" class="action-btn w-full mt-6" disabled>Schedule Interview</button>
+                            <div id="schedule-message" class="mt-2 text-center text-sm"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Content Tooltip -->
+    <div id="content-tooltip"></div>
+
+    <script type="module">
+        // --- Supabase Setup ---
+        const SUPABASE_URL = process.env.SUPABASE_URL; 
+        const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+        if (SUPABASE_URL === 'YOUR_SUPABASE_URL') {
+            document.body.innerHTML = `<div class="h-screen w-screen flex items-center justify-center text-center p-8" style="background-color: #500; color: white;"><div class="bg-red-700 p-8 rounded-lg border border-red-500"><h1 class="text-2xl font-bold mb-4">Configuration Error</h1><p>Please update Supabase credentials in the script tag.</p></div></div>`;
+            throw new Error("Supabase credentials are not configured.");
+        }
+        const { createClient } = supabase;
+        const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // --- State & Caches ---
+        let candidatesCache = [], jobsCache = [], questionsCache = [], promptsCache = [], rubricsCache = [];
+        let interviewFormState = {
+            candidate: null, job: null, interviewerPrompt: null, evaluatorPrompt: null, rubric: null, questions: [], newResumeFile: null
+        };
+
+        // --- DOM Elements ---
+        let DOMElements = {};
+
+        // --- UI & State Logic ---
+
+        function updateSummary() {
+            const { candidate, job, interviewerPrompt, evaluatorPrompt, rubric, questions } = interviewFormState;
+            DOMElements.summary.candidate.textContent = candidate ? `${candidate.first_name} ${candidate.last_name}` : 'Not Selected';
+            
+            let resumeText = 'N/A';
+            if (interviewFormState.newResumeFile) resumeText = interviewFormState.newResumeFile.name + " (new upload)";
+            else if (candidate?.resume_path) resumeText = candidate.resume_path.split('/').pop();
+            DOMElements.summary.resume.textContent = resumeText;
+            
+            DOMElements.summary.job.textContent = job ? job.title : 'Not Selected';
+            DOMElements.summary.interviewerPrompt.textContent = interviewerPrompt ? interviewerPrompt.name : 'Not Selected';
+            DOMElements.summary.evaluatorPrompt.textContent = evaluatorPrompt ? evaluatorPrompt.name : 'Not Selected';
+            DOMElements.summary.rubric.textContent = rubric ? rubric.name : 'Not Selected';
+            DOMElements.summary.questionCount.textContent = questions.length;
+
+            if (questions.length > 0) {
+                DOMElements.summary.questions.innerHTML = questions.map(q => `
+                    <div class="p-1 rounded bg-black/20 flex justify-between items-center">
+                        <span class="pr-2">${q.text}</span>
+                        <button data-id="${q.question_id}" class="remove-question-btn text-red-400 hover:text-white font-bold">&times;</button>
+                    </div>`).join('');
+            } else {
+                DOMElements.summary.questions.innerHTML = `<em class="text-secondary">Add questions from the list.</em>`;
+            }
+            
+            const isReady = candidate && job && interviewerPrompt && evaluatorPrompt && rubric && questions.length > 0;
+            DOMElements.scheduleBtn.disabled = !isReady;
+        }
+        
+        function renderAvailableQuestions() {
+            const type = DOMElements.interviewTypeFilter.value.toLowerCase();
+            const term = DOMElements.questionSearch.value.toLowerCase();
+
+            const available = questionsCache.filter(q => {
+                const isSelected = interviewFormState.questions.some(sq => sq.question_id === q.question_id);
+                if (isSelected) return false;
+                
+                const typeMatch = !type || (q.category && q.category.toLowerCase() === type);
+                const termMatch = !term || q.text.toLowerCase().includes(term) || q.tags?.some(t => t.toLowerCase().includes(term));
+                
+                return typeMatch && termMatch;
+            });
+            
+            DOMElements.availableQuestions.innerHTML = available.length ? available.map(q => `
+                <div class="question-item p-2 rounded-md flex justify-between items-center">
+                    <p class="text-sm pr-2">${q.text}</p>
+                    <button data-id="${q.question_id}" class="add-question-btn text-cyan-400 hover:text-white text-xs font-bold py-1 px-2 rounded-full bg-cyan-400/10 hover:bg-cyan-400/20">+</button>
+                </div>
+            `).join('') : `<p class="text-center text-sm text-secondary p-4">No questions found.</p>`;
+        }
+
+        // --- Data Fetching & Initialization ---
+        async function initCreateInterviewTab() {
+            const { data: candidates } = await db.from('candidates').select('*'); candidatesCache = candidates || [];
+            const { data: jobs } = await db.from('jobs').select('*'); jobsCache = jobs || [];
+            const { data: questions } = await db.from('questions').select('*'); questionsCache = questions || [];
+            const { data: prompts } = await db.from('prompts').select('*'); promptsCache = prompts || [];
+            const { data: rubrics } = await db.from('rubrics').select('*'); rubricsCache = rubrics || [];
+            
+            DOMElements.interviewerPromptSelect.innerHTML = '<option value="">Select Prompt</option>' + prompts.filter(p => p.purpose === 'interviewer').map(p => `<option value="${p.prompt_id}">${p.name}</option>`).join('');
+            DOMElements.evaluatorPromptSelect.innerHTML = '<option value="">Select Prompt</option>' + prompts.filter(p => p.purpose === 'evaluator').map(p => `<option value="${p.prompt_id}">${p.name}</option>`).join('');
+            DOMElements.rubricSelect.innerHTML = '<option value="">Select Rubric</option>' + rubrics.map(r => `<option value="${r.rubric_id}">${r.name}</option>`).join('');
+
+            renderAvailableQuestions();
+        }
+
+        // --- Event Handlers ---
+        
+        async function handleScheduleInterview() {
+            DOMElements.scheduleBtn.disabled = true;
+            DOMElements.scheduleMessage.textContent = 'Scheduling...';
+            DOMElements.scheduleMessage.style.color = 'var(--text-secondary)';
+
+            let { candidate, job, interviewerPrompt, evaluatorPrompt, rubric, questions, newResumeFile } = interviewFormState;
+
+            // 1. Handle Resume Upload if a new file is present
+            if (newResumeFile) {
+                const filePath = `resumes/${candidate.candidate_id}-${Date.now()}.pdf`;
+                const { error: uploadError } = await db.storage.from('resumes').upload(filePath, newResumeFile);
+                if (uploadError) {
+                    DOMElements.scheduleMessage.textContent = `Resume Upload Error: ${uploadError.message}`; return;
+                }
+                const { error: dbError } = await db.from('candidates').update({ resume_path: filePath }).eq('candidate_id', candidate.candidate_id);
+                if (dbError) {
+                    DOMElements.scheduleMessage.textContent = `Resume DB Error: ${dbError.message}`; return;
+                }
+            }
+            
+            // 2. Find or create an application
+            let application;
+            const { data: existingApp } = await db.from('applications').select('application_id').eq('candidate_id', candidate.candidate_id).eq('job_id', job.job_id).single();
+            if (existingApp) { application = existingApp; } 
+            else {
+                const { data: newApp, error } = await db.from('applications').insert({ candidate_id: candidate.candidate_id, job_id: job.job_id }).select('application_id').single();
+                if (error) { DOMElements.scheduleMessage.textContent = `Error: ${error.message}`; return; }
+                application = newApp;
+            }
+
+            // 3. Get latest versions of prompts and rubrics
+            const { data: interviewerPV } = await db.from('prompt_versions').select('prompt_version_id').eq('prompt_id', interviewerPrompt.prompt_id).order('version', { ascending: false }).limit(1).single();
+            const { data: evaluatorPV } = await db.from('prompt_versions').select('prompt_version_id').eq('prompt_id', evaluatorPrompt.prompt_id).order('version', { ascending: false }).limit(1).single();
+            const { data: rubricV } = await db.from('rubric_versions').select('rubric_version_id').eq('rubric_id', rubric.rubric_id).order('version', { ascending: false }).limit(1).single();
+            if (!interviewerPV || !evaluatorPV || !rubricV) { DOMElements.scheduleMessage.textContent = `Error: Missing latest version for prompt or rubric.`; return; }
+            
+            // 4. Create the interview record
+            const { data: interview, error: interviewError } = await db.from('interviews').insert({
+                application_id: application.application_id,
+                interviewer_prompt_version_id: interviewerPV.prompt_version_id,
+                evaluator_prompt_version_id: evaluatorPV.prompt_version_id,
+                rubric_version_id: rubricV.rubric_version_id,
+                status: 'scheduled'
+            }).select('interview_id').single();
+            if (interviewError) { DOMElements.scheduleMessage.textContent = `Error: ${interviewError.message}`; return; }
+
+            // 5. Insert interview questions
+            const interviewQuestions = questions.map((q, i) => ({ interview_id: interview.interview_id, question_id: q.question_id, position: i + 1, asked_text: q.text }));
+            const { error: iqError } = await db.from('interview_questions').insert(interviewQuestions);
+            if (iqError) { DOMElements.scheduleMessage.textContent = `Error: ${iqError.message}`; return; }
+
+            // 6. Invoke edge function (optional)
+            await db.functions.invoke('create-interview-session', { body: { interview_id: interview.interview_id } });
+
+            DOMElements.scheduleMessage.textContent = 'Interview scheduled successfully!';
+            DOMElements.scheduleMessage.style.color = 'var(--accent-cyan)';
+        }
+        
+        // --- Tooltip Logic ---
+        function showTooltip(e) {
+            const target = e.target.closest('.summary-item');
+            if (!target) return;
+            
+            const key = target.dataset.popupContentKey;
+            const item = interviewFormState[key];
+            let content = 'Not available.';
+            
+            if (item) {
+                if (key === 'job') content = item.description || 'No description provided.';
+                else if (key.includes('Prompt')) content = item.content || 'No content provided.';
+                else if (key === 'rubric') content = `<pre>${JSON.stringify(item.rubric_json, null, 2)}</pre>`;
+            }
+            
+            const tooltip = DOMElements.tooltip;
+            tooltip.innerHTML = content;
+            tooltip.style.opacity = 1;
+            tooltip.style.left = `${e.clientX + 15}px`;
+            tooltip.style.top = `${e.clientY + 15}px`;
+        }
+        
+        function hideTooltip() {
+            DOMElements.tooltip.style.opacity = 0;
+        }
+
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            DOMElements = {
+                // Config
+                candidateSearch: document.getElementById('candidate-search'),
+                candidateSearchResults: document.getElementById('candidate-search-results'),
+                jobSearch: document.getElementById('job-search'),
+                jobSearchResults: document.getElementById('job-search-results'),
+                resumeUpload: document.getElementById('resume-upload'),
+                resumeUploadLabel: document.getElementById('resume-upload-label'),
+                resumeUploadStatus: document.getElementById('resume-upload-status'),
+                interviewerPromptSelect: document.getElementById('interviewer-prompt-select'),
+                evaluatorPromptSelect: document.getElementById('evaluator-prompt-select'),
+                rubricSelect: document.getElementById('rubric-select'),
+                // Questions
+                interviewTypeFilter: document.getElementById('interview-type-filter'),
+                questionSearch: document.getElementById('question-search'),
+                availableQuestions: document.getElementById('available-questions'),
+                // Summary
+                summary: {
+                    candidate: document.getElementById('summary-candidate'),
+                    job: document.getElementById('summary-job'),
+                    resume: document.getElementById('summary-resume'),
+                    interviewerPrompt: document.getElementById('summary-interviewer-prompt'),
+                    evaluatorPrompt: document.getElementById('summary-evaluator-prompt'),
+                    rubric: document.getElementById('summary-rubric'),
+                    questionCount: document.getElementById('summary-question-count'),
+                    questions: document.getElementById('summary-questions'),
+                },
+                scheduleBtn: document.getElementById('schedule-interview-btn'),
+                scheduleMessage: document.getElementById('schedule-message'),
+                tooltip: document.getElementById('content-tooltip'),
+                summaryContainer: document.getElementById('interview-summary'),
+            };
+
+            // Setup searchable dropdowns
+            setupSearchableDropdown(DOMElements.candidateSearch, DOMElements.candidateSearchResults, candidatesCache, c => `${c.first_name} ${c.last_name}`, c => {
+                interviewFormState.candidate = c;
+                DOMElements.resumeUploadStatus.textContent = '';
+                interviewFormState.newResumeFile = null;
+                updateSummary();
+            });
+            setupSearchableDropdown(DOMElements.jobSearch, DOMElements.jobSearchResults, jobsCache, j => j.title, j => {
+                interviewFormState.job = j; updateSummary();
+            });
+
+            // Standard dropdowns
+            DOMElements.interviewerPromptSelect.addEventListener('change', e => { interviewFormState.interviewerPrompt = promptsCache.find(p => p.prompt_id === e.target.value); updateSummary(); });
+            DOMElements.evaluatorPromptSelect.addEventListener('change', e => { interviewFormState.evaluatorPrompt = promptsCache.find(p => p.prompt_id === e.target.value); updateSummary(); });
+            DOMElements.rubricSelect.addEventListener('change', e => { interviewFormState.rubric = rubricsCache.find(r => r.rubric_id === e.target.value); updateSummary(); });
+
+            // Resume Upload Handler
+            DOMElements.resumeUpload.addEventListener('change', e => {
+                const file = e.target.files[0];
+                if (!file || !interviewFormState.candidate) {
+                    DOMElements.resumeUploadStatus.textContent = 'Please select a candidate first.';
+                    DOMElements.resumeUploadStatus.style.color = 'var(--text-secondary)';
+                    return;
+                }
+                if (file.type !== 'application/pdf') {
+                     DOMElements.resumeUploadStatus.textContent = 'Only PDF files are allowed.';
+                     DOMElements.resumeUploadStatus.style.color = '#f87171';
+                     return;
+                }
+                interviewFormState.newResumeFile = file;
+                DOMElements.resumeUploadLabel.textContent = file.name;
+                DOMElements.resumeUploadStatus.textContent = 'Ready to upload on schedule.';
+                DOMElements.resumeUploadStatus.style.color = 'var(--accent-cyan)';
+                updateSummary();
+            });
+            
+            // Question filtering and management
+            DOMElements.interviewTypeFilter.addEventListener('change', renderAvailableQuestions);
+            DOMElements.questionSearch.addEventListener('keyup', renderAvailableQuestions);
+            DOMElements.availableQuestions.addEventListener('click', e => {
+                const btn = e.target.closest('.add-question-btn');
+                if(btn) {
+                    const question = questionsCache.find(q => q.question_id === btn.dataset.id);
+                    interviewFormState.questions.push(question);
+                    updateSummary();
+                    renderAvailableQuestions();
+                }
+            });
+             DOMElements.summary.questions.addEventListener('click', e => {
+                const btn = e.target.closest('.remove-question-btn');
+                if (btn) {
+                    const questionId = btn.dataset.id;
+                    interviewFormState.questions = interviewFormState.questions.filter(q => q.question_id !== questionId);
+                    updateSummary();
+                    renderAvailableQuestions();
+                }
+            });
+            
+            // Final action
+            DOMElements.scheduleBtn.addEventListener('click', handleScheduleInterview);
+
+            // Tooltip listeners
+            DOMElements.summaryContainer.addEventListener('mouseover', showTooltip);
+            DOMElements.summaryContainer.addEventListener('mouseout', hideTooltip);
+
+            // Initial Data Load
+            initCreateInterviewTab();
+        });
+
+        // Helper for Searchable Dropdowns
+        function setupSearchableDropdown(inputEl, resultsEl, cache, displayFn, onSelect) {
+            inputEl.addEventListener('keyup', () => {
+                const term = inputEl.value.toLowerCase();
+                if (term.length < 1) { resultsEl.classList.add('hidden'); return; }
+                const results = cache.filter(item => displayFn(item).toLowerCase().includes(term));
+                resultsEl.innerHTML = `<div class="glass-ui p-2 mt-1 rounded-md max-h-48 overflow-y-auto">${results.map(item => `<div class="p-2 cursor-pointer hover:bg-white/10 rounded" data-id="${item[Object.keys(item)[0]]}">${displayFn(item)}</div>`).join('') || `<div class="p-2 text-secondary">No results found.</div>`}</div>`;
+                resultsEl.classList.remove('hidden');
+            });
+
+            resultsEl.addEventListener('click', e => {
+                const target = e.target.closest('[data-id]');
+                if (target) {
+                    const selectedItem = cache.find(item => item[Object.keys(item)[0]] === target.dataset.id);
+                    inputEl.value = displayFn(selectedItem);
+                    onSelect(selectedItem);
+                    resultsEl.classList.add('hidden');
+                }
+            });
+
+            document.addEventListener('click', e => {
+                if (!inputEl.contains(e.target) && !resultsEl.contains(e.target)) {
+                    resultsEl.classList.add('hidden');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

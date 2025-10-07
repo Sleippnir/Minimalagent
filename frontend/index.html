@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>AI Interview Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        text-size-adjust: 100%;
+      }
+      .glass-ui {
+        background: rgba(31, 41, 55, 0.8);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(34, 197, 218, 0.2);
+        border-radius: 16px;
+        transition: all 0.3s ease;
+      }
+      .glass-ui:hover {
+        border-color: rgba(34, 197, 218, 0.4);
+      }
+      .animate-spin {
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      button {
+        transition: all 0.2s ease;
+      }
+      button:hover {
+        transform: translateY(-1px);
+      }
+      button:active {
+        transform: translateY(0);
+      }
+    </style>
+  </head>
+  <body class="bg-gray-900 min-h-screen">
+    <!-- Hero Section -->
+    <div class="relative overflow-hidden">
+      <!-- Background gradient -->
+      <div class="absolute inset-0 bg-gradient-to-br from-cyan-900/20 via-gray-900 to-purple-900/20"></div>
+
+      <!-- Content -->
+      <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
+        <div class="text-center">
+          <!-- Logo/Icon -->
+          <div class="mb-8">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-cyan-400/10 rounded-full mb-4">
+              <svg class="w-12 h-12 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Main Headline -->
+          <h1 class="text-5xl md:text-6xl font-bold text-white mb-6">
+            AI-Powered
+            <span class="text-cyan-400 block">Interview Platform</span>
+          </h1>
+
+          <!-- Subtitle -->
+          <p class="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
+            Revolutionize your hiring process with intelligent AI interviews, automated evaluation,
+            and comprehensive candidate insights.
+          </p>
+
+          <!-- Feature highlights -->
+          <div class="grid md:grid-cols-3 gap-6 mb-12 max-w-4xl mx-auto">
+            <div class="glass-ui p-6 rounded-xl">
+              <div class="text-cyan-400 mb-3">
+                <svg class="w-8 h-8 mx-auto" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-white mb-2">Smart Evaluation</h3>
+              <p class="text-gray-300 text-sm">AI-powered candidate assessment with detailed scoring and feedback</p>
+            </div>
+
+            <div class="glass-ui p-6 rounded-xl">
+              <div class="text-cyan-400 mb-3">
+                <svg class="w-8 h-8 mx-auto" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-white mb-2">Live Interviews</h3>
+              <p class="text-gray-300 text-sm">Real-time video interviews with AI assistance and recording</p>
+            </div>
+
+            <div class="glass-ui p-6 rounded-xl">
+              <div class="text-cyan-400 mb-3">
+                <svg class="w-8 h-8 mx-auto" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-white mb-2">Analytics Dashboard</h3>
+              <p class="text-gray-300 text-sm">Comprehensive insights and reporting for hiring teams</p>
+            </div>
+          </div>
+
+          <!-- CTA Buttons -->
+          <div class="grid md:grid-cols-2 gap-4 justify-center items-center max-w-2xl mx-auto">
+            <button
+              onclick="window.location.href='/dashboards/hr/'"
+              class="bg-cyan-400 hover:bg-cyan-300 text-gray-900 font-semibold py-4 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center"
+            >
+              <span class="mr-2">🏢</span>
+              HR Dashboard
+            </button>
+
+            <button
+              onclick="window.location.href='/candidate/'"
+              class="glass-ui border border-cyan-400/30 hover:border-cyan-400/60 text-cyan-400 hover:text-cyan-300 font-semibold py-4 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center"
+            >
+              <span class="mr-2">👤</span>
+              Candidate Portal
+            </button>
+          </div>
+
+          <!-- Coming Soon Roles -->
+          <div class="mt-8 grid md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+            <button
+              onclick="alert('Hiring Manager dashboard coming soon!')"
+              class="glass-ui border border-gray-600/30 text-gray-500 font-semibold py-4 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center opacity-75 hover:opacity-90 cursor-not-allowed"
+              aria-disabled="true"
+              tabindex="-1"
+            >
+              <span class="mr-2">👔</span>
+              Hiring Manager
+              <span class="ml-2 text-xs bg-gray-700 px-2 py-1 rounded-full">Soon</span>
+            </button>
+
+            <button
+              onclick="alert('Administrator dashboard coming soon!')"
+              class="glass-ui border border-gray-600/30 text-gray-500 font-semibold py-4 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center opacity-75 hover:opacity-90 cursor-not-allowed"
+              aria-disabled="true"
+              tabindex="-1"
+            >
+              <span class="mr-2">⚙️</span>
+              Administrator
+              <span class="ml-2 text-xs bg-gray-700 px-2 py-1 rounded-full">Soon</span>
+            </button>
+          </div>
+
+          <!-- Additional info -->
+          <div class="mt-12 text-center">
+            <p class="text-sm text-gray-400 mb-2">
+              Hiring Manager and Administrator dashboards in development
+            </p>
+            <div class="flex justify-center space-x-6 text-xs text-gray-500">
+              <span>🔒 Secure & Private</span>
+              <span>⚡ Real-time Processing</span>
+              <span>📊 Data-Driven Insights</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Add smooth scrolling and interaction effects
+      document.addEventListener('DOMContentLoaded', function() {
+        // Add hover effects to feature cards
+        const featureCards = document.querySelectorAll('.glass-ui');
+        featureCards.forEach(card => {
+          card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+            this.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1)';
+          });
+
+          card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = '';
+          });
+        });
+
+        // Add loading state to buttons
+        const buttons = document.querySelectorAll('button[onclick]');
+        buttons.forEach(button => {
+          button.addEventListener('click', function() {
+            if (this.getAttribute('aria-disabled') === 'true') {
+              return;
+            }
+            this.innerHTML = '<span class="animate-spin mr-2">⏳</span> Loading...';
+            this.disabled = true;
+          });
+        });
+
+        // Force reload when navigating back to prevent stuck loading states
+        window.addEventListener('pageshow', function(event) {
+          if (event.persisted) {
+            // Page was loaded from cache, reload to reset state
+            window.location.reload();
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

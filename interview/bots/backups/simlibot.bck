@@ -1,0 +1,398 @@
+import os
+
+from dotenv import load_dotenv
+from loguru import logger
+from simli import SimliConfig
+from datetime import datetime
+from pathlib import Path
+import asyncio
+
+from pipecat.services.google.stt import GoogleSTTService, Language
+from pipecat.services.elevenlabs.tts import ElevenLabsTTSService
+from pipecat.services.google.llm import GoogleLLMService
+from pipecat.audio.turn.smart_turn.base_smart_turn import SmartTurnParams
+from pipecat.audio.turn.smart_turn.local_smart_turn_v3 import LocalSmartTurnAnalyzerV3
+from pipecat.audio.vad.silero import SileroVADAnalyzer
+from pipecat.audio.vad.vad_analyzer import VADParams
+from pipecat.frames.frames import LLMRunFrame, StartFrame, TextFrame
+from pipecat.pipeline.pipeline import Pipeline
+from pipecat.pipeline.runner import PipelineRunner
+from pipecat.pipeline.task import PipelineParams, PipelineTask
+from pipecat.processors.aggregators.llm_context import LLMContext
+from pipecat.processors.aggregators.llm_response_universal import LLMContextAggregatorPair
+from pipecat.runner.types import RunnerArguments
+from pipecat.runner.utils import create_transport
+from pipecat.services.cartesia.tts import CartesiaTTSService
+from pipecat.services.deepgram.stt import DeepgramSTTService, Language, LiveOptions
+from pipecat.services.openai.llm import OpenAILLMService
+from pipecat.services.simli.video import SimliVideoService
+from pipecat.transports.base_transport import BaseTransport, TransportParams
+
+# Try to import Daily transport, fallback to WebRTC only if not available
+try:
+    from pipecat.transports.daily.transport import DailyParams
+    DAILY_AVAILABLE = True
+except ImportError:
+    DAILY_AVAILABLE = False
+    DailyParams = None
+from pipecat.frames.frames import EndFrame, EndTaskFrame, TTSSpeakFrame, TextFrame
+from pipecat.processors.frame_processor import FrameDirection
+from pipecat.services.llm_service import FunctionCallParams
+from pipecat.adapters.schemas.tools_schema import ToolsSchema
+from pipecat.adapters.schemas.function_schema import FunctionSchema
+from pipecat.processors.transcript_processor import TranscriptProcessor
+
+
+
+# Import Supabase client from context service
+from ..context_service.client import SupabaseClient, get_supabase_client
+from ..context_service.services import QueueService, TranscriptService
+
+# Import interview tools
+from ..tools import (
+    clean_context_and_summarize,
+    end_conversation,
+    get_interview_tools_schema,
+    set_context_aggregator
+)
+
+
+
+# Singleton instance
+_client = None
+
+
+
+load_dotenv(override=True)
+
+TRANSCRIPT_BASE_DIR = Path("storage")
+# Hardcoded auth token for testing
+TEST_AUTH_TOKEN = "5ebb4526-c63a-4025-8cdb-4cd1a515c519"
+_shutdown_services_callback = None
+
+# We store functions so objects (e.g. SileroVADAnalyzer) don't get
+# instantiated. The function will be called when the desired transport gets
+# selected.
+
+
+# Get interview tools schema
+tools = get_interview_tools_schema()
+
+
+transport_params = {}
+
+# Always include WebRTC transport
+transport_params["webrtc"] = lambda: TransportParams(
+    audio_in_enabled=True,
+    audio_out_enabled=True,
+    video_out_enabled=True,
+    video_out_is_live=True,
+    video_out_width=512,
+    video_out_height=512,
+    vad_analyzer=SileroVADAnalyzer(params=VADParams(stop_secs=0.2)),
+    turn_analyzer=LocalSmartTurnAnalyzerV3(params=SmartTurnParams()),
+    data_channels_enabled=True,
+)
+
+# Add Daily transport only if available
+if DAILY_AVAILABLE:
+    transport_params["daily"] = lambda: DailyParams(
+        audio_in_enabled=True,
+        audio_out_enabled=True,
+        video_out_enabled=True,
+        video_out_is_live=True,
+        video_out_width=512,
+        video_out_height=512,
+        vad_analyzer=SileroVADAnalyzer(params=VADParams(stop_secs=0.2)),
+        turn_analyzer=LocalSmartTurnAnalyzerV3(params=SmartTurnParams()),
+    )
+
+# For API-launched bots, force WebRTC transport
+if os.getenv("TRANSPORT") == "webrtc":
+    transport_params = {
+        "webrtc": transport_params["webrtc"]
+    }
+
+
+async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
+    logger.info(f"Starting bot with context management")
+
+    # Extract auth_token from environment variable (for API-launched bots) or room URL
+    auth_token = os.getenv("AUTH_TOKEN") or (getattr(transport, 'room_url', '').split('/')[-1] if hasattr(transport, 'room_url') else None) or TEST_AUTH_TOKEN
+    
+    logger.info(f"Using auth_token: {auth_token}")
+
+    # Retrieve interview context from Supabase using auth_token
+    queue_service = QueueService()
+    interviewer_record = await queue_service.get_interviewer_context(auth_token)
+
+    if not interviewer_record:
+        logger.error("Failed to retrieve interviewer record from queue")
+        # Handle error case - perhaps use default context or abort
+        return
+
+    # Extract the payload containing the interview context
+    interview_payload = interviewer_record.get('payload', {})
+
+    if not interview_payload:
+        logger.warning("No payload found in interviewer record")
+        # Use default context or abort
+        return
+
+    interview_id = interviewer_record.get('interview_id')  # Get from record, not payload
+    candidate_info = interview_payload.get('candidate', {})
+    candidate_name = candidate_info.get('first_name', 'Candidate')  # Extract from nested candidate object
+    job_info = interview_payload.get('job', {})
+    job_title = job_info.get('title', 'Position')
+    questions = interview_payload.get('questions', [])
+    evaluation_materials = interview_payload.get('evaluation_materials', {})
+    resume_text = evaluation_materials.get('resume_text')
+    job_description = evaluation_materials.get('job_description')
+    interviewer_prompt = interview_payload.get('interviewer_prompt')
+
+    logger.info(f"Retrieved interview context for {candidate_name} applying for {job_title} (ID: {interview_id})")
+
+    stt = DeepgramSTTService(
+        api_key=os.getenv("DEEPGRAM_API_KEY"),
+        live_options=LiveOptions(model="nova-3",),
+    )
+
+    tts = ElevenLabsTTSService(
+        api_key=os.getenv("ELEVENLABS_API_KEY", ""),
+        voice_id=os.getenv("ELEVENLABS_VOICE_ID", ""),
+    )
+
+    # Temporarily disable Simli video service due to API issues
+    # simli_ai = SimliVideoService(
+    #     SimliConfig(os.getenv("SIMLI_API_KEY"), os.getenv("SIMLI_FACE_ID")),
+    # )
+    simli_ai = None  # Placeholder for now
+
+    llm = GoogleLLMService(
+        api_key=os.getenv("GOOGLE_API_KEY"),
+        model="gemini-2.5-flash",
+    )
+
+    # Register both tools
+    llm.register_function(
+        "clean_context_and_summarize",
+        clean_context_and_summarize,
+        cancel_on_interruption=True,
+    )
+
+    llm.register_function(
+        "end_conversation",
+        end_conversation,
+        cancel_on_interruption=True,
+    )
+
+    # Replace placeholder variables in the interviewer prompt
+    if interviewer_prompt and candidate_name:
+        interviewer_prompt = interviewer_prompt.replace('[first_name]', candidate_name)
+        interviewer_prompt = interviewer_prompt.replace('[job_title]', job_title)
+
+    # Add ALL extracted context to the system message (exactly like test script)
+    context_text = f"\n## Part 9: Interview Context Details\n"
+    context_text += f"- Interview ID: {interview_id}\n"
+    context_text += f"- Candidate: {candidate_name}\n"
+    context_text += f"- Job Title: {job_title}\n"
+    context_text += f"- Questions Count: {len(questions)}\n"
+    context_text += f"- Resume Text: {resume_text[:200] + '...' if resume_text and len(resume_text) > 200 else resume_text}\n"
+    context_text += f"- Job Description: {job_description[:500] + '...' if job_description and len(job_description) > 500 else job_description}\n"
+
+    questions_text = "\n## Part 10: Interview Questions\n"
+    for i, question in enumerate(questions, 1):
+        questions_text += f"{i}. {question.get('text', 'N/A')} (Type: {question.get('type', 'N/A')})\n"
+
+    # Append all context to the interviewer prompt
+    full_system_prompt = interviewer_prompt + context_text + questions_text
+
+    # Enhanced system prompt with context management instructions
+    messages = [
+        {
+            "role": "system",
+            "content": full_system_prompt,
+        },
+    ]
+
+    context = LLMContext(messages, tools=tools)
+    context_aggregator = LLMContextAggregatorPair(context)
+
+    # Store global reference for tool access
+    set_context_aggregator(context_aggregator)
+
+    transcript = TranscriptProcessor()
+    session_timestamp = datetime.utcnow()
+    session_transcript_dir = TRANSCRIPT_BASE_DIR
+    transcript_path = session_transcript_dir / f"interview-{interview_id}.md"
+    transcript_initialized = False
+    services_shutdown = False
+
+    async def shutdown_services():
+        nonlocal services_shutdown
+        if services_shutdown:
+            return
+        services_shutdown = True
+        try:
+            await tts.stop(EndFrame())
+        except Exception:
+            logger.exception("Failed to stop ElevenLabs TTS service")
+        try:
+            await tts.cleanup()
+        except Exception:
+            logger.exception("Failed to clean up ElevenLabs TTS service")
+
+        # Save transcript to Supabase when interview ends
+        transcript_service = TranscriptService()
+
+        try:
+            with open(transcript_path, 'r', encoding='utf-8') as f:
+                full_text = f.read()
+
+            # Create transcript_json with interview metadata
+            transcript_json = {
+                "interview_id": interview_id,
+                "candidate_name": candidate_name,
+                "job_title": job_title,
+                "questions_asked": len(questions),
+                "transcript_length": len(full_text),
+                "session_timestamp": session_timestamp.isoformat()
+            }
+
+            success = await transcript_service.write_transcript(
+                interview_id=interview_id,
+                full_text=full_text,
+                transcript_json=transcript_json
+            )
+
+            if success:
+                logger.info(f"Transcript saved to Supabase for interview {interview_id}")
+            else:
+                logger.error(f"Failed to save transcript to Supabase for interview {interview_id}")
+
+        except FileNotFoundError:
+            logger.error(f"Transcript file not found: {transcript_path}")
+        except Exception as e:
+            logger.error(f"Error saving transcript: {e}")
+
+    global _shutdown_services_callback
+    _shutdown_services_callback = shutdown_services
+
+    # Build pipeline conditionally
+    pipeline_components = [
+        transport.input(),
+        stt,
+        transcript.user(),
+        context_aggregator.user(),
+        llm,
+        tts,
+    ]
+    
+    # Add video service if available
+    if simli_ai:
+        pipeline_components.append(simli_ai)
+    
+    pipeline_components.extend([
+        transport.output(),
+        transcript.assistant(),
+        context_aggregator.assistant(),
+    ])
+
+    pipeline = Pipeline(pipeline_components)
+
+    task = PipelineTask(
+        pipeline,
+        params=PipelineParams(
+            enable_metrics=True,
+            enable_usage_metrics=True,
+        ),
+        idle_timeout_secs=180,
+        idle_timeout_frames=(TTSSpeakFrame, LLMRunFrame,),
+        cancel_on_idle_timeout=False
+    )
+
+    @transport.event_handler("on_client_connected")
+    async def on_client_connected(transport, client):
+        logger.info(f"Client connected - waiting for START_INTERVIEW signal from frontend")
+        # Don't auto-start - wait for the frontend to send START_INTERVIEW via input_text
+
+    @transport.event_handler("on_client_disconnected")
+    async def on_client_disconnected(transport, client):
+        logger.info(f"Client disconnected - ending interview")
+        await task.cancel()
+        await shutdown_services()
+
+    # Handle input_text messages to start interview
+    @transport.event_handler("on_client_message")
+    async def on_client_message(transport, message):
+        logger.info(f"Received message from client: {message}")
+        if isinstance(message, dict) and message.get("type") == "input_text" and message.get("text") == "START_INTERVIEW":
+            logger.info("Received START_INTERVIEW signal - beginning conversation")
+            # Add START_INTERVIEW as a user message to trigger the LLM
+            await context_aggregator.user().push_frame(TextFrame("START_INTERVIEW"))
+            # Start conversation with LLM
+            await task.queue_frame(LLMRunFrame())
+
+    @task.event_handler("on_idle_timeout")
+    async def on_idle_timeout(task):
+        logger.info("Conversation has been idle for 60 seconds")
+        # Add a farewell message
+        await task.queue_frame(TTSSpeakFrame("I haven't heard from you in a while. Goodbye!"))
+
+        # Then end the conversation gracefully
+        await task.stop_when_done()
+
+    @transcript.event_handler("on_transcript_update")
+    async def handle_transcript_update(processor, frame):
+        nonlocal transcript_initialized
+        if not frame.messages:
+            return
+        if not transcript_initialized:
+            session_transcript_dir.mkdir(parents=True, exist_ok=True)
+            with transcript_path.open("w", encoding="utf-8") as md_file:
+                md_file.write(
+                    f"# Interview Transcript - {session_timestamp:%Y-%m-%d %H:%M UTC}\n\n"
+                    f"**Interview ID:** `{interview_id}`\n\n"
+                    "## Interview Context\n"
+                    f"- **Candidate:** {candidate_name}\n"
+                    f"- **Position:** {job_title}\n"
+                    f"- **Status:** In Progress\n\n"
+                )
+            transcript_initialized = True
+        lines = []
+        for message in frame.messages:
+            role = message.role.capitalize()
+            timestamp = message.timestamp or datetime.utcnow().isoformat()
+            content = message.content.strip().replace("\n", "  \n")
+            lines.append(f"- **{timestamp} – {role}:** {content}")
+        with transcript_path.open("a", encoding="utf-8") as md_file:
+            md_file.write("\n".join(lines) + "\n")
+
+
+    runner = PipelineRunner(handle_sigint=runner_args.handle_sigint)
+    
+    # Send StartFrame right before pipeline starts running
+    await task.queue_frame(StartFrame(
+        allow_interruptions=True,
+        enable_metrics=True,
+        enable_usage_metrics=True
+    ))
+    
+    try:
+        await runner.run(task)
+    finally:
+        await shutdown_services()
+        if _shutdown_services_callback is shutdown_services:
+            _shutdown_services_callback = None
+
+
+async def bot(runner_args: RunnerArguments):
+    """Main bot entry point compatible with Pipecat Cloud."""
+    transport = await create_transport(runner_args, transport_params)
+    await run_bot(transport, runner_args)
+
+
+if __name__ == "__main__":
+    from pipecat.runner.run import main
+
+    main()

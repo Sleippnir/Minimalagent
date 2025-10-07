@@ -16,7 +16,9 @@ from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.runner import PipelineRunner
 from pipecat.pipeline.task import PipelineParams, PipelineTask
 from pipecat.processors.aggregators.llm_context import LLMContext
-from pipecat.processors.aggregators.llm_response_universal import LLMContextAggregatorPair
+from pipecat.processors.aggregators.llm_response_universal import (
+    LLMContextAggregatorPair,
+)
 from pipecat.runner.types import RunnerArguments
 from pipecat.runner.utils import create_transport
 from pipecat.services.cartesia.tts import CartesiaTTSService
@@ -53,18 +55,16 @@ async def clean_context_and_summarize(params: FunctionCallParams):
     summary = params.arguments.get("summary", "")
 
     if not summary:
-        await params.result_callback({
-            "status": "error",
-            "message": "Summary is required"
-        })
+        await params.result_callback(
+            {"status": "error", "message": "Summary is required"}
+        )
         return
 
     # Get current context from the global context aggregator
     if not _context_aggregator:
-        await params.result_callback({
-            "status": "error",
-            "message": "Context aggregator not available"
-        })
+        await params.result_callback(
+            {"status": "error", "message": "Context aggregator not available"}
+        )
         return
 
     # Access the context from the aggregator
@@ -74,7 +74,9 @@ async def clean_context_and_summarize(params: FunctionCallParams):
     logger.info(f"Current context has {len(current_messages)} messages")
 
     # Preserve initial system prompt
-    initial_system_msg = next((msg for msg in current_messages if msg["role"] == "system"), None)
+    initial_system_msg = next(
+        (msg for msg in current_messages if msg["role"] == "system"), None
+    )
 
     # Create new cleaned context
     cleaned_messages = []
@@ -82,30 +84,38 @@ async def clean_context_and_summarize(params: FunctionCallParams):
         cleaned_messages.append(initial_system_msg)
 
     # Add the summary as a system message
-    cleaned_messages.append({
-        "role": "system",
-        "content": f"Interview Progress Summary: {summary}"
-    })
+    cleaned_messages.append(
+        {"role": "system", "content": f"Interview Progress Summary: {summary}"}
+    )
 
     # Reset context to cleaned version
     context.set_messages(cleaned_messages)
 
     messages_removed = len(current_messages) - len(cleaned_messages)
-    logger.info(f"Context cleaned: removed {messages_removed} messages, kept {len(cleaned_messages)} messages")
+    logger.info(
+        f"Context cleaned: removed {messages_removed} messages, kept {len(cleaned_messages)} messages"
+    )
 
-    await params.result_callback({
-        "status": "context_cleaned",
-        "summary": summary,
-        "messages_removed": messages_removed,
-        "remaining_messages": len(cleaned_messages)
-    })
+    await params.result_callback(
+        {
+            "status": "context_cleaned",
+            "summary": summary,
+            "messages_removed": messages_removed,
+            "remaining_messages": len(cleaned_messages),
+        }
+    )
 
 
 async def end_conversation(params: FunctionCallParams):
     # Optional: speak a goodbye
-    await params.llm.push_frame(TTSSpeakFrame("Okay, Thank you for joining us today, I'll be ending the session now."))
+    await params.llm.push_frame(
+        TTSSpeakFrame(
+            "Okay, Thank you for joining us today, I'll be ending the session now."
+        )
+    )
     # Push an EndTaskFrame upstream to terminate gracefully
     await params.llm.push_frame(EndTaskFrame())
+
 
 # Enhanced function schemas
 clean_context_schema = FunctionSchema(
@@ -114,17 +124,17 @@ clean_context_schema = FunctionSchema(
     properties={
         "summary": {
             "type": "string",
-            "description": "A concise summary of the key points from the recently completed Q&A exchange, including the question asked and the candidate's main responses. Focus on important insights, skills demonstrated, or red flags identified."
+            "description": "A concise summary of the key points from the recently completed Q&A exchange, including the question asked and the candidate's main responses. Focus on important insights, skills demonstrated, or red flags identified.",
         }
     },
-    required=["summary"]
+    required=["summary"],
 )
 
 end_fn_schema = FunctionSchema(
     name="end_conversation",
     description="End the current session and say goodbye",
     properties={},
-    required=[]
+    required=[],
 )
 
 tools = ToolsSchema(standard_tools=[clean_context_schema, end_fn_schema])
@@ -160,30 +170,38 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
     logger.info(f"Starting bot with context management")
 
     # Extract auth_token from room URL (room name is the auth_token)
-    room_url = getattr(transport, 'room_url', '')
-    auth_token = room_url.split('/')[-1] if room_url else config.AUTH_TOKEN  # Fallback to config for testing
-    
+    room_url = getattr(transport, "room_url", "")
+    auth_token = (
+        room_url.split("/")[-1] if room_url else config.AUTH_TOKEN
+    )  # Fallback to config for testing
+
     logger.info(f"Using auth_token: {auth_token}")
 
     # Retrieve interview context from queue
     queue_service = services.QueueService()
-    interview_context_payload = await queue_service.get_interview_context_from_queue(auth_token)
+    interview_context_payload = await queue_service.get_interview_context_from_queue(
+        auth_token
+    )
 
     interview_context = {}
-    if interview_context_payload and 'payload' in interview_context_payload:
-        interview_context = interview_context_payload['payload']
+    if interview_context_payload and "payload" in interview_context_payload:
+        interview_context = interview_context_payload["payload"]
     elif interview_context_payload:
         interview_context = interview_context_payload  # For backward compatibility
 
     if interview_context:
         logger.info(f"Retrieved interview context for token {auth_token}")
     else:
-        logger.warning(f"No interview context found for token {auth_token}, using defaults.")
+        logger.warning(
+            f"No interview context found for token {auth_token}, using defaults."
+        )
         interview_context = {}
 
     stt = DeepgramSTTService(
         api_key=config.DEEPGRAM_API_KEY,
-        live_options=LiveOptions(model="nova-3",),
+        live_options=LiveOptions(
+            model="nova-3",
+        ),
     )
 
     tts = ElevenLabsTTSService(
@@ -214,7 +232,10 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
     )
 
     # Enhanced system prompt with context management instructions
-    system_prompt = interview_context.get("interviewer_prompt", "You are an AI interviewer conducting a technical interview. Ask relevant questions and evaluate responses.")
+    system_prompt = interview_context.get(
+        "interviewer_prompt",
+        "You are an AI interviewer conducting a technical interview. Ask relevant questions and evaluate responses.",
+    )
 
     messages = [
         {
@@ -231,7 +252,9 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
 
     transcript = TranscriptProcessor()
     session_timestamp = datetime.utcnow()
-    interview_id = interview_context.get("interview_id", f"session-{session_timestamp:%Y%m%dT%H%M%SZ}")
+    interview_id = interview_context.get(
+        "interview_id", f"session-{session_timestamp:%Y%m%dT%H%M%SZ}"
+    )
     session_transcript_dir = TRANSCRIPT_BASE_DIR
     transcript_path = session_transcript_dir / f"{interview_id}.md"
     transcript_initialized = False
@@ -262,21 +285,27 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
                         "interview_id": interview_context.get("interview_id"),
                         "candidate_name": interview_context.get("candidate_name"),
                         "job_title": interview_context.get("job_title"),
-                        "session_timestamp": session_timestamp.isoformat()
+                        "session_timestamp": session_timestamp.isoformat(),
                     }
 
                     await transcript_service.write_transcript(
                         interview_id=interview_context["interview_id"],
                         full_text=full_text,
-                        transcript_json=transcript_json
+                        transcript_json=transcript_json,
                     )
-                    logger.info(f"Successfully saved transcript for interview {interview_context['interview_id']}")
+                    logger.info(
+                        f"Successfully saved transcript for interview {interview_context['interview_id']}"
+                    )
                 else:
-                    logger.warning(f"Transcript file {transcript_path} not found, cannot save to Supabase.")
+                    logger.warning(
+                        f"Transcript file {transcript_path} not found, cannot save to Supabase."
+                    )
             except Exception as e:
                 logger.error(f"Failed to save transcript to Supabase: {e}")
         else:
-            logger.warning("No interview_id in context, skipping transcript save to Supabase.")
+            logger.warning(
+                "No interview_id in context, skipping transcript save to Supabase."
+            )
 
     pipeline = Pipeline(
         [
@@ -300,8 +329,11 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
             enable_usage_metrics=True,
         ),
         idle_timeout_secs=180,
-        idle_timeout_frames=(TTSSpeakFrame, LLMRunFrame,),
-        cancel_on_idle_timeout=False
+        idle_timeout_frames=(
+            TTSSpeakFrame,
+            LLMRunFrame,
+        ),
+        cancel_on_idle_timeout=False,
     )
 
     @transport.event_handler("on_client_connected")
@@ -320,7 +352,9 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
     async def on_idle_timeout(task):
         logger.info("Conversation has been idle for 180 seconds")
         # Add a farewell message
-        await task.queue_frame(TTSSpeakFrame("I haven't heard from you in a while. Goodbye!"))
+        await task.queue_frame(
+            TTSSpeakFrame("I haven't heard from you in a while. Goodbye!")
+        )
 
         # Then end the conversation gracefully
         await task.stop_when_done()

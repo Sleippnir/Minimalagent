@@ -1,0 +1,71 @@
+tag,categories,category_count,usage_frequency
+algorithms,Problem Solving,1,15
+analytical-thinking,Problem Solving,1,13
+api-development,"DevOps, General SE, Problem Solving, Situational",4,5
+authentication-authorization,"Backend, Behavioral, DevOps, Frontend, General SE, System Design",6,14
+automation,DevOps,1,31
+backend-development,"Backend, Frontend, General SE",3,18
+behavioral-interview,Behavioral,1,35
+career-development,"Behavioral, Cultural Fit, Problem Solving",3,4
+ci-cd-pipelines,DevOps,1,29
+client-side,Frontend,1,10
+cloud-infrastructure,"DevOps, Frontend, General SE, Situational",4,11
+code-review,Cultural Fit,1,3
+communication,"Behavioral, Cultural Fit, Situational",3,15
+company-culture,Cultural Fit,1,10
+computer-science-fundamentals,General SE,1,38
+conflict-resolution,"Behavioral, Situational",2,3
+containerization,"DevOps, Frontend, General SE",3,5
+continuous-learning,Situational,1,1
+creative-problem-solving,"Behavioral, Problem Solving, Situational",3,4
+critical-thinking,"Backend, Behavioral, Cultural Fit, Problem Solving, Situational",5,10
+data-management,Backend,1,3
+data-modeling,"Backend, Behavioral, Frontend, General SE, Problem Solving, Situational, System Design",7,19
+database-management,"Behavioral, Frontend, General SE, Problem Solving, System Design",5,9
+decision-making,Situational,1,7
+deployment,DevOps,1,34
+deployment-automation,"General SE, Situational",2,2
+devops,"DevOps, Frontend, General SE",3,4
+distributed-systems,System Design,1,13
+estimation,Problem Solving,1,16
+frontend-development,Frontend,1,21
+frontend-frameworks,"Backend, Behavioral, Frontend, General SE, Problem Solving",5,21
+infrastructure,DevOps,1,33
+innovation,"Problem Solving, Situational",2,3
+javascript-ecosystem,"Backend, Behavioral, Frontend, General SE, Problem Solving",5,25
+leadership,"Backend, Behavioral, Cultural Fit, DevOps, General SE, Situational, System Design",7,19
+leadership-potential,"Behavioral, Cultural Fit, Problem Solving",3,8
+logic-puzzles,Problem Solving,1,19
+mentorship,"Backend, Behavioral, DevOps, General SE, Situational, System Design",6,12
+microservices-architecture,Situational,1,1
+motivation,Cultural Fit,1,2
+organization,"Behavioral, Cultural Fit, Frontend",3,13
+past-experience,Behavioral,1,34
+performance-optimization,"Backend, Frontend, General SE, Problem Solving",4,10
+problem-solving,"Backend, Behavioral, Cultural Fit, Frontend, General SE, Problem Solving, Situational",7,21
+professional-development,Behavioral,1,35
+project-management,"Behavioral, Cultural Fit, Frontend",3,14
+python,"Frontend, General SE",2,4
+quality-assurance,"Behavioral, Problem Solving",2,2
+query-optimization,"Behavioral, Frontend, General SE, Problem Solving, System Design",5,13
+scalability,System Design,1,11
+security-practices,"Behavioral, DevOps, Frontend, General SE, System Design",5,10
+server-side,Backend,1,15
+service-integration,"Backend, DevOps, Frontend, General SE, Problem Solving, Situational",6,8
+skill-development,"Backend, Cultural Fit, Frontend, General SE, Situational",5,7
+software-engineering,General SE,1,35
+software-testing,"Backend, Behavioral, Frontend, General SE, Problem Solving, Situational",6,9
+system-architecture,System Design,1,11
+system-design,"Backend, Behavioral, DevOps, Frontend, General SE, Problem Solving, Situational, System Design",8,44
+tdd-bdd,"Backend, Behavioral, DevOps, Frontend, Problem Solving, Situational",6,8
+team-dynamics,Cultural Fit,1,10
+team-management,"Behavioral, DevOps, Frontend, General SE, System Design",5,7
+technical-architecture,"Backend, Behavioral, DevOps, Frontend, General SE, Problem Solving, Situational, System Design",8,44
+technical-knowledge,General SE,1,28
+test-automation,"Behavioral, Problem Solving",2,2
+time-management,Behavioral,1,6
+troubleshooting,"Backend, Behavioral, Cultural Fit, Frontend, General SE, Problem Solving, Situational",7,16
+user-interface,"Behavioral, Frontend, General SE, Problem Solving",4,29
+web-frameworks,Frontend,1,1
+web-technologies,Frontend,1,11
+work-preferences,Cultural Fit,1,2

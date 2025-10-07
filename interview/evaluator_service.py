@@ -17,33 +17,37 @@ class InterviewEvaluator:
         self.context_service = context_service or ContextService()
         self.evaluation_helper = EvaluationHelper()
 
-    async def evaluate_interview(self, interview_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def evaluate_interview(
+        self, interview_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Evaluate a complete interview"""
         try:
-            interview_id = interview_data.get('id')
-            responses = interview_data.get('responses', [])
-            questions = interview_data.get('questions', [])
+            interview_id = interview_data.get("id")
+            responses = interview_data.get("responses", [])
+            questions = interview_data.get("questions", [])
 
             # Evaluate each response
             evaluations = []
             for i, (question, response) in enumerate(zip(questions, responses)):
                 evaluation = self.evaluate_response(question, response)
-                evaluations.append({
-                    'question_number': i + 1,
-                    'question': question,
-                    'response': response,
-                    'evaluation': evaluation
-                })
+                evaluations.append(
+                    {
+                        "question_number": i + 1,
+                        "question": question,
+                        "response": response,
+                        "evaluation": evaluation,
+                    }
+                )
 
             # Calculate overall score
             overall_score = self._calculate_overall_score(evaluations)
 
             result = {
-                'interview_id': interview_id,
-                'evaluations': evaluations,
-                'overall_score': overall_score,
-                'recommendation': self._get_recommendation(overall_score),
-                'evaluated_at': str(datetime.now())
+                "interview_id": interview_id,
+                "evaluations": evaluations,
+                "overall_score": overall_score,
+                "recommendation": self._get_recommendation(overall_score),
+                "evaluated_at": str(datetime.now()),
             }
 
             # Save evaluation if interview_id provided
@@ -54,7 +58,7 @@ class InterviewEvaluator:
 
         except Exception as e:
             print(f"Error evaluating interview: {e}")
-            return {'error': str(e)}
+            return {"error": str(e)}
 
     def evaluate_response(self, question: str, response: str) -> Dict[str, Any]:
         """Evaluate a single response"""
@@ -67,7 +71,7 @@ class InterviewEvaluator:
 
         total_score = 0
         for eval_data in evaluations:
-            score = eval_data.get('evaluation', {}).get('score', 0)
+            score = eval_data.get("evaluation", {}).get("score", 0)
             total_score += score
 
         return round(total_score / len(evaluations), 2)
