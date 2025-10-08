@@ -23,9 +23,9 @@ const dateFilter = document.getElementById('date-filter');
 let supabaseClient = null;
 
 /**
- * Initialize the HR dashboard, authenticate the user, and load dashboard data.
+ * Initialize the HR dashboard: verify authentication and HR access, load either mock or real interview data, and attach UI event handlers.
  *
- * Initializes the authentication state, verifies the user has HR privileges (redirecting to the login page if not authenticated or unauthorized), displays the user info, loads mock data for mock sessions or real data via Supabase for real sessions, sets up UI event listeners, and handles initialization failures by alerting the user and redirecting to the login page.
+ * Initializes the authentication state, ensures the current user has HR privileges (redirects to the login page on failure), updates the displayed user information, selects mock data or obtains a Supabase client for real sessions (assigning it to the module-level `supabaseClient`), loads dashboard data, and registers event listeners for dashboard UI controls. On fatal errors the function alerts the user and navigates to the login page.
  */
 async function initializeDashboard() {
     console.log('initializeDashboard called');
@@ -86,9 +86,10 @@ async function initializeDashboard() {
 }
 
 /**
- * Loads interview records, updates dashboard statistics, and renders the interviews table.
+ * Fetches interview records from the backend and refreshes the dashboard UI.
  *
- * Fetches up to 100 interviews (including related applications, candidates, and job data), updates the dashboard stats, populates the interviews table, and manages loading/empty UI states. On failure, logs the error and shows an alert to the user.
+ * Loads interviews (including related applications, candidates, and jobs), updates the dashboard statistics,
+ * populates the interviews table, and manages the loading/empty UI states. On failure, logs the error and alerts the user.
  */
 async function loadDashboardData() {
     try {
@@ -131,11 +132,9 @@ async function loadDashboardData() {
 }
 
 /**
- * Loads mock interview data into the dashboard UI for testing and development.
+ * Load a predefined set of mock interviews, update dashboard statistics, and render the interviews table.
  *
- * Populates dashboard statistics and the interviews table with predefined sample
- * interviews, displays a loading state while simulating a short delay, and
- * alerts the user if loading fails.
+ * Shows a loading state while simulating a short delay, hides the empty-state placeholder, computes and displays stats, and populates the interviews table with mock data. On failure it logs the error and displays an alert to the user; the loading state is always cleared when the operation completes.
  */
 async function loadMockDashboardData() {
     console.log('loadMockDashboardData called');
@@ -214,16 +213,8 @@ async function loadMockDashboardData() {
 }
 
 /**
- * Update dashboard statistic elements based on the provided interviews.
- *
- * Processes the interviews to compute total count, number scheduled for today,
- * number currently in progress, and number completed, then writes those values
- * into the corresponding dashboard DOM elements.
- *
- * @param {Array<Object>} interviews - Array of interview records.
- *   Each interview object must include:
- *     - {string|Date} scheduled_at — scheduled date/time of the interview.
- *     - {string} status — interview status (e.g., "scheduled", "in_progress", "completed", "cancelled").
+ * Update dashboard counters (total, scheduled today, in progress, completed) from the given interviews.
+ * @param {Array<Object>} interviews - Interview records to summarize. Each object must include `scheduled_at` (ISO date/time string or timestamp) and `status` (e.g., `'scheduled'`, `'in_progress'`, `'completed'`, `'cancelled'`). The function updates global UI elements with the computed counts.
  */
 function updateStats(interviews) {
     const now = new Date();
@@ -260,10 +251,10 @@ function updateStats(interviews) {
 }
 
 /**
- * Populates the interviews table element with rows representing each interview.
+ * Render interviews into the table and toggle the empty-state UI.
  *
- * Clears existing rows, shows the empty state if the array is empty, otherwise hides the empty state and appends a table row for each interview.
- * @param {Array<Object>} interviews - Array of interview records containing the data required to render each table row.
+ * Populates the interviews table body with a row for each interview and shows the empty state when the array is empty.
+ * @param {Array<Object>} interviews - Array of interview records; each item is expected to include related application, candidate, and job data used to build the table row.
  */
 function populateInterviewsTable(interviews) {
     console.log('populateInterviewsTable called with', interviews.length, 'interviews');
@@ -286,15 +277,16 @@ function populateInterviewsTable(interviews) {
 }
 
 /**
- * Create a table row element representing an interview with candidate, job, status, scheduled date, and action buttons.
- * @param {Object} interview - Interview record containing metadata and related application data.
- * @param {string} interview.interview_id - Unique identifier for the interview.
- * @param {string} interview.status - Interview status (e.g., 'scheduled', 'in_progress', 'completed', 'cancelled').
- * @param {string|number|Date} interview.scheduled_at - Timestamp or date string when the interview is scheduled.
- * @param {Object} [interview.applications] - Related application data.
- * @param {Object} [interview.applications.candidates] - Candidate record (expects `first_name`, `last_name`, `email`).
- * @param {Object} [interview.applications.jobs] - Job record (expects `title`).
- * @returns {HTMLTableRowElement} A `<tr>` element populated with the interview's display fields and action buttons.
+ * Create a table row element representing a single interview for display in the interviews table.
+ *
+ * @param {Object} interview - Interview record to render.
+ *   Expected shape (properties used): 
+ *     - interview.interview_id {string}
+ *     - interview.status {string}
+ *     - interview.scheduled_at {string|number|Date}
+ *     - interview.applications?.candidates {Object} with `first_name`, `last_name`, `email`
+ *     - interview.applications?.jobs {Object} with `title`
+ * @returns {HTMLTableRowElement} A table row element containing cells for candidate info, job title, status badge, scheduled date, and action buttons.
  */
 function createInterviewRow(interview) {
     const row = document.createElement('tr');
@@ -347,9 +339,9 @@ function createInterviewRow(interview) {
 }
 
 /**
- * Create a styled HTML badge representing an interview status.
- * @param {string} status - Status key such as 'scheduled', 'in_progress', 'completed', or 'cancelled'; any other value yields an "Unknown" badge.
- * @returns {string} An HTML string for a <span> element containing the status label and CSS classes for visual styling.
+ * Render an HTML status badge for an interview status.
+ * @param {string} status - One of 'scheduled', 'in_progress', 'completed', or 'cancelled'. Unrecognized values produce an "Unknown" badge.
+ * @returns {string} A span HTML string containing the status label with appropriate color classes.
  */
 function getStatusBadge(status) {
     const statusConfig = {
@@ -365,10 +357,9 @@ function getStatusBadge(status) {
 }
 
 /**
- * Attach click and change handlers to dashboard UI controls to enable logout, navigation, and filtering.
+ * Attach UI event handlers for dashboard controls (logout, navigation, view stubs, and filters).
  *
- * Wires the logout, create-interview, calendar, and manage-candidates buttons to their respective actions
- * and binds the status and date filter controls to the table-filtering routine.
+ * Binds click handlers for logout (signs out and navigates to the login page), create interview (navigates to the interview creation page), calendar and candidate management buttons (show informational alerts), and change handlers for status and date filters (invoke filterInterviews to update visible rows).
  */
 function setupEventListeners() {
     // Logout
@@ -404,9 +395,9 @@ function setupEventListeners() {
 }
 
 /**
- * Filters the interviews table rows by the currently selected status and date, hiding rows that do not match.
+ * Filter the interviews table rows using the current status and date controls.
  *
- * The status filter compares the row's badge text after converting it to lowercase and replacing spaces with underscores (e.g., "In Progress" -> "in_progress"). The date filter compares the row's scheduled date in `YYYY-MM-DD` format against the selected date.
+ * Reads the selected values from the global `statusFilter` and `dateFilter` controls and hides any table rows in `interviewsTableBody` whose interview status or scheduled date do not match the selected filters by setting their `display` style to `none`. Rows that match both active filters remain visible.
  */
 function filterInterviews() {
     const statusValue = statusFilter.value;

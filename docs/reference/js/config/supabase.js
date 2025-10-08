@@ -8,9 +8,12 @@ let supabaseClient = null;
 /**
  * Initialize and cache the Supabase configuration and client.
  *
- * Ensures environment variables are loaded, validates required Supabase variables, caches the configuration, and creates the Supabase client for subsequent calls.
- * @returns {{url: string, key: string}} The loaded Supabase configuration object.
- * @throws {Error} If `VITE_SUPABASE_URL` or `VITE_SUPABASE_ANON_KEY` are missing.
+ * Ensures environment variables are loaded, validates required variables, builds and caches
+ * the config object, and creates a Supabase client instance for subsequent calls.
+ *
+ * @returns {{url: string, key: string}} The Supabase configuration object with `url` and `key`.
+ * @throws {Error} If required Supabase environment variables are missing.
+ */
 export async function initializeSupabase() {
     if (supabaseConfig) return supabaseConfig;
 
@@ -40,8 +43,9 @@ export async function initializeSupabase() {
 }
 
 /**
- * Return the cached Supabase configuration, initializing it if necessary.
- * @returns {Promise<{url: string, key: string}>} The Supabase configuration object containing `url` and `key`.
+ * Retrieve the cached Supabase configuration, initializing it first if it has not been created.
+ * @returns {{url: string, key: string}} The Supabase configuration object with `url` and `key`.
+ * @throws {Error} If required environment variables are missing and initialization fails.
  */
 export async function getSupabaseConfig() {
     if (!supabaseConfig) {
@@ -51,7 +55,7 @@ export async function getSupabaseConfig() {
 }
 
 /**
- * Retrieve the initialized Supabase client, initializing and caching it first if necessary.
+ * Gets the initialized Supabase client, initializing it if necessary.
  * @returns {any} The Supabase client instance.
  */
 export async function getSupabaseClient() {

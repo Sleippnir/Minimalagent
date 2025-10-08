@@ -41,10 +41,8 @@ const authForm = new AuthForm(loginForm, {
 });
 
 /**
- * Handle the forgot-password link click by validating the email and initiating a password-reset flow.
- *
- * Prevents the default link behavior, reads and trims the '#email' input, shows an inline error if the email is empty, and otherwise triggers the password-reset notification/flow (currently a placeholder alert).
- * @param {Event} event - Click event from the forgot-password link. 
+ * Initiates the forgot-password flow by validating the email input and initiating a password reset (currently shows an alert).
+ * @param {Event} event - The triggering event; its default action will be prevented.
  */
 function handleForgotPassword(event) {
     event.preventDefault();
@@ -63,9 +61,13 @@ function handleForgotPassword(event) {
 }
 
 /**
- * Verifies the current authentication state and performs role-based redirection.
+ * Updates the debugAuthState display and redirects authenticated users based on role or email.
  *
- * If the user is authenticated, updates the debug status and navigates to 'hr/dashboard.html' when the user's role is 'hr' or 'recruiter' (determined from user_metadata.role or the user's email containing 'hr' or 'recruiter'); otherwise navigates to 'interview_creation.html'. If not authenticated, updates the debug status accordingly.
+ * If the current auth state indicates an authenticated user, sets debugAuthState to
+ * "Already authenticated", determines HR eligibility when the user's `user_metadata.role`
+ * equals "hr" or "recruiter" or the user email contains "hr@" or "recruiter@", and then
+ * navigates to "hr/dashboard.html" for HR/recruiter users or "interview_creation.html"
+ * for other users. If not authenticated, sets debugAuthState to "Not authenticated".
  */
 function checkAuthState() {
     if (authState.isAuthenticated()) {

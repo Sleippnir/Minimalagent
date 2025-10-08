@@ -6,10 +6,11 @@ import CandidatesView from './components/CandidatesView.jsx'
 import EvaluationsView from './components/EvaluationsView.jsx'
 
 /**
- * Root application component that provides top-level layout and navigation between dashboard, interviews, candidates, and evaluations.
+ * Main application component that provides Supabase context and renders the top navigation and selected view.
  *
- * Manages internal view state and renders the selected view inside SupabaseProvider.
- * @returns {JSX.Element} The rendered application UI.
+ * The navigation lets the user switch between Dashboard, Schedule Interview, Candidates, and Evaluations;
+ * the currently selected view is rendered in the main content area.
+ * @returns {JSX.Element} The app's root React element containing the navigation and the currently selected view.
  */
 function App() {
   const [currentView, setCurrentView] = useState('dashboard')

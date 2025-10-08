@@ -34,15 +34,15 @@ class Config:
 
     def __init__(self):
         """
-        Validate that all required environment-derived configuration values are present on the instance.
+        Ensure all required environment-backed configuration attributes are set.
         
-        Checks for presence of SUPABASE_URL, SUPABASE_ANON_KEY, DEEPGRAM_API_KEY, ELEVENLABS_API_KEY,
-        ELEVENLABS_VOICE_ID, GOOGLE_API_KEY, SIMLI_API_KEY, and SIMLI_FACE_ID and raises an error
-        if any are missing.
+        Checks SUPABASE_URL, SUPABASE_ANON_KEY, DEEPGRAM_API_KEY, ELEVENLABS_API_KEY,
+        ELEVENLABS_VOICE_ID, GOOGLE_API_KEY, SIMLI_API_KEY, and SIMLI_FACE_ID and
+        raises ValueError listing any that are missing.
         
         Raises:
-            ValueError: If one or more required environment variables are not set; the exception message
-            lists the missing variable names.
+            ValueError: One or more required environment variables are missing; the
+            exception message contains the names of the missing variables.
         """
         required_vars = [
             "SUPABASE_URL",
