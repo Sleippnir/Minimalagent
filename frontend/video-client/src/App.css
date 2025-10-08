@@ -1,0 +1,285 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.app {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #213547;
+  background-color: #ffffff;
+  min-height: 100vh;
+}
+
+header {
+  margin-bottom: 2rem;
+}
+
+header h1 {
+  color: #646cff;
+  font-size: 2.5rem;
+  font-weight: 600;
+}
+
+header p {
+  color: #6c757d;
+  font-size: 1.1rem;
+  margin-top: 0.5rem;
+}
+
+main {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+}
+
+.voice-bot-container {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  width: 100%;
+}
+
+.voice-bot-container h2 {
+  color: #213547;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.voice-bot-container h3 {
+  color: #495057;
+  font-size: 1.2rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  margin-top: 1.5rem;
+}
+
+.config-section {
+  text-align: left;
+  margin-bottom: 1.5rem;
+}
+
+.config-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.config-inputs label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #495057;
+}
+
+.config-inputs input {
+  margin-top: 0.25rem;
+  padding: 0.5rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.connection-status {
+  margin-bottom: 1.5rem;
+}
+
+.connection-status p {
+  margin: 0.5rem 0;
+  font-weight: 500;
+}
+
+.connected {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.disconnected {
+  color: #6c757d;
+}
+
+.error {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.controls {
+  margin-bottom: 1.5rem;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.connect-btn, .disconnect-btn, .test-btn {
+  background: #646cff;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.connect-btn:hover:not(:disabled) {
+  background: #535bf2;
+}
+
+.connect-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.disconnect-btn {
+  background: #dc3545;
+}
+
+.disconnect-btn:hover {
+  background: #c82333;
+}
+
+.test-btn {
+  background: #17a2b8;
+}
+
+.test-btn:hover {
+  background: #138496;
+}
+
+.audio-section {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: #e9ecef;
+  border-radius: 8px;
+}
+
+.logs-section {
+  text-align: left;
+  margin-top: 1.5rem;
+}
+
+.logs {
+  max-height: 200px;
+  overflow-y: auto;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 0.5rem;
+}
+
+.log-entry {
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: #495057;
+  margin-bottom: 0.25rem;
+  padding: 0.25rem;
+  border-radius: 2px;
+}
+
+.log-entry:nth-child(even) {
+  background: #e9ecef;
+}
+
+.media-controls {
+  text-align: left;
+  margin-bottom: 1.5rem;
+}
+
+.media-controls h3 {
+  color: #495057;
+  font-size: 1.2rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.control-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.media-btn {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.media-btn.enabled {
+  background: #28a745;
+}
+
+.media-btn.enabled:hover {
+  background: #218838;
+}
+
+.media-btn.disabled {
+  background: #dc3545;
+}
+
+.media-btn.disabled:hover {
+  background: #c82333;
+}
+
+.video-section {
+  margin: 1.5rem 0;
+  text-align: left;
+}
+
+.video-section h3 {
+  color: #495057;
+  font-size: 1.2rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.video-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.video-wrapper {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1rem;
+  border: 2px solid #dee2e6;
+}
+
+.video-wrapper h4 {
+  color: #495057;
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.video-wrapper video {
+  width: 100%;
+  max-width: 300px;
+  height: auto;
+  border-radius: 4px;
+  background: #000;
+}
+
+@media (max-width: 768px) {
+  .video-container {
+    grid-template-columns: 1fr;
+  }
+}

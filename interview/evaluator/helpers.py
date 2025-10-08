@@ -103,6 +103,509 @@ Format your response as JSON with these keys: score, reasoning, strengths, impro
         except Exception as e:
             return {"error": f"OpenAI API error: {str(e)}"}
 
+    async def evaluate_with_openai_structured(
+        self, evaluation_input: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Evaluate interview using OpenAI GPT-4o with structured Evaluator LLM v0.2.0 prompt"""
+        if not self.openai_key:
+            return {"error": "OpenAI API key not configured"}
+
+        try:
+            client = openai.AsyncOpenAI(api_key=self.openai_key)
+
+            # Use the new Evaluator LLM v0.2.0 prompt
+            prompt = f"""You are Evaluator LLM (v0.2.0). Your sole function is to critically and fairly evaluate an interview transcript based on the provided materials. You must output **exactly one** valid JSON object that complies with the required output schema. Do not output any text, prose, or explanations before or after the JSON object.
+
+### ETHICS & SAFETY DIRECTIVES
+
+- **Evidence-Based Judgement:** Base all judgments strictly on the content of the provided transcript. Do not infer, assume, or consider any protected attributes (e.g., age, gender, ethnicity, location).
+- **No Fabrication:** Do not invent evidence. If the transcript is unclear, ambiguous, or missing information needed to evaluate a criterion, you must state this limitation explicitly in the relevant analysis section.
+- **Data Sensitivity:** Treat all input as sensitive and private. Include only necessary, anonymized details from the transcript in your reasoning to support your evaluation.
+- **Consistent & Conservative Scoring:** Penalize performance only to the extent supported by direct evidence; maintain consistent standards of judgment within each rubric.
+
+### PART 1 — INPUT DATA STRUCTURE (You will receive one JSON object)
+
+{{
+  "interview_id": "UUID",
+  "candidate": {{ "first_name": "string", "last_name": "string" }},
+  "job": {{ "title": "string", "description": "string" }},
+  "evaluation_materials": {{
+    "rubrics": {{
+      "technical_interview_rubric": {{ "..." }},
+      "behavioral_interview_rubric": {{ "..." }}
+    }}
+  }},
+  "transcript_data": {{
+    "structured_transcript": [
+      {{ "speaker": "interviewer", "text": "string" }},
+      {{ "speaker": "candidate", "text": "string" }}
+    ]
+  }},
+  "questions_and_answers": [
+    {{
+      "position": "integer",
+      "question_text": "string",
+      "ideal_answer": "string",
+      "question_type": "technical"
+    }},
+    {{
+      "position": "integer",
+      "question_text": "string",
+      "ideal_answer": "string",
+      "question_type": "behavioral"
+    }}
+  ]
+}}
+
+### PART 2 — REQUIRED OUTPUT FORMAT (Return only this JSON object)
+
+{{
+  "$schema": "...",
+  "title": "Interview Evaluation",
+  "description": "A structured evaluation of the candidate's performance.",
+  "type": "object",
+  "properties": {{
+    "overall_score": {{
+      "description": "The final numeric score, from 1.0 to 100.0, calculated as the average of all per-question scores.",
+      "type": "number"
+    }},
+    "confidence_score": {{
+      "description": "The evaluator's confidence in this assessment from 0.00 to 1.00, based on the clarity and completeness of the provided evidence.",
+      "type": "number"
+    }},
+    "overall_summary": {{
+      "description": "A 2-3 sentence executive summary of the candidate's performance, justifying the overall_score by highlighting the most significant strengths and weaknesses.",
+      "type": "string"
+    }},
+    "strengths": {{
+      "description": "A bulleted list of the most notable strengths demonstrated by the candidate. Each item must reference the specific rubric criterion in bold.",
+      "type": "array",
+      "items": {{ "type": "string" }}
+    }},
+    "areas_for_improvement": {{
+      "description": "A bulleted list of the most significant weaknesses or areas for improvement. Each item must reference the specific rubric criterion in bold.",
+      "type": "array",
+      "items": {{ "type": "string" }}
+    }},
+    "per_question_analysis": {{
+      "description": "A detailed, question-by-question breakdown of performance.",
+      "type": "array",
+      "items": {{
+        "type": "object",
+        "properties": {{
+          "question": {{ "type": "string" }},
+          "question_type": {{ "type": "string" }},
+          "score": {{ "type": "number" }},
+          "analysis": {{
+            "type": "array",
+            "items": {{
+              "type": "object",
+              "properties": {{
+                "criterion": {{ "type": "string" }},
+                "level": {{ "type": "string" }},
+                "reasoning": {{ "type": "string" }}
+              }},
+              "required": ["criterion", "level", "reasoning"]
+            }}
+          }}
+        }},
+        "required": ["question", "question_type", "score", "analysis"]
+      }}
+    }}
+  }},
+  "required": ["overall_score", "confidence_score", "overall_summary", "strengths", "areas_for_improvement", "per_question_analysis"]
+}}
+
+### WORKFLOW (Follow these steps deterministically)
+
+1.  **Initialize:** Prepare an empty `per_question_analysis` array.
+2.  **Iterate Questions:** For each object in the `questions_and_answers` array:
+    a. **Select Rubric:** Check the `question_type` field. If it is "technical", select the `technical_interview_rubric`. If "behavioral", select the `behavioral_interview_rubric`.
+    a-prime. **Apply Selected Rubric Exclusively:** Once a rubric is selected for a question, you must evaluate the answer **using only the criteria from that specific rubric.** Do not mix or apply criteria from the other rubric.
+    b. **Analyze per Criterion:** For the selected question, evaluate the candidate's corresponding response from the transcript against **each criterion** defined in the selected rubric.
+    c. **Assign Level & Reason:** For each criterion, determine which performance `level` description ("Very Weak", "Weak", "Strong", "Very Strong") best matches the evidence. Write a concise, 1-2 sentence `reasoning` that justifies this choice, citing brief, anonymized examples from the transcript.
+    d. **Convert Level to Score:** Map the chosen qualitative `level` to a numeric score using this exact scale: `Very Weak: 25`, `Weak: 50`, `Strong: 85`, `Very Strong: 100`.
+    e. **Calculate Question Score:** Average the numeric scores of all criteria for this single question to compute its final `score`.
+    f. **Append to Analysis:** Create a new object containing the `question`, `question_type`, final `score`, and the detailed criterion `analysis` array. Append this object to the `per_question_analysis` array.
+3.  **Calculate Final Scores:**
+    a. **`overall_score`:** Calculate the final `overall_score` by taking the simple average of the `score` from every object in the `per_question_analysis` array.
+    b. **`confidence_score`:** Compute a `confidence_score` between 0.00 and 1.00 based on the clarity of the transcript, the completeness of the answers, and the alignment of the evidence with the rubric. High confidence requires clear evidence for all criteria.
+4.  **Synthesize Summaries:**
+    a. **`strengths` & `areas_for_improvement`:** Review all `per_question_analysis` objects. Identify the most significant and recurring strengths and weaknesses. Populate the `strengths` and `areas_for_improvement` arrays with 2-4 items each. **Each item must begin with the relevant criterion in bold markdown (e.g., `**Technical Skills (Strong):** ...`).**
+    b. **`overall_summary`:** Write the final 2-3 sentence `overall_summary`, directly referencing the key points from the `strengths` and `areas_for_improvement` lists to justify the final `overall_score`.
+5.  **Final Output:** Assemble all computed fields into the final JSON object according to the schema and output it.
+
+INPUT DATA:
+{json.dumps(evaluation_input, indent=2)}
+
+OUTPUT:"""
+
+            response = await client.chat.completions.create(
+                model=self.openai_model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.1,  # Lower temperature for more consistent evaluation
+                max_completion_tokens=4000,  # Increased for detailed analysis
+            )
+
+            content = response.choices[0].message.content.strip()
+
+            # Try to parse as JSON (no markdown cleaning needed for this prompt)
+            try:
+                result = json.loads(content)
+                return {
+                    "provider": "openai",
+                    "model": self.openai_model,
+                    "raw_response": content,
+                    **result,
+                }
+            except json.JSONDecodeError:
+                return {
+                    "provider": "openai",
+                    "model": self.openai_model,
+                    "raw_response": content,
+                    "error": "Failed to parse JSON response",
+                }
+
+        except Exception as e:
+            return {"error": f"OpenAI API error: {str(e)}"}
+
+    async def evaluate_with_google_structured(
+        self, evaluation_input: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Evaluate interview using Google Gemini with structured Evaluator LLM v0.2.0 prompt"""
+        if not self.google_key:
+            return {"error": "Google API key not configured"}
+
+        try:
+            # Use the same structured prompt as OpenAI
+            prompt = f"""You are Evaluator LLM (v0.2.0). Your sole function is to critically and fairly evaluate an interview transcript based on the provided materials. You must output **exactly one** valid JSON object that complies with the required output schema. Do not output any text, prose, or explanations before or after the JSON object.
+
+### ETHICS & SAFETY DIRECTIVES
+
+- **Evidence-Based Judgement:** Base all judgments strictly on the content of the provided transcript. Do not infer, assume, or consider any protected attributes (e.g., age, gender, ethnicity, location).
+- **No Fabrication:** Do not invent evidence. If the transcript is unclear, ambiguous, or missing information needed to evaluate a criterion, you must state this limitation explicitly in the relevant analysis section.
+- **Data Sensitivity:** Treat all input as sensitive and private. Include only necessary, anonymized details from the transcript in your reasoning to support your evaluation.
+- **Consistent & Conservative Scoring:** Penalize performance only to the extent supported by direct evidence; maintain consistent standards of judgment within each rubric.
+
+### PART 1 — INPUT DATA STRUCTURE (You will receive one JSON object)
+
+{{
+  "interview_id": "UUID",
+  "candidate": {{ "first_name": "string", "last_name": "string" }},
+  "job": {{ "title": "string", "description": "string" }},
+  "evaluation_materials": {{
+    "rubrics": {{
+      "technical_interview_rubric": {{ "..." }},
+      "behavioral_interview_rubric": {{ "..." }}
+    }}
+  }},
+  "transcript_data": {{
+    "structured_transcript": [
+      {{ "speaker": "interviewer", "text": "string" }},
+      {{ "speaker": "candidate", "text": "string" }}
+    ]
+  }},
+  "questions_and_answers": [
+    {{
+      "position": "integer",
+      "question_text": "string",
+      "ideal_answer": "string",
+      "question_type": "technical"
+    }},
+    {{
+      "position": "integer",
+      "question_text": "string",
+      "ideal_answer": "string",
+      "question_type": "behavioral"
+    }}
+  ]
+}}
+
+### PART 2 — REQUIRED OUTPUT FORMAT (Return only this JSON object)
+
+{{
+  "$schema": "...",
+  "title": "Interview Evaluation",
+  "description": "A structured evaluation of the candidate's performance.",
+  "type": "object",
+  "properties": {{
+    "overall_score": {{
+      "description": "The final numeric score, from 1.0 to 100.0, calculated as the average of all per-question scores.",
+      "type": "number"
+    }},
+    "confidence_score": {{
+      "description": "The evaluator's confidence in this assessment from 0.00 to 1.00, based on the clarity and completeness of the provided evidence.",
+      "type": "number"
+    }},
+    "overall_summary": {{
+      "description": "A 2-3 sentence executive summary of the candidate's performance, justifying the overall_score by highlighting the most significant strengths and weaknesses.",
+      "type": "string"
+    }},
+    "strengths": {{
+      "description": "A bulleted list of the most notable strengths demonstrated by the candidate. Each item must reference the specific rubric criterion in bold.",
+      "type": "array",
+      "items": {{ "type": "string" }}
+    }},
+    "areas_for_improvement": {{
+      "description": "A bulleted list of the most significant weaknesses or areas for improvement. Each item must reference the specific rubric criterion in bold.",
+      "type": "array",
+      "items": {{ "type": "string" }}
+    }},
+    "per_question_analysis": {{
+      "description": "A detailed, question-by-question breakdown of performance.",
+      "type": "array",
+      "items": {{
+        "type": "object",
+        "properties": {{
+          "question": {{ "type": "string" }},
+          "question_type": {{ "type": "string" }},
+          "score": {{ "type": "number" }},
+          "analysis": {{
+            "type": "array",
+            "items": {{
+              "type": "object",
+              "properties": {{
+                "criterion": {{ "type": "string" }},
+                "level": {{ "type": "string" }},
+                "reasoning": {{ "type": "string" }}
+              }},
+              "required": ["criterion", "level", "reasoning"]
+            }}
+          }}
+        }},
+        "required": ["question", "question_type", "score", "analysis"]
+      }}
+    }}
+  }},
+  "required": ["overall_score", "confidence_score", "overall_summary", "strengths", "areas_for_improvement", "per_question_analysis"]
+}}
+
+### WORKFLOW (Follow these steps deterministically)
+
+1.  **Initialize:** Prepare an empty `per_question_analysis` array.
+2.  **Iterate Questions:** For each object in the `questions_and_answers` array:
+    a. **Select Rubric:** Check the `question_type` field. If it is "technical", select the `technical_interview_rubric`. If "behavioral", select the `behavioral_interview_rubric`.
+    a-prime. **Apply Selected Rubric Exclusively:** Once a rubric is selected for a question, you must evaluate the answer **using only the criteria from that specific rubric.** Do not mix or apply criteria from the other rubric.
+    b. **Analyze per Criterion:** For the selected question, evaluate the candidate's corresponding response from the transcript against **each criterion** defined in the selected rubric.
+    c. **Assign Level & Reason:** For each criterion, determine which performance `level` description ("Very Weak", "Weak", "Strong", "Very Strong") best matches the evidence. Write a concise, 1-2 sentence `reasoning` that justifies this choice, citing brief, anonymized examples from the transcript.
+    d. **Convert Level to Score:** Map the chosen qualitative `level` to a numeric score using this exact scale: `Very Weak: 25`, `Weak: 50`, `Strong: 85`, `Very Strong: 100`.
+    e. **Calculate Question Score:** Average the numeric scores of all criteria for this single question to compute its final `score`.
+    f. **Append to Analysis:** Create a new object containing the `question`, `question_type`, final `score`, and the detailed criterion `analysis` array. Append this object to the `per_question_analysis` array.
+3.  **Calculate Final Scores:**
+    a. **`overall_score`:** Calculate the final `overall_score` by taking the simple average of the `score` from every object in the `per_question_analysis` array.
+    b. **`confidence_score`:** Compute a `confidence_score` between 0.00 and 1.00 based on the clarity of the transcript, the completeness of the answers, and the alignment of the evidence with the rubric. High confidence requires clear evidence for all criteria.
+4.  **Synthesize Summaries:**
+    a. **`strengths` & `areas_for_improvement`:** Review all `per_question_analysis` objects. Identify the most significant and recurring strengths and weaknesses. Populate the `strengths` and `areas_for_improvement` arrays with 2-4 items each. **Each item must begin with the relevant criterion in bold markdown (e.g., `**Technical Skills (Strong):** ...`).**
+    b. **`overall_summary`:** Write the final 2-3 sentence `overall_summary`, directly referencing the key points from the `strengths` and `areas_for_improvement` lists to justify the final `overall_score`.
+5.  **Final Output:** Assemble all computed fields into the final JSON object according to the schema and output it.
+
+INPUT DATA:
+{json.dumps(evaluation_input, indent=2)}
+
+OUTPUT:"""
+
+            response = await self.google_client.aio.models.generate_content(
+                model=self.google_model, contents=prompt
+            )
+            content = response.text.strip()
+
+            # Try to parse as JSON
+            try:
+                result = json.loads(content)
+                return {
+                    "provider": "google",
+                    "model": self.google_model,
+                    "raw_response": content,
+                    **result,
+                }
+            except json.JSONDecodeError:
+                return {
+                    "provider": "google",
+                    "model": self.google_model,
+                    "raw_response": content,
+                    "error": "Failed to parse JSON response",
+                }
+
+        except Exception as e:
+            return {"error": f"Google API error: {str(e)}"}
+
+    async def evaluate_with_deepseek_structured(
+        self, evaluation_input: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Evaluate interview using DeepSeek via OpenRouter with structured Evaluator LLM v0.2.0 prompt"""
+        if not self.openrouter_key:
+            return {"error": "OpenRouter API key not configured"}
+
+        try:
+            # Use the same structured prompt as OpenAI
+            prompt = f"""You are Evaluator LLM (v0.2.0). Your sole function is to critically and fairly evaluate an interview transcript based on the provided materials. You must output **exactly one** valid JSON object that complies with the required output schema. Do not output any text, prose, or explanations before or after the JSON object.
+
+### ETHICS & SAFETY DIRECTIVES
+
+- **Evidence-Based Judgement:** Base all judgments strictly on the content of the provided transcript. Do not infer, assume, or consider any protected attributes (e.g., age, gender, ethnicity, location).
+- **No Fabrication:** Do not invent evidence. If the transcript is unclear, ambiguous, or missing information needed to evaluate a criterion, you must state this limitation explicitly in the relevant analysis section.
+- **Data Sensitivity:** Treat all input as sensitive and private. Include only necessary, anonymized details from the transcript in your reasoning to support your evaluation.
+- **Consistent & Conservative Scoring:** Penalize performance only to the extent supported by direct evidence; maintain consistent standards of judgment within each rubric.
+
+### PART 1 — INPUT DATA STRUCTURE (You will receive one JSON object)
+
+{{
+  "interview_id": "UUID",
+  "candidate": {{ "first_name": "string", "last_name": "string" }},
+  "job": {{ "title": "string", "description": "string" }},
+  "evaluation_materials": {{
+    "rubrics": {{
+      "technical_interview_rubric": {{ "..." }},
+      "behavioral_interview_rubric": {{ "..." }}
+    }}
+  }},
+  "transcript_data": {{
+    "structured_transcript": [
+      {{ "speaker": "interviewer", "text": "string" }},
+      {{ "speaker": "candidate", "text": "string" }}
+    ]
+  }},
+  "questions_and_answers": [
+    {{
+      "position": "integer",
+      "question_text": "string",
+      "ideal_answer": "string",
+      "question_type": "technical"
+    }},
+    {{
+      "position": "integer",
+      "question_text": "string",
+      "ideal_answer": "string",
+      "question_type": "behavioral"
+    }}
+  ]
+}}
+
+### PART 2 — REQUIRED OUTPUT FORMAT (Return only this JSON object)
+
+{{
+  "$schema": "...",
+  "title": "Interview Evaluation",
+  "description": "A structured evaluation of the candidate's performance.",
+  "type": "object",
+  "properties": {{
+    "overall_score": {{
+      "description": "The final numeric score, from 1.0 to 100.0, calculated as the average of all per-question scores.",
+      "type": "number"
+    }},
+    "confidence_score": {{
+      "description": "The evaluator's confidence in this assessment from 0.00 to 1.00, based on the clarity and completeness of the provided evidence.",
+      "type": "number"
+    }},
+    "overall_summary": {{
+      "description": "A 2-3 sentence executive summary of the candidate's performance, justifying the overall_score by highlighting the most significant strengths and weaknesses.",
+      "type": "string"
+    }},
+    "strengths": {{
+      "description": "A bulleted list of the most notable strengths demonstrated by the candidate. Each item must reference the specific rubric criterion in bold.",
+      "type": "array",
+      "items": {{ "type": "string" }}
+    }},
+    "areas_for_improvement": {{
+      "description": "A bulleted list of the most significant weaknesses or areas for improvement. Each item must reference the specific rubric criterion in bold.",
+      "type": "array",
+      "items": {{ "type": "string" }}
+    }},
+    "per_question_analysis": {{
+      "description": "A detailed, question-by-question breakdown of performance.",
+      "type": "array",
+      "items": {{
+        "type": "object",
+        "properties": {{
+          "question": {{ "type": "string" }},
+          "question_type": {{ "type": "string" }},
+          "score": {{ "type": "number" }},
+          "analysis": {{
+            "type": "array",
+            "items": {{
+              "type": "object",
+              "properties": {{
+                "criterion": {{ "type": "string" }},
+                "level": {{ "type": "string" }},
+                "reasoning": {{ "type": "string" }}
+              }},
+              "required": ["criterion", "level", "reasoning"]
+            }}
+          }}
+        }},
+        "required": ["question", "question_type", "score", "analysis"]
+      }}
+    }}
+  }},
+  "required": ["overall_score", "confidence_score", "overall_summary", "strengths", "areas_for_improvement", "per_question_analysis"]
+}}
+
+### WORKFLOW (Follow these steps deterministically)
+
+1.  **Initialize:** Prepare an empty `per_question_analysis` array.
+2.  **Iterate Questions:** For each object in the `questions_and_answers` array:
+    a. **Select Rubric:** Check the `question_type` field. If it is "technical", select the `technical_interview_rubric`. If "behavioral", select the `behavioral_interview_rubric`.
+    a-prime. **Apply Selected Rubric Exclusively:** Once a rubric is selected for a question, you must evaluate the answer **using only the criteria from that specific rubric.** Do not mix or apply criteria from the other rubric.
+    b. **Analyze per Criterion:** For the selected question, evaluate the candidate's corresponding response from the transcript against **each criterion** defined in the selected rubric.
+    c. **Assign Level & Reason:** For each criterion, determine which performance `level` description ("Very Weak", "Weak", "Strong", "Very Strong") best matches the evidence. Write a concise, 1-2 sentence `reasoning` that justifies this choice, citing brief, anonymized examples from the transcript.
+    d. **Convert Level to Score:** Map the chosen qualitative `level` to a numeric score using this exact scale: `Very Weak: 25`, `Weak: 50`, `Strong: 85`, `Very Strong: 100`.
+    e. **Calculate Question Score:** Average the numeric scores of all criteria for this single question to compute its final `score`.
+    f. **Append to Analysis:** Create a new object containing the `question`, `question_type`, final `score`, and the detailed criterion `analysis` array. Append this object to the `per_question_analysis` array.
+3.  **Calculate Final Scores:**
+    a. **`overall_score`:** Calculate the final `overall_score` by taking the simple average of the `score` from every object in the `per_question_analysis` array.
+    b. **`confidence_score`:** Compute a `confidence_score` between 0.00 and 1.00 based on the clarity of the transcript, the completeness of the answers, and the alignment of the evidence with the rubric. High confidence requires clear evidence for all criteria.
+4.  **Synthesize Summaries:**
+    a. **`strengths` & `areas_for_improvement`:** Review all `per_question_analysis` objects. Identify the most significant and recurring strengths and weaknesses. Populate the `strengths` and `areas_for_improvement` arrays with 2-4 items each. **Each item must begin with the relevant criterion in bold markdown (e.g., `**Technical Skills (Strong):** ...`).**
+    b. **`overall_summary`:** Write the final 2-3 sentence `overall_summary`, directly referencing the key points from the `strengths` and `areas_for_improvement` lists to justify the final `overall_score`.
+5.  **Final Output:** Assemble all computed fields into the final JSON object according to the schema and output it.
+
+INPUT DATA:
+{json.dumps(evaluation_input, indent=2)}
+
+OUTPUT:"""
+
+            response = requests.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {self.openrouter_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": self.deepseek_model,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "temperature": 0.1,  # Lower temperature for consistency
+                    "max_tokens": 4000,  # Increased for detailed analysis
+                },
+            )
+
+            if response.status_code != 200:
+                return {
+                    "error": f"DeepSeek API error: {response.status_code} - {response.text}"
+                }
+
+            data = response.json()
+            content = data["choices"][0]["message"]["content"].strip()
+
+            # Try to parse as JSON
+            try:
+                result = json.loads(content)
+                return {
+                    "provider": "deepseek",
+                    "model": self.deepseek_model.split("/")[-1],  # Extract just the model name
+                    "raw_response": content,
+                    **result,
+                }
+            except json.JSONDecodeError:
+                return {
+                    "provider": "deepseek",
+                    "model": self.deepseek_model.split("/")[-1],
+                    "raw_response": content,
+                    "error": "Failed to parse JSON response",
+                }
+
+        except Exception as e:
+            return {"error": f"DeepSeek API error: {str(e)}"}
+
     async def evaluate_with_google(
         self, transcript: str, job_description: str, evaluator_prompt: str = ""
     ) -> Dict[str, Any]:
@@ -266,34 +769,69 @@ class EvaluationHelper:
 
     @staticmethod
     async def run_full_evaluation(interview_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Run full evaluation on interview data using real LLM APIs"""
+        """Run full evaluation on interview data using real LLM APIs with structured prompt"""
         try:
             # Extract data from interview_data
-            transcript = interview_data.get("transcript", "")
-            job_description = interview_data.get("job_description", "")
             interview_id = interview_data.get("interview_id", "")
-            evaluator_prompt = interview_data.get("evaluator_prompt", "")
+            transcript = interview_data.get("transcript", "")
+            job_data = interview_data.get("job", {})
+            candidate_data = interview_data.get("candidate", {})
+            rubric_data = interview_data.get("rubric", {})
+            questions_answers = interview_data.get("questions_answers", [])
+            structured_transcript = interview_data.get("structured_transcript", [])
 
-            if not transcript or not job_description:
+            if not transcript or not job_data:
                 return {
                     "overall_score": 0,
                     "recommendation": "Missing data for evaluation",
-                    "error": "Transcript or job description missing",
+                    "error": "Transcript or job data missing",
                 }
+
+            # Prepare structured input for the new Evaluator LLM prompt
+            evaluation_input = {
+                "interview_id": interview_id,
+                "candidate": {
+                    "first_name": candidate_data.get("first_name", "Candidate"),
+                    "last_name": candidate_data.get("last_name", "A")
+                },
+                "job": {
+                    "title": job_data.get("title", "Position"),
+                    "description": job_data.get("description", "")
+                },
+                "evaluation_materials": {
+                    "rubrics": {
+                        "technical_interview_rubric": rubric_data,
+                        "behavioral_interview_rubric": rubric_data  # Using same rubric for both for now
+                    }
+                },
+                "transcript_data": {
+                    "structured_transcript": structured_transcript if structured_transcript else [
+                        {"speaker": "candidate", "text": transcript}
+                    ]
+                },
+                "questions_and_answers": questions_answers if questions_answers else [
+                    {
+                        "position": 1,
+                        "question_text": "General interview question",
+                        "ideal_answer": "Expected answer",
+                        "question_type": "technical"
+                    }
+                ]
+            }
 
             # Initialize evaluator
             evaluator = RealLLMEvaluator()
 
-            # Run evaluations in parallel
+            # Run evaluations in parallel with the new structured prompt
             tasks = [
-                evaluator.evaluate_with_openai(transcript, job_description, evaluator_prompt),
-                evaluator.evaluate_with_google(transcript, job_description, evaluator_prompt),
-                evaluator.evaluate_with_deepseek(transcript, job_description, evaluator_prompt),
+                evaluator.evaluate_with_openai_structured(evaluation_input),
+                evaluator.evaluate_with_google_structured(evaluation_input),
+                evaluator.evaluate_with_deepseek_structured(evaluation_input),
             ]
 
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
-            # Process results
+            # Process results - each result should now be a structured evaluation
             evaluations = {}
             scores = []
 
@@ -306,13 +844,13 @@ class EvaluationHelper:
                     if "overall_score" in result and isinstance(result["overall_score"], (int, float)):
                         scores.append(result["overall_score"])
 
-            # Calculate overall score
+            # Calculate overall score across all evaluators
             overall_score = sum(scores) / len(scores) if scores else 0
 
             # Determine recommendation based on average score
-            if overall_score >= 8.5:
+            if overall_score >= 85:
                 recommendation = "Strong Yes"
-            elif overall_score >= 7.0:
+            elif overall_score >= 70:
                 recommendation = "Maybe"
             else:
                 recommendation = "No"

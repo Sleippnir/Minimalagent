@@ -15,6 +15,7 @@ import os
 from datetime import datetime, timedelta
 from contextlib import asynccontextmanager
 from interview import InterviewConfig, ContextService
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -334,19 +335,25 @@ async def get_interview_payload(jwt_token: str, launch_bot: bool = False):
 
     This endpoint:
     1. Receives the JWT token from the URL path
-    2. Queries the interviewer_queue table for the payload
-    3. Optionally launches a bot for the interview
-    4. Returns the complete interviewer payload
+    2. For test token "AnyoneAI", loads dummy payload directly
+    3. Otherwise, queries the interviewer_queue table for the payload
+    4. Optionally launches a bot for the interview
+    5. Returns the complete interviewer payload
     """
     try:
-        # Get interview context from queue
-        context_service = get_context_service()
-        payload = await context_service.get_interview_context(jwt_token)
+        # Check for test token shortcut
+        if jwt_token == "AnyoneAI":
+            with open("interview/bots/resources/dummy_payload.json", "r") as f:
+                payload = json.load(f)
+        else:
+            # Get interview context from queue
+            context_service = get_context_service()
+            payload = await context_service.get_interview_context(jwt_token)
 
-        if not payload:
-            raise HTTPException(
-                status_code=404, detail="Interview not found or token expired"
-            )
+            if not payload:
+                raise HTTPException(
+                    status_code=404, detail="Interview not found or token expired"
+                )
 
         # Optionally launch bot
         if launch_bot:

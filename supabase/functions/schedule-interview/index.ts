@@ -92,11 +92,12 @@ serve(async (req: Request) => {
       evaluatorPrompt = evaluator_prompt_version_id ? specificPrompts.find(p => p.prompt_version_id === evaluator_prompt_version_id) : null;
     }
 
-    // Fetch any missing prompts (latest versions)
+    // Fetch any missing prompts (latest versions, excluding deprecated)
     if (!interviewerPrompt || !evaluatorPrompt) {
       const promptRes = await supabaseAdmin
         .from('prompt_versions')
         .select('prompt_version_id, content, prompts(purpose)')
+        .not('version', 'ilike', '%deprecated%')
         .order('version', { ascending: false });
 
       if (promptRes.error) throw new Error(`Failed to fetch prompts: ${promptRes.error.message}`);

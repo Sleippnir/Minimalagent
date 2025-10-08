@@ -252,15 +252,43 @@ class BackgroundEvaluatorAgent:
             Dict containing evaluation results
         """
         try:
-            # For now, use the placeholder evaluation
-            # TODO: Implement actual LLM API calls (TODO 04 and TODO 05)
+            # Prepare structured data for the new Evaluator LLM v0.2.0 prompt
             evaluation_result = await self.evaluation_helper.run_full_evaluation(
                 {
                     "interview_id": interview.interview_id,
                     "transcript": interview.transcript_data.full_text_transcript,
-                    "job_description": interview.job.description,
+                    "job": {
+                        "title": interview.job.title,
+                        "description": interview.job.description
+                    },
+                    "candidate": {
+                        "first_name": interview.candidate.first_name,
+                        "last_name": interview.candidate.last_name
+                    },
                     "rubric": interview.evaluation_materials.rubric.to_dict(),
-                    "evaluator_prompt": interview.evaluation_materials.evaluator_prompt,
+                    "questions_answers": [
+                        {
+                            "position": qa.position,
+                            "question_text": qa.question_text,
+                            "ideal_answer": qa.ideal_answer,
+                            "question_type": "technical"  # Default to technical for now
+                        } for qa in (interview.questions_answers or [])
+                    ] or [
+                        {
+                            "position": 1,
+                            "question_text": "General technical interview question",
+                            "ideal_answer": "Expected technical answer",
+                            "question_type": "technical"
+                        }
+                    ],
+                    "structured_transcript": [
+                        {
+                            "speaker": entry.speaker,
+                            "text": entry.text
+                        } for entry in interview.transcript_data.structured_transcript
+                    ] if interview.transcript_data.structured_transcript else [
+                        {"speaker": "candidate", "text": interview.transcript_data.full_text_transcript}
+                    ]
                 }
             )
 
@@ -307,7 +335,7 @@ class BackgroundEvaluatorAgent:
                     interview_id=interview_id,
                     evaluator_llm_model=eval_data.get("model"),
                     score=eval_data.get("overall_score"),
-                    reasoning=eval_data.get("overall_reasoning") or eval_data.get("reasoning", ""),
+                    reasoning=eval_data.get("overall_summary") or eval_data.get("overall_reasoning") or eval_data.get("reasoning", ""),
                     raw_llm_response=eval_data,
                 )
                 await evaluation_repo.create(evaluation_1)
@@ -319,7 +347,7 @@ class BackgroundEvaluatorAgent:
                     interview_id=interview_id,
                     evaluator_llm_model=eval_data.get("model"),
                     score=eval_data.get("overall_score"),
-                    reasoning=eval_data.get("overall_reasoning") or eval_data.get("reasoning", ""),
+                    reasoning=eval_data.get("overall_summary") or eval_data.get("overall_reasoning") or eval_data.get("reasoning", ""),
                     raw_llm_response=eval_data,
                 )
                 await evaluation_repo.create(evaluation_2)
@@ -331,7 +359,7 @@ class BackgroundEvaluatorAgent:
                     interview_id=interview_id,
                     evaluator_llm_model=eval_data.get("model"),
                     score=eval_data.get("overall_score"),
-                    reasoning=eval_data.get("overall_reasoning") or eval_data.get("reasoning", ""),
+                    reasoning=eval_data.get("overall_summary") or eval_data.get("overall_reasoning") or eval_data.get("reasoning", ""),
                     raw_llm_response=eval_data,
                 )
                 await evaluation_repo.create(evaluation_3)
