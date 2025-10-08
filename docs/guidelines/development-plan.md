@@ -9,7 +9,9 @@ This document provides a step-by-step plan for building the HR AI Assistant fron
 - [ ] **Environment Setup:**
   - [ ] Create a file named `.env.local` inside the `/frontend` directory.
   - [ ] Add the following two lines to this file, replacing the placeholders with the actual Supabase credentials:
-    ```
+
+    ```env
+
     VITE_SUPABASE_URL="YOUR_SUPABASE_URL_HERE"
     VITE_SUPABASE_ANON_KEY="YOUR_SUPABASE_ANON_KEY_HERE"
     ```

@@ -101,17 +101,19 @@ graph TD
 
    ```bash
    # Terminal 1: Start backend API
-   python -m uvicorn interview_api:app --host 0.0.0.0 --port 8001
+  python -m uvicorn interview_api:app --host 0.0.0.0 --port 8001
 
-   # Terminal 2: Start frontend
-   cd frontend && npm run dev
+  # Terminal 2: Start frontend
+  cd frontend && npm run dev
 
-   # Terminal 3: Start background evaluator
-   python -m interview.evaluator.background_evaluator
+  # Terminal 3: Start background evaluator worker (see Background Processes & Maintenance)
 
-   # Optional: Start content maintenance (run periodically)
-   python scripts/maintain_content.py
-   ```
+  python -m interview.evaluator.background_evaluator
+
+
+  # Optional: Start content maintenance (run periodically)
+    python scripts/maintain_content.py
+  ```
 
 3. **Access the application**
    - **Production (Docker)**: HR Dashboard at `http://localhost:8080/dashboards/hr/`
@@ -368,12 +370,7 @@ select cron.schedule('reprocess-stuck-interviews', '*/30 * * * *', 'select repro
 - **Google Gemini-2.5-flash**: Alternative evaluation perspective
 - **DeepSeek (OpenRouter)**: Additional validation
 - **Rubric-Based**: Structured scoring against predefined criteria
-
-### Background Processing
-
-- **Agent**: `BackgroundEvaluatorAgent` polls `evaluator_queue`
-- **Trigger**: Automatic evaluation after transcript submission
-- **Storage**: Results stored with full LLM response metadata
+- **Async Execution**: Evaluations run via the background evaluator worker (see Background Processes & Maintenance)
 
 ## 🎯 Key Features
 
@@ -408,19 +405,8 @@ select cron.schedule('reprocess-stuck-interviews', '*/30 * * * *', 'select repro
 
 ### Core Background Services
 
-#### 1. Background Evaluator (`interview/evaluator/background_evaluator.py`)
-
-- **Purpose**: Processes completed interviews with AI evaluation
-- **Trigger**: Runs continuously, polls `evaluator_queue` every 30 seconds
-- **Function**: Multi-LLM evaluation (OpenAI GPT-4o, Google Gemini, DeepSeek)
-- **Output**: Structured evaluation results stored in database
-
-#### 2. Interview Bot Processes
-
-- **Purpose**: Handle real-time AI-powered interviews
-- **Trigger**: Launched automatically when candidates access interview URLs
-- **Function**: Pipecat-based conversational AI with speech processing
-- **Management**: Monitored via `/admin/bot-processes` endpoint
+- **Background evaluator** (`interview/evaluator/background_evaluator.py`): Polls `evaluator_queue` roughly every 30 seconds to run multi-LLM evaluations (GPT-4o, Gemini, DeepSeek) and persist structured results. Start it with `python -m interview.evaluator.background_evaluator` or rely on the `background-evaluator` Docker service.
+- **Interview bot processes**: Launch automatically when candidates open their interview links, handling Pipecat-based conversations with speech processing. Monitor and clean them up via the `/admin/bot-processes` endpoint.
 
 ### Maintenance Scripts (Run Periodically)
 
@@ -473,7 +459,7 @@ select cron.schedule('reprocess-stuck-interviews', '*/30 * * * *', 'select repro
 ### Scaling Considerations
 
 - **API Service**: Horizontal scaling with multiple instances behind load balancer
-- **Background Evaluator**: Can run multiple instances for parallel processing
+- **Evaluation Workers**: Run additional `background-evaluator` containers when higher throughput is required
 - **Content Maintenance**: Run on schedule or as needed, not continuously
 - **Database**: Supabase handles scaling automatically
 - **AI Services**: Rate limiting and cost optimization across all LLM providers
@@ -492,43 +478,33 @@ select cron.schedule('reprocess-stuck-interviews', '*/30 * * * *', 'select repro
 ### Common Issues
 
 #### Interview Bot Import Errors
+
 **Error**: `ImportError: attempted relative import with no known parent package`
 
-**Solution**: Ensure bots are launched as modules, not scripts:
-```bash
-# Correct
-python -m interview.bots.simlibot
-
-# Incorrect  
-python interview/bots/simlibot.py
-```
+**Solution**: Launch bots as modules (see Bot Launching section) rather than executing the script path directly.
 
 #### Frontend API Connection Issues
+
 **Error**: `500 Internal Server Error` when starting interviews
 
 **Cause**: Vite dev server proxy misconfiguration
 
-**Solution**: Verify `frontend/vite.config.js` proxies to correct port:
-```javascript
-proxy: {
-  '/api': {
-    target: 'http://localhost:8001',  // Must be 8001, not 8000
-    changeOrigin: true
-  }
-}
-```
+**Solution**: Confirm the proxy in `frontend/vite.config.js` points to `http://localhost:8001` as noted in the Frontend Development Server section.
 
 #### Button Loading State Stuck
+
 **Error**: Buttons remain in loading state after navigation
 
 **Solution**: Added `pageshow` event handler in `frontend/index.html` to force page reload on browser back navigation.
 
 #### CUDA Dependencies in Container
+
 **Error**: Container build fails with CUDA installation
 
 **Solution**: Removed unused `openai-whisper` dependency that pulled in CUDA. Use `uv` for faster, cleaner dependency management.
 
 #### Chart Visualization Issues
+
 **Error**: Interview status charts don't display full circles
 
 **Solution**: Filter chart data to only include valid status values before rendering.
@@ -550,12 +526,6 @@ docker compose up --build -d
 docker compose down
 docker compose up --build -d
 ```
-
-### Development Workflow
-
-1. **Frontend changes**: `cd frontend && npm run build` then `docker compose up --build -d`
-2. **Backend changes**: `docker compose up --build -d`
-3. **Environment variables**: Copy `.env.example` to `.env` and configure API keys
 
 ## �📝 License
 
