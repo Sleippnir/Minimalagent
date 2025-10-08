@@ -1,17 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { PipecatClient } from '@pipecat-ai/client-js'
 import { PipecatClientAudio, PipecatClientVideo, PipecatClientProvider, usePipecatClient } from '@pipecat-ai/client-react'
-import { SmallWebRTCTransport } from '@pipecat-ai/small-webrtc-transport'
+import { DailyTransport } from '@pipecat-ai/daily-transport'
 import './App.css'
 
-// Create Pipecat client with SmallWebRTC transport for local testing
+// Create Pipecat client with Daily transport
 const pcClient = new PipecatClient({
-  transport: new SmallWebRTCTransport({
-    enableMic: true,
-    enableCam: true, // Enable camera for video
-    // Optional: use WavMediaManager instead of Daily's manager
-    // mediaManager: new WavMediaManager()
-  }),
+  transport: new DailyTransport(),
   callbacks: {
     onBotConnected: () => console.log("Bot connected"),
     onBotReady: () => console.log("Bot ready to chat"),
@@ -67,10 +62,11 @@ function VoiceBot() {
   const [isConnected, setIsConnected] = useState(false)
   const [error, setError] = useState(null)
   const [logs, setLogs] = useState([])
-  const [endpoint, setEndpoint] = useState('/api/offer')
-  const [token, setToken] = useState('test_token')
+  const [token, setToken] = useState('AnyoneAI')
   const [micEnabled, setMicEnabled] = useState(true)
   const [camEnabled, setCamEnabled] = useState(true)
+  const [isLaunching, setIsLaunching] = useState(false)
+  const [roomDetails, setRoomDetails] = useState(null)
 
   const addLog = (message) => {
     setLogs(prev => [...prev.slice(-9), `${new Date().toLocaleTimeString()}: ${message}`])
@@ -103,18 +99,27 @@ function VoiceBot() {
     addLog("Attempting to connect...")
 
     try {
+      let room = roomDetails
+      if (!room) {
+        addLog("No room details found, launching bot first...")
+        room = await launchBotViaApi(true)
+        if (!room) {
+          throw new Error("Unable to launch bot for Daily room")
+        }
+        // ensure state in sync
+        setRoomDetails(room)
+      }
+
       await client.startBotAndConnect({
-        endpoint: endpoint,
+        roomUrl: room.roomUrl,
+        token: room.roomToken,
         requestData: {
           loginToken: token,
           context: {
-            interview_id: 'test_interview',
-            candidate_name: 'Test Candidate',
-            test_mode: true,
             enableMic: micEnabled,
             enableCam: camEnabled
           }
-        },
+        }
       })
 
       setIsConnected(true)
@@ -141,6 +146,52 @@ function VoiceBot() {
     }
   }
 
+  const launchBotViaApi = async (silent = false) => {
+    if (!token) {
+      addLog("Cannot launch bot: token is required")
+      return null
+    }
+
+    setError(null)
+    if (!silent) {
+      setIsLaunching(true)
+      addLog("Launching bot via API...")
+    }
+
+    try {
+      const response = await fetch(`/api/interviews/${token}?launch_bot=true`)
+      const data = await response.json()
+
+      if (!response.ok) {
+        const message = data?.detail || data?.error || response.statusText
+        throw new Error(message || "Launch request failed")
+      }
+
+      addLog(`Launch response: ${JSON.stringify(data)}`)
+      if (data?.room) {
+        const room = {
+          roomUrl: data.room.room_url,
+          roomToken: data.room.room_token,
+        }
+        setRoomDetails(room)
+        addLog(`Daily room ready: ${room.roomUrl}`)
+        return room
+      }
+      return null
+
+    } catch (err) {
+      console.error("Failed to launch bot:", err)
+      const message = err.message || "Failed to launch bot"
+      addLog(`Launch failed: ${message}`)
+      setError(message)
+      return null
+    } finally {
+      if (!silent) {
+        setIsLaunching(false)
+      }
+    }
+  }
+
   const testHealthCheck = async () => {
     try {
       addLog("Testing health check...")
@@ -153,13 +204,29 @@ function VoiceBot() {
   }
 
   const toggleMic = () => {
-    setMicEnabled(!micEnabled)
-    addLog(`Microphone ${!micEnabled ? 'enabled' : 'disabled'}`)
+    const next = !micEnabled
+    setMicEnabled(next)
+    try {
+      if (client?.transport?.enableMic) {
+        client.transport.enableMic(next)
+      }
+    } catch (err) {
+      console.error("Failed toggling mic:", err)
+    }
+    addLog(`Microphone ${next ? 'enabled' : 'disabled'}`)
   }
 
   const toggleCam = () => {
-    setCamEnabled(!camEnabled)
-    addLog(`Camera ${!camEnabled ? 'enabled' : 'disabled'}`)
+    const next = !camEnabled
+    setCamEnabled(next)
+    try {
+      if (client?.transport?.enableCam) {
+        client.transport.enableCam(next)
+      }
+    } catch (err) {
+      console.error("Failed toggling camera:", err)
+    }
+    addLog(`Camera ${next ? 'enabled' : 'disabled'}`)
   }
 
   return (
@@ -170,24 +237,23 @@ function VoiceBot() {
         <h3>Configuration</h3>
         <div className="config-inputs">
           <label>
-            Endpoint:
-            <input
-              type="text"
-              value={endpoint}
-              onChange={(e) => setEndpoint(e.target.value)}
-              placeholder="/api/offer"
-            />
-          </label>
-          <label>
             Token:
             <input
               type="text"
               value={token}
-              onChange={(e) => setToken(e.target.value)}
-              placeholder="test_token"
+              onChange={(e) => {
+                setToken(e.target.value)
+                setRoomDetails(null)
+              }}
+              placeholder="AnyoneAI"
             />
           </label>
         </div>
+        {roomDetails && (
+          <div className="room-details">
+            <p><strong>Room URL:</strong> {roomDetails.roomUrl}</p>
+          </div>
+        )}
       </div>
 
       <div className="media-controls">
@@ -239,6 +305,13 @@ function VoiceBot() {
         >
           Test API Health
         </button>
+        <button
+          onClick={launchBotViaApi}
+          disabled={isLaunching}
+          className="launch-btn"
+        >
+          {isLaunching ? "Launching..." : "Launch Bot via API"}
+        </button>
       </div>
 
       {/* Video section with both local and remote video */}
@@ -272,10 +345,10 @@ function VoiceBot() {
       </div>
 
       <div className="info">
-        <p><strong>Transport:</strong> SmallWebRTCTransport (local testing only)</p>
+        <p><strong>Transport:</strong> DailyTransport</p>
         <p><strong>Media:</strong> Microphone {micEnabled ? 'enabled' : 'disabled'}, Camera {camEnabled ? 'enabled' : 'disabled'}</p>
-        <p><strong>Note:</strong> For production, switch to DailyTransport.</p>
-        <p><strong>Backend:</strong> Make sure your API server is running on port 8001</p>
+        <p><strong>Workflow:</strong> Launch bot to mint a Daily room, then connect.</p>
+        <p><strong>Backend:</strong> Ensure the API server is running on port 8001</p>
       </div>
     </div>
   )
@@ -287,7 +360,7 @@ function App() {
       <div className="app">
         <header>
           <h1>Pipecat Video Client Test</h1>
-          <p>Testing Pipecat integration with SmallWebRTCTransport</p>
+          <p>Testing Pipecat integration with DailyTransport</p>
         </header>
         <main>
           <VoiceBot />

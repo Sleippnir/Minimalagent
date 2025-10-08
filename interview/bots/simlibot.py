@@ -1,3 +1,5 @@
+import csv
+import json
 import os
 from typing import Optional
 
@@ -23,7 +25,7 @@ from pipecat.processors.aggregators.llm_context import LLMContext
 from pipecat.processors.aggregators.llm_response_universal import (
     LLMContextAggregatorPair,
 )
-from pipecat.runner.types import RunnerArguments
+from pipecat.runner.types import DailyRunnerArguments, RunnerArguments
 from pipecat.runner.utils import create_transport
 from pipecat.services.cartesia.tts import CartesiaTTSService
 from pipecat.services.deepgram.stt import DeepgramSTTService, Language, LiveOptions
@@ -71,6 +73,8 @@ load_dotenv(override=True)
 TRANSCRIPT_BASE_DIR = Path("storage")
 # Hardcoded auth token for testing
 TEST_AUTH_TOKEN = "cac3c4ec-0542-4c3c-b6c1-3e3636fbb89a"
+DUMMY_TEST_TOKEN = "AnyoneAI"
+DUMMY_PAYLOAD_CSV = Path(__file__).resolve().parent / "resources" / "dummy_payload.csv"
 _shutdown_services_callback = None
 
 # We store functions so objects (e.g. SileroVADAnalyzer) don't get
@@ -82,10 +86,63 @@ _shutdown_services_callback = None
 tools = get_interview_tools_schema()
 
 
+def _load_dummy_record(auth_token: str) -> Optional[dict]:
+    """Return a dummy interviewer record from CSV if available."""
+    if not DUMMY_PAYLOAD_CSV.exists():
+        return None
+
+    try:
+        with DUMMY_PAYLOAD_CSV.open("r", encoding="utf-8", newline="") as csv_file:
+            reader = csv.DictReader(csv_file)
+            for row in reader:
+                if row.get("auth_token", "").strip() == auth_token:
+                    payload_raw = row.get("payload") or "{}"
+                    try:
+                        payload = json.loads(payload_raw)
+                    except json.JSONDecodeError as exc:
+                        logger.error(
+                            "Failed to parse dummy payload JSON for token %s: %s",
+                            auth_token,
+                            exc,
+                        )
+                        return None
+
+                    return {
+                        "interview_id": row.get("interview_id") or auth_token,
+                        "payload": payload,
+                    }
+    except Exception as exc:  # pragma: no cover - defensive logging
+        logger.error("Error loading dummy payload CSV: %s", exc)
+
+    return None
+
+
+async def resolve_interview_context(auth_token: str) -> Optional[InterviewContext]:
+    """Load interview context from Supabase or fallback to the dummy payload CSV."""
+    queue_service = QueueService()
+    try:
+        record = await queue_service.get_interview_context_from_queue(auth_token)
+        if record:
+            logger.info("Loaded interview context for token %s from Supabase", auth_token)
+            return InterviewContext.from_supabase_record(record)
+    except Exception as exc:  # pragma: no cover - defensive logging
+        logger.error("Error fetching interview context from Supabase: %s", exc)
+
+    if auth_token == DUMMY_TEST_TOKEN:
+        dummy_record = _load_dummy_record(auth_token)
+        if dummy_record:
+            logger.info("Loaded interview context for token %s from dummy payload", auth_token)
+            return InterviewContext.from_supabase_record(dummy_record)
+        logger.error("Dummy payload for token %s not found", auth_token)
+
+    logger.error("Unable to load interview context for token %s", auth_token)
+    return None
+
+
 transport_params = {}
 
 # Always include WebRTC transport
-transport_params["webrtc"] = lambda: TransportParams(
+base_webrtc_factory = lambda: TransportParams(
     audio_in_enabled=True,
     audio_out_enabled=True,
     video_out_enabled=True,
@@ -96,10 +153,12 @@ transport_params["webrtc"] = lambda: TransportParams(
     turn_analyzer=LocalSmartTurnAnalyzerV3(params=SmartTurnParams()),
     data_channels_enabled=True,
 )
+transport_params["webrtc"] = base_webrtc_factory
 
 # Add Daily transport only if available
+base_daily_factory = None
 if DAILY_AVAILABLE:
-    transport_params["daily"] = lambda: DailyParams(
+    base_daily_factory = lambda: DailyParams(
         audio_in_enabled=True,
         audio_out_enabled=True,
         video_out_enabled=True,
@@ -109,10 +168,19 @@ if DAILY_AVAILABLE:
         vad_analyzer=SileroVADAnalyzer(params=VADParams(stop_secs=0.2)),
         turn_analyzer=LocalSmartTurnAnalyzerV3(params=SmartTurnParams()),
     )
+    transport_params["daily"] = base_daily_factory
 
-# For API-launched bots, force WebRTC transport
-if os.getenv("TRANSPORT") == "webrtc":
-    transport_params = {"webrtc": transport_params["webrtc"]}
+# For API-launched bots, force specific transport if requested
+transport_override = os.getenv("TRANSPORT")
+if transport_override == "webrtc":
+    transport_params = {"webrtc": base_webrtc_factory}
+elif transport_override == "daily":
+    if not DAILY_AVAILABLE or base_daily_factory is None:
+        raise RuntimeError("Daily transport requested but not available in this environment.")
+    transport_params = {
+        "webrtc": base_webrtc_factory,
+        "daily": base_daily_factory,
+    }
 
 
 async def run_bot(
@@ -136,19 +204,10 @@ async def run_bot(
 
     logger.info(f"Using auth_token: {auth_token}")
 
-    # Retrieve interview context from Supabase using auth_token
-    queue_service = QueueService()
-    interviewer_record = await queue_service.get_interview_context_from_queue(
-        auth_token
-    )
-
-    if not interviewer_record:
-        logger.error("Failed to retrieve interviewer record from queue")
-        # Handle error case - perhaps use default context or abort
+    interview_context = await resolve_interview_context(auth_token)
+    if not interview_context:
+        logger.error("Failed to resolve interview context; aborting bot startup")
         return
-
-    # Create InterviewContext from the record
-    interview_context = InterviewContext.from_supabase_record(interviewer_record)
 
     logger.info(
         f"Retrieved interview context for {interview_context.candidate_name} applying for {interview_context.job_title} (ID: {interview_context.interview_id})"
@@ -389,12 +448,38 @@ async def main():
 
 if __name__ == "__main__":
     import sys
+    import asyncio
+
+    bot_mode = os.getenv("BOT_MODE")
+    transport_mode = os.getenv("TRANSPORT", "webrtc")
+
+    if bot_mode == "standalone":
+        auth_token = os.getenv("AUTH_TOKEN")
+
+        if transport_mode == "daily":
+            if not DAILY_AVAILABLE:
+                raise RuntimeError("Daily transport requested but not available.")
+
+            room_url = os.getenv("DAILY_ROOM_URL")
+            room_token = os.getenv("DAILY_ROOM_TOKEN")
+            if not room_url:
+                raise RuntimeError("DAILY_ROOM_URL is required for Daily standalone mode.")
+
+            runner_args = DailyRunnerArguments(room_url=room_url, token=room_token)
+        else:
+            from pipecat.runner.types import SmallWebRTCRunnerArguments
+
+            host = os.getenv("HOST", "0.0.0.0")
+            port = int(os.getenv("PORT", "7861"))
+            runner_args = SmallWebRTCRunnerArguments(host=host, port=port)
+
+        asyncio.run(bot(runner_args, auth_token))
 
     # Check if running with auth_token argument (CLI mode)
-    if len(sys.argv) >= 2 and not sys.argv[1].startswith("--"):
+    elif len(sys.argv) >= 2 and not sys.argv[1].startswith("--"):
         asyncio.run(main())
     else:
-        # Pipecat Cloud mode
-        from pipecat.runner.run import main
+        # Pipecat Cloud mode or default runner
+        from pipecat.runner.run import main as runner_main
 
-        main()
+        runner_main()

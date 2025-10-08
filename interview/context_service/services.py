@@ -12,6 +12,7 @@ class QueueService:
 
     def __init__(self):
         self.client = get_supabase_client()
+        self._context_cache: Dict[str, Dict[str, Any]] = {}
 
     async def get_interview_from_queue(
         self, auth_token: str
@@ -32,16 +33,22 @@ class QueueService:
             return None
 
     async def get_interview_context_from_queue(
-        self, auth_token: str
+        self, auth_token: str, *, use_cache: bool = True
     ) -> Optional[Dict[str, Any]]:
         """Retrieve interview context from interviewer_queue by auth token"""
+        if use_cache and auth_token in self._context_cache:
+            return self._context_cache[auth_token]
+
         try:
             results = await self.client.get(
                 "interviewer_queue", {"auth_token": auth_token}
             )
 
             if results:
-                return results[0]  # The interview context
+                record = results[0]
+                if use_cache:
+                    self._context_cache[auth_token] = record
+                return record  # The interview context
             return None
 
         except Exception as e:

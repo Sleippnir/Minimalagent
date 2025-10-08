@@ -24,9 +24,13 @@ class ContextService:
         self.evaluator_repo = EvaluationRepository()
         self.evaluation_helper = EvaluationHelper()
 
-    async def get_interview_context(self, auth_token: str) -> Optional[Dict[str, Any]]:
+    async def get_interview_context(
+        self, auth_token: str, *, use_cache: bool = True
+    ) -> Optional[Dict[str, Any]]:
         """Get interview context for a given auth token"""
-        return await self.queue_service.get_interview_context_from_queue(auth_token)
+        return await self.queue_service.get_interview_context_from_queue(
+            auth_token, use_cache=use_cache
+        )
 
     async def get_evaluation_task(self) -> Optional[Dict[str, Any]]:
         """Get next available evaluation task"""

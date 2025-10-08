@@ -6,13 +6,13 @@ Provides endpoints for interview management and transcript submission
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 import uvicorn
 import logging
 import asyncio
 import signal
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from contextlib import asynccontextmanager
 from interview import InterviewConfig, ContextService
 import json
@@ -61,10 +61,62 @@ def get_context_service():
     return context_service
 
 
-async def launch_interview_bot(room_url: str, interview_id: str) -> bool:
+async def create_daily_room() -> Dict[str, str]:
+    """Create a Daily room and meeting token."""
+    import uuid
+    import httpx
+
+    api_key = os.getenv("DAILY_API_KEY")
+    daily_domain = os.getenv("DAILY_DOMAIN")
+
+    if not api_key or not daily_domain:
+        raise RuntimeError(
+            "Daily configuration missing. DAILY_API_KEY and DAILY_DOMAIN are required."
+        )
+
+    room_name = f"interview-{uuid.uuid4().hex[:10]}"
+    headers = {"Authorization": f"Bearer {api_key}"}
+    api_url = os.getenv("DAILY_API_URL", "https://api.daily.co/v1")
+    expiration_dt = datetime.now(timezone.utc) + timedelta(hours=2)
+    expiration = int(expiration_dt.timestamp())
+
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        room_payload = {
+            "name": room_name,
+            "properties": {
+                "exp": expiration,
+                "eject_at_room_exp": True,
+            },
+        }
+        room_resp = await client.post(
+            f"{api_url}/rooms", headers=headers, json=room_payload
+        )
+        room_resp.raise_for_status()
+
+        token_payload = {
+            "properties": {"room_name": room_name, "is_owner": False, "exp": expiration}
+        }
+        token_resp = await client.post(
+            f"{api_url}/meeting-tokens", headers=headers, json=token_payload
+        )
+        token_resp.raise_for_status()
+
+        room_url = f"https://{daily_domain}.daily.co/{room_name}"
+        meeting_token = token_resp.json().get("token", "")
+
+    return {"room_url": room_url, "room_token": meeting_token}
+
+
+async def launch_interview_bot(
+    auth_token: str,
+    interview_id: str,
+    *,
+    transport: Optional[str] = None,
+    room_info: Optional[Dict[str, str]] = None,
+) -> Tuple[bool, Optional[Dict[str, str]]]:
     """
-    Launch an interview bot for the given room URL.
-    Returns True if bot was launched successfully, False otherwise.
+    Launch an interview bot for the given auth token.
+    Returns (success flag, room info) - room info is present for Daily transport.
     """
     try:
         # Import here to avoid circular imports
@@ -79,31 +131,51 @@ async def launch_interview_bot(room_url: str, interview_id: str) -> bool:
         # Ensure the bot script exists
         if not os.path.exists(bot_script):
             logger.error(f"Bot script not found: {bot_script}")
-            return False
+            return False, room_info
 
-        # For WebRTC transport, we don't need a room URL
-        # Just pass the auth_token as an environment variable
-        auth_token = room_url.split("/")[-1] if room_url else interview_id
+        transport = transport or os.getenv("PIPECAT_TRANSPORT", "daily")
 
-        # Launch the bot as a subprocess with WebRTC transport
+        # Launch the bot as a subprocess with desired transport
         env = os.environ.copy()
         env["AUTH_TOKEN"] = auth_token
-        env["TRANSPORT"] = "webrtc"  # Force WebRTC transport
+        env["TRANSPORT"] = transport
 
         logger.info(
             f"Launching bot {bot_script} for interview {interview_id} with auth_token: {auth_token}"
         )
 
+        if transport == "daily":
+            if room_info is None:
+                room_info = await create_daily_room()
+            env["DAILY_ROOM_URL"] = room_info["room_url"]
+            env["DAILY_ROOM_TOKEN"] = room_info.get("room_token", "")
+            env["BOT_MODE"] = "standalone"
+            launch_command = [
+                sys.executable,
+                "-m",
+                bot_script.replace("/", ".").replace(".py", ""),
+            ]
+        else:
+            # WebRTC fallback (local testing)
+            env["PORT"] = "7861"
+            env["PIPECAT_PORT"] = "7861"
+            env["HOST"] = "0.0.0.0"
+            launch_command = [
+                sys.executable,
+                "-m",
+                bot_script.replace("/", ".").replace(".py", ""),
+                "--host",
+                "0.0.0.0",
+                "--port",
+                "7861",
+            ]
+
         # Launch the bot in the background
-        # Use WebRTC transport which runs on port 7861 (to avoid conflict with API on 7860)
-        env["PORT"] = "7861"  # Configure Pipecat to use port 7861 instead of default 7860
-        env["PIPECAT_PORT"] = "7861"  # Alternative environment variable for Pipecat
-        env["HOST"] = "0.0.0.0"  # Bind to all interfaces
         try:
             # Convert script path to module format for proper relative imports
             module_path = bot_script.replace("/", ".").replace(".py", "")
             process = subprocess.Popen(
-                [sys.executable, "-m", module_path, "--host", "0.0.0.0", "--port", "7861"],
+                launch_command,
                 env=env,
                 # Remove stdout/stderr pipes to show logs in main terminal
                 cwd=os.getcwd(),
@@ -121,28 +193,30 @@ async def launch_interview_bot(room_url: str, interview_id: str) -> bool:
                 bot_processes[interview_id] = {
                     "pid": process.pid,
                     "auth_token": auth_token,
+                    "transport": transport,
+                    "room_url": room_info["room_url"] if room_info else None,
                     "start_time": datetime.now(),
                     "cleanup_scheduled": False,
                 }
                 logger.info(
                     f"Tracking bot process {process.pid} for interview {interview_id}"
                 )
-                return True
+                return True, room_info if transport == "daily" else None
             else:
                 # Process exited, get the error
                 stdout, stderr = process.communicate()
                 logger.error(
                     f"Bot process exited immediately. STDOUT: {stdout.decode()}, STDERR: {stderr.decode()}"
                 )
-                return False
+                return False, None
 
         except Exception as e:
             logger.error(f"Failed to start bot process: {str(e)}")
-            return False
+            return False, None
 
     except Exception as e:
         logger.error(f"Failed to launch interview bot: {str(e)}")
-        return False
+        return False, None
 
 
 async def cleanup_completed_bot_processes():
@@ -162,7 +236,7 @@ async def cleanup_completed_bot_processes():
                     # Try to get interview context - if it fails or status is 'completed', clean up
                     try:
                         interview_context = await ctx_service.get_interview_context(
-                            process_info.get("auth_token", interview_id)
+                            process_info.get("auth_token", interview_id), use_cache=False
                         )
                         if (
                             interview_context
@@ -340,41 +414,55 @@ async def get_interview_payload(jwt_token: str, launch_bot: bool = False):
     4. Optionally launches a bot for the interview
     5. Returns the complete interviewer payload
     """
+    transport = os.getenv("PIPECAT_TRANSPORT", "daily")
+    dummy_token = "AnyoneAI"
+
+    payload = None
     try:
-        # Check for test token shortcut
-        if jwt_token == "AnyoneAI":
-            with open("interview/bots/resources/dummy_payload.json", "r") as f:
-                payload = json.load(f)
-        else:
-            # Get interview context from queue
-            context_service = get_context_service()
-            payload = await context_service.get_interview_context(jwt_token)
+        context_service = get_context_service()
+        payload = await context_service.get_interview_context(jwt_token)
+    except Exception as exc:
+        logger.warning(f"Unable to fetch payload for {jwt_token}: {exc}")
 
-            if not payload:
-                raise HTTPException(
-                    status_code=404, detail="Interview not found or token expired"
-                )
-
-        # Optionally launch bot
-        if launch_bot:
-            try:
-                success = await launch_interview_bot(
-                    jwt_token, payload.get("interview_id", jwt_token)
-                )
-                if success:
-                    logger.info(f"Bot launched for interview {jwt_token}")
-                else:
-                    logger.error(f"Failed to launch bot for interview {jwt_token}")
-            except Exception as e:
-                logger.error(f"Failed to launch bot for interview {jwt_token}: {e}")
-                # Don't fail the request if bot launch fails
-
-        return {"status": "success", "payload": payload, "bot_launched": launch_bot}
-
-    except Exception as e:
+    if not payload and jwt_token != dummy_token:
         raise HTTPException(
-            status_code=500, detail=f"Error retrieving interview payload: {str(e)}"
+            status_code=404, detail="Interview not found or token expired"
         )
+
+    response: Dict[str, Any] = {
+        "status": "success",
+        "auth_token": jwt_token,
+        "transport": transport,
+        "bot_launched": False,
+    }
+
+    if payload:
+        response["payload"] = payload
+
+    room_details: Optional[Dict[str, str]] = None
+
+    if launch_bot:
+        try:
+            initial_room = await create_daily_room() if transport == "daily" else None
+            success, bot_room = await launch_interview_bot(
+                auth_token=jwt_token,
+                interview_id=(payload or {}).get("interview_id", jwt_token),
+                transport=transport,
+                room_info=initial_room,
+            )
+            response["bot_launched"] = success
+            room_details = bot_room or initial_room
+            if success:
+                logger.info(f"Bot launched for interview {jwt_token}")
+            else:
+                logger.error(f"Failed to launch bot for interview {jwt_token}")
+        except Exception as e:
+            logger.error(f"Failed to launch bot for interview {jwt_token}: {e}")
+
+    if room_details:
+        response["room"] = room_details
+
+    return response
 
 
 @app.post("/interviews/{interview_id}/transcript")
