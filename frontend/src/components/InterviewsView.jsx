@@ -614,8 +614,10 @@ const InterviewsView = () => {
                     <h3 className="text-lg leading-6 font-medium text-cyan-400 mb-4">{inspectTitle}</h3>
                     <div className="bg-dark-blue p-4 rounded-md max-h-96 overflow-y-auto">
                       {inspectType === 'prompt' ? (
-                        <div className="text-sm text-gray-300 prose prose-invert max-w-none">
-                          <ReactMarkdown>{inspectContent}</ReactMarkdown>
+                        <div className="text-sm prose prose-invert max-w-none">
+                          <ReactMarkdown>
+                            {inspectContent}
+                          </ReactMarkdown>
                         </div>
                       ) : inspectType === 'rubric' ? (
                         <RubricViewer data={JSON.parse(inspectContent)} />
