@@ -67,6 +67,7 @@ function VoiceBot() {
   const [camEnabled, setCamEnabled] = useState(true)
   const [isLaunching, setIsLaunching] = useState(false)
   const [roomDetails, setRoomDetails] = useState(null)
+  const lastTransportState = useRef('disconnected')
 
   const addLog = (message) => {
     setLogs(prev => [...prev.slice(-9), `${new Date().toLocaleTimeString()}: ${message}`])
@@ -76,22 +77,21 @@ function VoiceBot() {
     // Listen for client state changes
     const handleStateChange = (state) => {
       addLog(`Client state: ${state}`)
-      setIsConnected(state === 'connected')
+      setIsConnected(['connected', 'ready'].includes(state))
     }
 
-    // This is a simplified way to listen to state changes
-    // In a real implementation, you'd use the proper Pipecat hooks
+    // Poll transport state to keep local status in sync
     const interval = setInterval(() => {
-      if (client && client.transport) {
-        const state = client.transport.state
-        if (state !== (isConnected ? 'connected' : 'disconnected')) {
-          handleStateChange(state)
-        }
+      if (!client?.transport) return
+      const state = client.transport.state
+      if (state !== lastTransportState.current) {
+        lastTransportState.current = state
+        handleStateChange(state)
       }
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [client, isConnected])
+  }, [client])
 
   const connectToBot = async () => {
     setIsConnecting(true)
@@ -130,6 +130,7 @@ function VoiceBot() {
       }
 
       setIsConnected(true)
+      lastTransportState.current = client?.transport?.state ?? 'connected'
       addLog("Successfully connected to bot")
     } catch (err) {
       console.error("Failed to connect:", err)

@@ -1,11 +1,13 @@
 # Frontend Refactor Opportunities
 
 **Scoring rubric**
+
 - Ease levels (E1-E5): E5 Very Easy, E4 Easy, E3 Moderate, E2 Hard, E1 Very Hard.
 - Impact levels (I1-I5): I1 Minimal, I2 Low, I3 Moderate, I4 High, I5 Critical.
 - Priority score = ImpactScore / (6 - EaseScore). Higher scores mean better ease-to-impact ratio.
 
 ## Interview Scheduling Workflow (Avg Priority 1.416)
+
 | Task ID | Description | Ease | Impact | Priority Score | Dependencies / Notes |
 | --- | --- | --- | --- | --- | --- |
 | ISW-4 | Move the prompt/rubric label helpers from `frontend/src/components/InterviewsView.jsx` into a shared utility consumed by `InterviewSummary.jsx` and related views to stop duplication. | E5 Very Easy | I2 Low | 2.00 | Unblocks ISW-3 by giving the shared component a single import site. |
@@ -15,12 +17,14 @@
 | ISW-5 | Normalize resume upload/selection into a dedicated hook or service consumed by the scheduling flow. | E3 Moderate | I3 Moderate | 1.00 | Pair with ISW-2 to isolate storage concerns before further UI polish. |
 
 ## Shared UX Infrastructure (Avg Priority 1.415)
+
 | Task ID | Description | Ease | Impact | Priority Score | Dependencies / Notes |
 | --- | --- | --- | --- | --- | --- |
 | SUX-1 | Create a reusable modal shell component for the repeated overlay/transition markup in `InterviewsView.jsx` and `CandidatesView.jsx`. | E4 Easy | I3 Moderate | 1.50 | Enables ISW-1 and ISW-2 to drop duplicated scaffolding. |
 | SUX-2 | Centralize toast notifications in a provider or `useToast` hook instead of duplicating state/effects across `DashboardView.jsx`, `InterviewsView.jsx`, `CandidatesView.jsx`, and `CandidatePortal.jsx`. | E3 Moderate | I4 High | 1.33 | Can leverage SDH-1 once standard Supabase error objects flow through. |
 
 ## Shared Data Hooks & Services (Avg Priority 1.110)
+
 | Task ID | Description | Ease | Impact | Priority Score | Dependencies / Notes |
 | --- | --- | --- | --- | --- | --- |
 | SDH-1 | Build a generic Supabase query hook (or data service) and refactor `useCandidates.js`, `useJobs.js`, `useQuestions.js`, `usePromptVersions.js`, and `useRubricVersions.js` to consume it. | E3 Moderate | I4 High | 1.33 | Lays groundwork for SDH-2, SDH-3, and SUX-2 error handling. |
@@ -28,16 +32,19 @@
 | SDH-3 | Introduce a `useCandidateInterviews` hook (or API service) so `CandidatePortal.jsx` and admin screens load interview/token data the same way. | E3 Moderate | I3 Moderate | 1.00 | Benefits from SDH-1 to avoid duplicating query scaffolding. |
 
 ## Evaluation Workflow (Avg Priority 1.000)
+
 | Task ID | Description | Ease | Impact | Priority Score | Dependencies / Notes |
 | --- | --- | --- | --- | --- | --- |
 | EV-1 | Extract the tabbed evaluation detail renderer in `frontend/src/components/EvaluationsView.jsx` into composable pieces (`EvaluationTabs`, `useEvaluationFilters`) and reuse rubric helpers from ISW-3/ISW-4. | E3 Moderate | I3 Moderate | 1.00 | Builds on the shared rubric utilities and could plug into future reporting screens. |
 
 ## Video & Real-Time (Avg Priority 0.800)
+
 | Task ID | Description | Ease | Impact | Priority Score | Dependencies / Notes |
 | --- | --- | --- | --- | --- | --- |
 | VR-1 | Break `frontend/video-client/src/App.jsx` into dedicated components/hooks (`usePipecatConnection`, media controls, logging) that `frontend/src/components/InterviewSession.jsx` can consume when video support is re-enabled. | E1 Very Hard | I4 High | 0.80 | Aligns with ISW-2 once the interview session reacquires live video features. |
 
 ## Ordered TODOs
+
 - TODO 01-01 - Implement ISW-4: centralize the prompt/rubric label helper into a shared utility and update `InterviewsView.jsx` plus `InterviewSummary.jsx` to consume it.
 - TODO 01-02 - Complete ISW-3: extract `RubricViewer` to its own component file and wire it into `InterviewsView.jsx` and `EvaluationsView.jsx`.
 - TODO 01-03 - Execute ISW-1: turn the candidate add/edit form into a shared component or hook used by both `InterviewsView.jsx` and `CandidatesView.jsx` modals.
