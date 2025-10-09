@@ -5,9 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:harness": "vite --config vite.harness.config.js",
     "build": "vite build",
+    "build:harness": "vite build --config vite.harness.config.js",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "preview:harness": "vite preview --config vite.harness.config.js"
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.2.8",

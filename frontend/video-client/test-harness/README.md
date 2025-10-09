@@ -33,18 +33,27 @@ npm install
 
 ### Development
 
+You can run the harness independently from the main interview experience:
+
 ```bash
-npm run dev
+npm run dev:harness
 ```
 
-The application will run on `http://localhost:5174` (or next available port) with API proxying to `http://localhost:8001`.
+This spins up Vite with `test-harness/` as the root (default port `5173`) while still proxying `/api` to `http://localhost:8001`.
+
+To produce a production build or preview it:
+
+```bash
+npm run build:harness
+npm run preview:harness
+```
 
 ## Usage
 
 ### Basic Testing
 
 1. **Start the backend**: Make sure your FastAPI server is running on port 8001
-2. **Open the test client**: Navigate to the dev server URL
+2. **Open the test client**: Navigate to the dev server URL reported by `npm run dev:harness`
 3. **Configure connection**:
    - **Endpoint**: `/api/offer` (or your backend endpoint)
    - **Token**: Use a valid JWT token or `test_token` for testing

@@ -1,9 +1,8 @@
 import '../styles/interview-experience.css'
 
-import { useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ThemeProvider,
-  PipecatAppBase,
   ControlBar,
   ConnectButton,
   UserAudioControl,
@@ -18,9 +17,12 @@ import {
   EventsPanel,
   VoiceVisualizer,
   TranscriptOverlay,
+  ConversationProvider,
 } from '@pipecat-ai/voice-ui-kit'
+import { PipecatClientProvider, PipecatClientAudio } from '@pipecat-ai/client-react'
 
 import { useTranscriptRecorder } from '../lib/transcriptRecorder.js'
+import { useDailyInterviewClient } from '../hooks/useDailyInterviewClient.js'
 
 const TranscriptCapture = ({ onUpdate, children }) => {
   useTranscriptRecorder({ enabled: true, onUpdate })
@@ -29,22 +31,34 @@ const TranscriptCapture = ({ onUpdate, children }) => {
 
 export default function InterviewExperience() {
   const [token, setToken] = useState('AnyoneAI')
-  const [connectParams, setConnectParams] = useState(null)
+  const [connectResponse, setConnectResponse] = useState(null)
   const [launching, setLaunching] = useState(false)
   const [launchError, setLaunchError] = useState(null)
   const [capturedTranscript, setCapturedTranscript] = useState([])
   const abortRef = useRef(null)
 
-  const dailyConnectParams = useMemo(() => {
-    if (!connectParams) return null
-    return {
-      room_url: connectParams.roomUrl,
-      ...(connectParams.roomToken ? { token: connectParams.roomToken } : {}),
+  const { client, connect, disconnect, state } = useDailyInterviewClient({
+    onStateChange: (s) => console.log('[InterviewExperience] transport state', s),
+    onError: (err) => console.warn('[InterviewExperience] client error', err),
+  })
+
+  useEffect(() => {
+    return () => {
+      disconnect().catch(() => undefined)
     }
-  }, [connectParams])
+  }, [disconnect])
+
+  const roomDetails = useMemo(() => {
+    if (!connectResponse?.room?.room_url) return null
+    return {
+      roomUrl: connectResponse.room.room_url,
+      roomToken: connectResponse.room.room_token ?? undefined,
+    }
+  }, [connectResponse])
 
   const handleLaunch = async () => {
     if (!token) return
+    await disconnect().catch(() => undefined)
     setLaunching(true)
     setLaunchError(null)
     abortRef.current?.abort()
@@ -63,25 +77,48 @@ export default function InterviewExperience() {
       }
 
       const payload = await response.json()
-      const roomUrl = payload?.room?.room_url
-
-      if (!roomUrl) {
+      if (!payload?.room?.room_url) {
         throw new Error('Launch response did not include Daily room details')
       }
 
-      setConnectParams({
-        roomUrl,
-        roomToken: payload.room.room_token ?? undefined,
-      })
+      setConnectResponse(payload)
     } catch (error) {
       if (error.name === 'AbortError') return
       console.error('Failed to launch bot:', error)
       setLaunchError(error.message || 'Failed to launch bot')
-      setConnectParams(null)
+      setConnectResponse(null)
     } finally {
       setLaunching(false)
     }
   }
+
+  const handleConnect = useCallback(async () => {
+    if (!roomDetails) return
+    try {
+      await connect(roomDetails)
+    } catch (error) {
+      console.error('Connect failed', error)
+      setLaunchError(error instanceof Error ? error.message : String(error))
+    }
+  }, [connect, roomDetails])
+
+  const autoConnectRef = useRef(null)
+
+  useEffect(() => {
+    if (!roomDetails) {
+      autoConnectRef.current = null
+      return
+    }
+
+    if (autoConnectRef.current === roomDetails.roomUrl) {
+      return
+    }
+
+    autoConnectRef.current = roomDetails.roomUrl
+    handleConnect().catch((err) => {
+      console.error('Auto connect failed', err)
+    })
+  }, [roomDetails, handleConnect])
 
   const handleDownloadTranscript = () => {
     if (!capturedTranscript.length) return
@@ -123,7 +160,9 @@ export default function InterviewExperience() {
             </div>
 
             {launchError && <p className="token-error">{launchError}</p>}
-            {connectParams && <p className="token-success">Daily room ready for {token}</p>}
+            {roomDetails && (
+              <p className="token-success">Daily room ready for {token}</p>
+            )}
 
             <div className="transcript-actions">
               <button
@@ -141,25 +180,20 @@ export default function InterviewExperience() {
         </header>
 
         <main className="interview-main">
-          {dailyConnectParams ? (
-            <PipecatAppBase transportType="daily" connectParams={dailyConnectParams} noThemeProvider>
-              {({ client, handleConnect, handleDisconnect, transformedStartBotResponse }) => (
+          {roomDetails ? (
+            <PipecatClientProvider client={client}>
+              <ConversationProvider>
                 <TranscriptCapture onUpdate={setCapturedTranscript}>
-                  {client ? (
-                    <ExperienceLayout
-                      handleConnect={handleConnect}
-                      handleDisconnect={handleDisconnect}
-                      transformedStartBotResponse={transformedStartBotResponse}
-                    />
-                  ) : (
-                    <div className="loading-state glass-ui">
-                      <p className="loading-headline">Initializing interview session...</p>
-                      <p className="loading-text">Setting up voice connection</p>
-                    </div>
-                  )}
+                  <ExperienceLayout
+                    onConnect={handleConnect}
+                    onDisconnect={disconnect}
+                    connectionState={state.transport}
+                    transformedStartBotResponse={connectResponse}
+                  />
                 </TranscriptCapture>
-              )}
-            </PipecatAppBase>
+              </ConversationProvider>
+              <PipecatClientAudio />
+            </PipecatClientProvider>
           ) : (
             <div className="empty-state glass-ui">
               <p className="empty-headline">Launch an interview to begin</p>
@@ -180,7 +214,7 @@ export default function InterviewExperience() {
   )
 }
 
-const ExperienceLayout = ({ handleConnect, handleDisconnect, transformedStartBotResponse }) => (
+const ExperienceLayout = ({ onConnect, onDisconnect, connectionState, transformedStartBotResponse }) => (
   <div className="experience-grid">
     <section className="media-stack glass-ui">
       <div className="remote-video">
@@ -196,8 +230,19 @@ const ExperienceLayout = ({ handleConnect, handleDisconnect, transformedStartBot
           <UserAudioControl />
           <UserVideoControl />
           <UserAudioOutputControl />
-          <ConnectButton onConnect={handleConnect} onDisconnect={handleDisconnect} />
+          <ConnectButton
+            onConnect={onConnect}
+            onDisconnect={onDisconnect}
+            stateContent={{
+              connecting: { children: 'Connecting...', variant: 'secondary' },
+              disconnected: { children: 'Connect', variant: 'active' },
+              ready: { children: 'Disconnect', variant: 'destructive' },
+            }}
+          />
         </ControlBar>
+        <p className="connection-hint text-xs text-gray-400 mt-2">
+          Connection state: {connectionState}
+        </p>
       </div>
     </section>
 
@@ -227,4 +272,3 @@ const ExperienceLayout = ({ handleConnect, handleDisconnect, transformedStartBot
     </aside>
   </div>
 )
-

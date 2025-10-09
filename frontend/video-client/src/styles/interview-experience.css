@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import '@pipecat-ai/voice-ui-kit/styles.css';
 
 :root {
   --interview-primary: #06b6d4;
@@ -342,4 +340,3 @@
     border-radius: 16px;
   }
 }
-
