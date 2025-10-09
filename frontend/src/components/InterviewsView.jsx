@@ -39,8 +39,8 @@ const InterviewsView = () => {
   })
 
   const formatPromptLabel = (prompt) => {
-    if (!prompt) return 'Unknown'
-    const name = prompt.prompts?.name ?? 'Unknown'
+    if (!prompt) return 'Not selected'
+    const name = prompt.prompts?.name ?? prompt.name ?? 'Unknown'
     const version = prompt.version
     if (version === undefined || version === null || version === '') {
       return name
@@ -49,8 +49,8 @@ const InterviewsView = () => {
   }
 
   const formatRubricLabel = (rubric) => {
-    if (!rubric) return 'Unknown'
-    const name = rubric.rubrics?.name ?? 'Unknown'
+    if (!rubric) return 'Not selected'
+    const name = rubric.rubrics?.name ?? rubric.name ?? 'Unknown'
     const version = rubric.version
     if (version === undefined || version === null || version === '') {
       return name
@@ -115,39 +115,6 @@ const InterviewsView = () => {
     () => [...interviewerPromptVersions, ...evaluatorPromptVersions],
     [interviewerPromptVersions, evaluatorPromptVersions]
   )
-
-  const data = useMemo(
-    () => ({
-      candidates: candidateList,
-      jobs: jobList,
-      questions: questionList,
-      prompts,
-      rubrics: rubricVersions,
-      resumes: [],
-    }),
-    [candidateList, jobList, prompts, questionList, rubricVersions]
-  )
-
-  useEffect(() => {
-    if (isLoading || anyError) {
-      return
-    }
-
-    setFormData(prev => ({
-      ...prev,
-      interviewerPrompt:
-        prev.interviewerPrompt ?? (interviewerPromptVersions[0] ?? null),
-      evaluatorPrompt:
-        prev.evaluatorPrompt ?? (evaluatorPromptVersions[0] ?? null),
-      rubric: prev.rubric ?? (rubricVersions[0] ?? null),
-    }))
-  }, [
-    anyError,
-    evaluatorPromptVersions,
-    interviewerPromptVersions,
-    isLoading,
-    rubricVersions,
-  ])
 
   useEffect(() => {
     if (anyError) {
@@ -424,7 +391,7 @@ const InterviewsView = () => {
             value={formData.interviewerPrompt}
             onChange={(prompt) => setFormData(prev => ({ ...prev, interviewerPrompt: prompt }))}
             displayKey={formatPromptLabel}
-            placeholder="Select interviewer prompt"
+            placeholder="Interviewer"
             extraButton={
               formData.interviewerPrompt ? (
                 <button
@@ -448,7 +415,7 @@ const InterviewsView = () => {
             value={formData.evaluatorPrompt}
             onChange={(prompt) => setFormData(prev => ({ ...prev, evaluatorPrompt: prompt }))}
             displayKey={formatPromptLabel}
-            placeholder="Select evaluator prompt"
+            placeholder="Evaluator"
             extraButton={
               formData.evaluatorPrompt ? (
                 <button
@@ -472,7 +439,7 @@ const InterviewsView = () => {
             value={formData.rubric}
             onChange={(rubric) => setFormData(prev => ({ ...prev, rubric }))}
             displayKey={formatRubricLabel}
-            placeholder="Select rubric"
+            placeholder="Rubric"
             extraButton={
               formData.rubric ? (
                 <button
@@ -491,7 +458,7 @@ const InterviewsView = () => {
           />
         </div>
 
-        <InterviewSummary formData={formData} data={data} />
+        <InterviewSummary formData={formData} />
 
         <div className="flex justify-end">
           <button

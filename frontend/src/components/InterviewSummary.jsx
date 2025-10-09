@@ -1,4 +1,24 @@
-const InterviewSummary = ({ formData, data }) => {
+const formatPrompt = (prompt) => {
+  if (!prompt) return 'Not selected'
+  const name = prompt.prompts?.name ?? prompt.name ?? 'Unknown'
+  const version = prompt.version
+  if (version === undefined || version === null || version === '') {
+    return name
+  }
+  return `${name} (v${version})`
+}
+
+const formatRubric = (rubric) => {
+  if (!rubric) return 'Not selected'
+  const name = rubric.rubrics?.name ?? rubric.name ?? 'Unknown'
+  const version = rubric.version
+  if (version === undefined || version === null || version === '') {
+    return name
+  }
+  return `${name} (v${version})`
+}
+
+const InterviewSummary = ({ formData }) => {
   const getDisplayName = (item, key) => {
     if (!item) return 'Not selected'
     return typeof key === 'function' ? key(item) : item[key]
@@ -35,19 +55,19 @@ const InterviewSummary = ({ formData, data }) => {
         <div>
           <dt className="text-sm font-medium text-gray-300">Interviewer Prompt</dt>
           <dd className="mt-1 text-sm text-gray-300">
-            {getDisplayName(formData.interviewerPrompt, 'name')}
+            {formatPrompt(formData.interviewerPrompt)}
           </dd>
         </div>
         <div>
           <dt className="text-sm font-medium text-gray-300">Evaluator Prompt</dt>
           <dd className="mt-1 text-sm text-gray-300">
-            {getDisplayName(formData.evaluatorPrompt, 'name')}
+            {formatPrompt(formData.evaluatorPrompt)}
           </dd>
         </div>
         <div className="sm:col-span-2">
           <dt className="text-sm font-medium text-gray-300">Evaluation Rubric</dt>
           <dd className="mt-1 text-sm text-gray-300">
-            {getDisplayName(formData.rubric, 'name')}
+            {formatRubric(formData.rubric)}
           </dd>
         </div>
       </dl>
