@@ -45,7 +45,7 @@ const QuestionManager = ({ questions, selectedQuestions, onChange }) => {
         />
       </div>
 
-      <div className="glass-ui border border-cyan-800 rounded-md max-h-60 overflow-y-auto">
+      <div className="glass-ui border border-cyan-800 rounded-md max-h-96 overflow-y-auto">
         {filteredQuestions.map(question => (
           <div
             key={question.question_id}
