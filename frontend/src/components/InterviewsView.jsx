@@ -16,6 +16,44 @@ import {
   useRubricVersions,
 } from '../hooks/index.js'
 
+const RubricViewer = ({ data }) => {
+  const renderRubric = (rubric, title) => (
+    <div key={title} className="mb-8">
+      <h4 className="text-base font-semibold text-cyan-400 mb-4">{title.replace(/_/g, ' ').toUpperCase()}</h4>
+      <div className="overflow-x-auto">
+        <table className="min-w-full table-auto border-collapse border border-gray-600">
+          <thead>
+            <tr className="bg-gray-700">
+              <th className="border border-gray-600 px-4 py-2 text-left text-cyan-400 text-xs">Criterion</th>
+              {rubric.scale.map(level => (
+                <th key={level} className="border border-gray-600 px-4 py-2 text-left text-cyan-400 text-xs">{level}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rubric.criteria.map(criterion => (
+              <tr key={criterion.name} className="hover:bg-gray-800">
+                <td className="border border-gray-600 px-4 py-2 font-medium text-gray-300 text-xs">{criterion.name}</td>
+                {rubric.scale.map(level => (
+                  <td key={level} className="border border-gray-600 px-4 py-2 text-xs text-gray-400">
+                    {criterion.levels[level] || 'N/A'}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+
+  return (
+    <div className="text-xs">
+      {Object.entries(data).map(([key, rubric]) => renderRubric(rubric, key))}
+    </div>
+  )
+}
+
 const InterviewsView = () => {
   const supabase = useSupabase()
   const [submitting, setSubmitting] = useState(false)
@@ -569,7 +607,7 @@ const InterviewsView = () => {
             <div className="fixed inset-0 transition-opacity" aria-hidden="true">
               <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
             </div>
-            <div className="inline-block align-bottom glass-ui rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="inline-block align-bottom glass-ui rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full" onClick={(e) => e.stopPropagation()}>
               <div className="px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div className="sm:flex sm:items-start">
                   <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
@@ -579,6 +617,8 @@ const InterviewsView = () => {
                         <div className="text-sm text-gray-300 prose prose-invert max-w-none">
                           <ReactMarkdown>{inspectContent}</ReactMarkdown>
                         </div>
+                      ) : inspectType === 'rubric' ? (
+                        <RubricViewer data={JSON.parse(inspectContent)} />
                       ) : (
                         <SyntaxHighlighter language="json" style={oneDark} className="text-sm">
                           {inspectContent}
