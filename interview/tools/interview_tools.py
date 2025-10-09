@@ -3,6 +3,7 @@ Interview Tools for LLM
 Tools that can be called by the LLM during interview conversations
 """
 
+import asyncio
 import logging
 from typing import Optional
 
@@ -11,7 +12,7 @@ from pipecat.processors.frame_processor import FrameDirection
 from pipecat.services.llm_service import FunctionCallParams
 from pipecat.adapters.schemas.function_schema import FunctionSchema
 from pipecat.adapters.schemas.tools_schema import ToolsSchema
-
+from time import sleep
 logger = logging.getLogger(__name__)
 
 # Global reference to context aggregator (set by the bot)
@@ -85,14 +86,15 @@ async def clean_context_and_summarize(params: FunctionCallParams):
     )
 
 
-async def end_conversation(params: FunctionCallParams):
+async def end_conversation(params: FunctionCallParams, delay):
     """Tool for LLM to end the conversation"""
     await params.llm.push_frame(
         TTSSpeakFrame(
-            "Okay, thank you for joining us today. I'll be ending the session now."
+            "Okay, thank you for joining us today. I'll be ending the session now. Have a great day!"
         ),
         FrameDirection.DOWNSTREAM,
     )
+    await asyncio.sleep(delay)  # Allow time for TTS to complete
     await params.llm.push_frame(EndTaskFrame(), FrameDirection.UPSTREAM)
 
 
