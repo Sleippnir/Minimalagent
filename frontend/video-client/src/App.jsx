@@ -110,17 +110,24 @@ function VoiceBot() {
         setRoomDetails(room)
       }
 
-      await client.startBotAndConnect({
-        roomUrl: room.roomUrl,
-        token: room.roomToken,
-        requestData: {
-          loginToken: token,
-          context: {
-            enableMic: micEnabled,
-            enableCam: camEnabled
-          }
-        }
-      })
+      if (!room.roomUrl) {
+        throw new Error("Missing Daily room URL from launch response")
+      }
+
+      const connectParams = {
+        room_url: room.roomUrl,
+        ...(room.roomToken ? { token: room.roomToken } : {}),
+      }
+
+      addLog(`Connecting to Daily room ${room.roomUrl}`)
+      await client.connect(connectParams)
+
+      if (client?.transport?.enableMic) {
+        client.transport.enableMic(micEnabled)
+      }
+      if (client?.transport?.enableCam) {
+        client.transport.enableCam(camEnabled)
+      }
 
       setIsConnected(true)
       addLog("Successfully connected to bot")
@@ -320,7 +327,7 @@ function VoiceBot() {
         <div className="video-container">
           <div className="video-wrapper">
             <h4>Remote Video (Bot)</h4>
-            <PipecatClientVideo />
+            <PipecatClientVideo participant="bot" />
           </div>
           <div className="video-wrapper">
             <h4>Local Video (You)</h4>
