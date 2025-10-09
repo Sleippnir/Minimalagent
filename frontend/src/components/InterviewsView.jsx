@@ -1,14 +1,20 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useSupabase } from '../SupabaseContext.jsx'
 import Spinner from './Spinner.jsx'
 import Toast from './Toast.jsx'
 import SearchableDropdown from './SearchableDropdown.jsx'
 import QuestionManager from './QuestionManager.jsx'
 import InterviewSummary from './InterviewSummary.jsx'
+import {
+  useCandidates,
+  useJobs,
+  useQuestions,
+  usePromptVersions,
+  useRubricVersions,
+} from '../hooks/index.js'
 
 const InterviewsView = () => {
   const supabase = useSupabase()
-  const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [toast, setToast] = useState(null)
   const [showCandidateModal, setShowCandidateModal] = useState(false)
@@ -31,108 +37,136 @@ const InterviewsView = () => {
     evaluatorPrompt: null,
     rubric: null,
   })
-  const [data, setData] = useState({
-    candidates: [],
-    jobs: [],
-    questions: [],
-    prompts: [],
-    rubrics: [],
-    resumes: [],
-  })
+
+  const formatPromptLabel = (prompt) => {
+    if (!prompt) return 'Unknown'
+    const name = prompt.prompts?.name ?? 'Unknown'
+    const version = prompt.version
+    if (version === undefined || version === null || version === '') {
+      return name
+    }
+    return `${name} (v${version})`
+  }
+
+  const formatRubricLabel = (rubric) => {
+    if (!rubric) return 'Unknown'
+    const name = rubric.rubrics?.name ?? 'Unknown'
+    const version = rubric.version
+    if (version === undefined || version === null || version === '') {
+      return name
+    }
+    return `${name} (v${version})`
+  }
+
+  const {
+    data: candidateList = [],
+    loading: candidatesLoading,
+    error: candidatesError,
+    refetch: refetchCandidates,
+  } = useCandidates()
+
+  const {
+    data: jobList = [],
+    loading: jobsLoading,
+    error: jobsError,
+  } = useJobs()
+
+  const {
+    data: questionList = [],
+    loading: questionsLoading,
+    error: questionsError,
+  } = useQuestions()
+
+  const {
+    data: interviewerPromptVersions = [],
+    loading: interviewerPromptsLoading,
+    error: interviewerPromptsError,
+  } = usePromptVersions({ purpose: 'interviewer' })
+
+  const {
+    data: evaluatorPromptVersions = [],
+    loading: evaluatorPromptsLoading,
+    error: evaluatorPromptsError,
+  } = usePromptVersions({ purpose: 'evaluator' })
+
+  const {
+    data: rubricVersions = [],
+    loading: rubricsLoading,
+    error: rubricsError,
+  } = useRubricVersions()
+
+  const isLoading =
+    candidatesLoading ||
+    jobsLoading ||
+    questionsLoading ||
+    interviewerPromptsLoading ||
+    evaluatorPromptsLoading ||
+    rubricsLoading
+
+  const anyError =
+    candidatesError ||
+    jobsError ||
+    questionsError ||
+    interviewerPromptsError ||
+    evaluatorPromptsError ||
+    rubricsError
+
+  const prompts = useMemo(
+    () => [...interviewerPromptVersions, ...evaluatorPromptVersions],
+    [interviewerPromptVersions, evaluatorPromptVersions]
+  )
+
+  const data = useMemo(
+    () => ({
+      candidates: candidateList,
+      jobs: jobList,
+      questions: questionList,
+      prompts,
+      rubrics: rubricVersions,
+      resumes: [],
+    }),
+    [candidateList, jobList, prompts, questionList, rubricVersions]
+  )
 
   useEffect(() => {
-    fetchInterviewFormData()
-  }, [])
-
-  const fetchInterviewFormData = async () => {
-    setLoading(true)
-    try {
-      if (!supabase) {
-        // Mock data for development
-        setData({
-          candidates: [
-            { candidate_id: '1', first_name: 'John', last_name: 'Doe', email: 'john@example.com', resume_path: 'https://example.com/resumes/John_Doe_Resume.pdf' },
-            { candidate_id: '2', first_name: 'Jane', last_name: 'Smith', email: 'jane@example.com', resume_path: null }
-          ],
-          jobs: [
-            { job_id: '1', title: 'Software Engineer' },
-            { job_id: '2', title: 'Product Manager' }
-          ],
-          questions: [
-            { question_id: '1', text: 'Tell me about yourself', category: 'Behavioral', tags: ['intro'] },
-            { question_id: '2', text: 'What are your strengths?', category: 'Behavioral', tags: ['personal'] }
-          ],
-          prompts: [
-            { prompt_version_id: '1', prompts: { name: 'Friendly Interviewer', purpose: 'interviewer' } },
-            { prompt_version_id: '2', prompts: { name: 'Detailed Evaluator', purpose: 'evaluator' } }
-          ],
-          rubrics: [
-            { rubric_version_id: '1', rubrics: { name: 'Technical Assessment' } },
-            { rubric_version_id: '2', rubrics: { name: 'Behavioral Assessment' } }
-          ],
-          resumes: [
-            { resume_id: '1', candidate_id: '1', name: 'John_Doe_Resume.pdf', url: 'https://example.com/resumes/John_Doe_Resume.pdf' },
-            { resume_id: '2', candidate_id: '2', name: 'Jane_Smith_Resume.pdf', url: 'https://example.com/resumes/Jane_Smith_Resume.pdf' }
-          ],
-        })
-
-        // Set latest prompt versions and rubrics as defaults for mock data
-        setFormData(prev => ({
-          ...prev,
-          interviewerPrompt: { prompt_version_id: '1', prompts: { name: 'Friendly Interviewer', purpose: 'interviewer' } },
-          evaluatorPrompt: { prompt_version_id: '2', prompts: { name: 'Detailed Evaluator', purpose: 'evaluator' } },
-          rubric: { rubric_version_id: '2', rubrics: { name: 'Behavioral Assessment' } },
-        }))
-      } else {
-        const [candidatesRes, jobsRes, questionsRes, promptsRes, rubricsRes] = await Promise.all([
-          supabase.from('candidates').select('candidate_id, first_name, last_name, email, resume_path'),
-          supabase.from('jobs').select('job_id, title'),
-          supabase.from('questions').select('question_id, text, category, tags'),
-          supabase.from('prompt_versions').select('prompt_version_id, prompts(name, purpose)').order('version', { ascending: false }),
-          supabase.from('rubric_versions').select('rubric_version_id, rubrics(name)').order('version', { ascending: false }),
-        ])
-
-        if (candidatesRes.error) throw candidatesRes.error
-        if (jobsRes.error) throw jobsRes.error
-        if (questionsRes.error) throw questionsRes.error
-        if (promptsRes.error) throw promptsRes.error
-        if (rubricsRes.error) throw rubricsRes.error
-
-        setData({
-          candidates: candidatesRes.data,
-          jobs: jobsRes.data,
-          questions: questionsRes.data,
-          prompts: promptsRes.data,
-          rubrics: rubricsRes.data,
-        })
-
-        // Set latest prompt versions and rubrics as defaults
-        const interviewerPrompt = promptsRes.data
-          .filter(p => p.prompts?.purpose === 'interviewer')
-          .sort((a, b) => parseInt(b.prompt_version_id) - parseInt(a.prompt_version_id))[0]
-        const evaluatorPrompt = promptsRes.data
-          .filter(p => p.prompts?.purpose === 'evaluator')
-          .sort((a, b) => parseInt(b.prompt_version_id) - parseInt(a.prompt_version_id))[0]
-        const latestRubric = rubricsRes.data
-          .sort((a, b) => parseInt(b.rubric_version_id) - parseInt(a.rubric_version_id))[0]
-
-        setFormData(prev => ({
-          ...prev,
-          interviewerPrompt: interviewerPrompt || null,
-          evaluatorPrompt: evaluatorPrompt || null,
-          rubric: latestRubric || null,
-        }))
-      }
-    } catch (error) {
-      console.error('Error fetching form data:', error)
-      setToast({ message: 'Failed to load form data', type: 'error' })
-    } finally {
-      setLoading(false)
+    if (isLoading || anyError) {
+      return
     }
-  }
+
+    setFormData(prev => ({
+      ...prev,
+      interviewerPrompt:
+        prev.interviewerPrompt ?? (interviewerPromptVersions[0] ?? null),
+      evaluatorPrompt:
+        prev.evaluatorPrompt ?? (evaluatorPromptVersions[0] ?? null),
+      rubric: prev.rubric ?? (rubricVersions[0] ?? null),
+    }))
+  }, [
+    anyError,
+    evaluatorPromptVersions,
+    interviewerPromptVersions,
+    isLoading,
+    rubricVersions,
+  ])
+
+  useEffect(() => {
+    if (anyError) {
+      console.error('Error fetching form data:', anyError)
+      setToast(prev =>
+        prev?.type === 'error'
+          ? prev
+          : { message: 'Failed to load form data', type: 'error' }
+      )
+    }
+  }, [anyError])
 
   const handleInspect = async (type, item) => {
     if (!item) return
+
+    if (!supabase) {
+      setToast({ message: 'Supabase not configured', type: 'error' })
+      return
+    }
 
     try {
       let content = ''
@@ -140,32 +174,24 @@ const InterviewsView = () => {
 
       if (type === 'prompt') {
         title = `${item.prompts?.name} (${item.prompts?.purpose})`
-        if (!supabase) {
-          content = `Mock content for ${title}`
-        } else {
-          const { data, error } = await supabase
-            .from('prompt_versions')
-            .select('content')
-            .eq('prompt_version_id', item.prompt_version_id)
-            .single()
+        const { data, error } = await supabase
+          .from('prompt_versions')
+          .select('content')
+          .eq('prompt_version_id', item.prompt_version_id)
+          .single()
 
-          if (error) throw error
-          content = data.content
-        }
+        if (error) throw error
+        content = data.content
       } else if (type === 'rubric') {
         title = item.rubrics?.name
-        if (!supabase) {
-          content = `Mock rubric JSON for ${title}`
-        } else {
-          const { data, error } = await supabase
-            .from('rubric_versions')
-            .select('rubric_json')
-            .eq('rubric_version_id', item.rubric_version_id)
-            .single()
+        const { data, error } = await supabase
+          .from('rubric_versions')
+          .select('rubric_json')
+          .eq('rubric_version_id', item.rubric_version_id)
+          .single()
 
-          if (error) throw error
-          content = JSON.stringify(data.rubric_json, null, 2)
-        }
+        if (error) throw error
+        content = JSON.stringify(data.rubric_json, null, 2)
       }
 
       setInspectTitle(title)
@@ -187,16 +213,7 @@ const InterviewsView = () => {
     }
 
     if (!supabase) {
-      // Mock upload
-      const mockUrl = `https://example.com/resumes/${file.name}`
-      setData(prev => ({
-        ...prev,
-        candidates: prev.candidates.map(c =>
-          c.candidate_id === formData.candidate.candidate_id ? { ...c, resume_path: mockUrl } : c
-        )
-      }))
-      setFormData(prev => ({ ...prev, resume: mockUrl, candidate: { ...prev.candidate, resume_path: mockUrl } }))
-      setToast({ message: 'Resume uploaded successfully (mock)', type: 'success' })
+      setToast({ message: 'Supabase not configured', type: 'error' })
       return
     }
 
@@ -223,13 +240,8 @@ const InterviewsView = () => {
 
       if (updateError) throw updateError
 
-      setData(prev => ({
-        ...prev,
-        candidates: prev.candidates.map(c =>
-          c.candidate_id === formData.candidate.candidate_id ? { ...c, resume_path: publicUrl } : c
-        )
-      }))
       setFormData(prev => ({ ...prev, resume: publicUrl, candidate: { ...prev.candidate, resume_path: publicUrl } }))
+      await refetchCandidates()
       setToast({ message: 'Resume uploaded successfully', type: 'success' })
     } catch (error) {
       console.error('Error uploading resume:', error)
@@ -241,28 +253,22 @@ const InterviewsView = () => {
     e.preventDefault()
     setSubmitting(true)
     try {
-      let newCandidate
       if (!supabase) {
-        // Mock adding candidate
-        newCandidate = {
-          candidate_id: Date.now().toString(),
-          ...candidateFormData
-        }
-        setData(prev => ({ ...prev, candidates: [...prev.candidates, newCandidate] }))
-        setToast({ message: 'Candidate added successfully (mock)', type: 'success' })
-      } else {
-        const { data, error } = await supabase
-          .from('candidates')
-          .insert([candidateFormData])
-          .select()
-
-        if (error) throw error
-
-        newCandidate = data[0]
-        setData(prev => ({ ...prev, candidates: [...prev.candidates, newCandidate] }))
-        setToast({ message: 'Candidate added successfully', type: 'success' })
+        setToast({ message: 'Supabase not configured', type: 'error' })
+        return
       }
+
+      const { data, error } = await supabase
+        .from('candidates')
+        .insert([candidateFormData])
+        .select()
+
+      if (error) throw error
+
+      const newCandidate = data[0]
+      await refetchCandidates()
       setFormData(prev => ({ ...prev, candidate: newCandidate }))
+      setToast({ message: 'Candidate added successfully', type: 'success' })
       setShowCandidateModal(false)
       setCandidateFormData({
         first_name: '',
@@ -341,7 +347,7 @@ const InterviewsView = () => {
     }
   }
 
-  if (loading) {
+  if (isLoading) {
     return <Spinner />
   }
 
@@ -357,7 +363,7 @@ const InterviewsView = () => {
           <div>
             <SearchableDropdown
               label="Candidate"
-              options={data.candidates}
+              options={candidateList}
               value={formData.candidate}
               onChange={(candidate) => setFormData(prev => ({ ...prev, candidate, resume: candidate?.resume_path || null }))}
               displayKey={(c) => `${c.first_name} ${c.last_name} (${c.email})`}
@@ -374,7 +380,7 @@ const InterviewsView = () => {
 
           <SearchableDropdown
             label="Job Position"
-            options={data.jobs}
+            options={jobList}
             value={formData.job}
             onChange={(job) => setFormData(prev => ({ ...prev, job }))}
             displayKey="title"
@@ -406,7 +412,7 @@ const InterviewsView = () => {
         </div>
 
         <QuestionManager
-          questions={data.questions}
+          questions={questionList}
           selectedQuestions={formData.questions}
           onChange={(questions) => setFormData(prev => ({ ...prev, questions }))}
         />
@@ -414,10 +420,10 @@ const InterviewsView = () => {
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
           <SearchableDropdown
             label="Interviewer Prompt"
-            options={data.prompts.filter(p => p.prompts?.purpose === 'interviewer')}
+            options={prompts.filter(p => p.prompts?.purpose === 'interviewer')}
             value={formData.interviewerPrompt}
             onChange={(prompt) => setFormData(prev => ({ ...prev, interviewerPrompt: prompt }))}
-            displayKey={(p) => p.prompts?.name || 'Unknown'}
+            displayKey={formatPromptLabel}
             placeholder="Select interviewer prompt"
             extraButton={
               formData.interviewerPrompt ? (
@@ -438,10 +444,10 @@ const InterviewsView = () => {
 
           <SearchableDropdown
             label="Evaluator Prompt"
-            options={data.prompts.filter(p => p.prompts?.purpose === 'evaluator')}
+            options={prompts.filter(p => p.prompts?.purpose === 'evaluator')}
             value={formData.evaluatorPrompt}
             onChange={(prompt) => setFormData(prev => ({ ...prev, evaluatorPrompt: prompt }))}
-            displayKey={(p) => p.prompts?.name || 'Unknown'}
+            displayKey={formatPromptLabel}
             placeholder="Select evaluator prompt"
             extraButton={
               formData.evaluatorPrompt ? (
@@ -462,10 +468,10 @@ const InterviewsView = () => {
 
           <SearchableDropdown
             label="Evaluation Rubric"
-            options={data.rubrics}
+            options={rubricVersions}
             value={formData.rubric}
             onChange={(rubric) => setFormData(prev => ({ ...prev, rubric }))}
-            displayKey={(r) => r.rubrics?.name || 'Unknown'}
+            displayKey={formatRubricLabel}
             placeholder="Select rubric"
             extraButton={
               formData.rubric ? (
@@ -628,3 +634,4 @@ const InterviewsView = () => {
 }
 
 export default InterviewsView
+
