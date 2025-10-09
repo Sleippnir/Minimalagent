@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
+import ReactMarkdown from 'react-markdown'
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { useSupabase } from '../SupabaseContext.jsx'
 import Spinner from './Spinner.jsx'
 import Toast from './Toast.jsx'
@@ -21,6 +24,7 @@ const InterviewsView = () => {
   const [showInspectModal, setShowInspectModal] = useState(false)
   const [inspectContent, setInspectContent] = useState('')
   const [inspectTitle, setInspectTitle] = useState('')
+  const [inspectType, setInspectType] = useState('')
   const [candidateFormData, setCandidateFormData] = useState({
     first_name: '',
     last_name: '',
@@ -163,6 +167,7 @@ const InterviewsView = () => {
 
       setInspectTitle(title)
       setInspectContent(content)
+      setInspectType(type)
       setShowInspectModal(true)
     } catch (error) {
       console.error('Error fetching content:', error)
@@ -570,7 +575,15 @@ const InterviewsView = () => {
                   <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
                     <h3 className="text-lg leading-6 font-medium text-cyan-400 mb-4">{inspectTitle}</h3>
                     <div className="bg-dark-blue p-4 rounded-md max-h-96 overflow-y-auto">
-                      <pre className="text-sm text-gray-300 whitespace-pre-wrap">{inspectContent}</pre>
+                      {inspectType === 'prompt' ? (
+                        <div className="text-sm text-gray-300 prose prose-invert max-w-none">
+                          <ReactMarkdown>{inspectContent}</ReactMarkdown>
+                        </div>
+                      ) : (
+                        <SyntaxHighlighter language="json" style={oneDark} className="text-sm">
+                          {inspectContent}
+                        </SyntaxHighlighter>
+                      )}
                     </div>
                   </div>
                 </div>
