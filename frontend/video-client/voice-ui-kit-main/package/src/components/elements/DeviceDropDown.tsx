@@ -13,7 +13,7 @@ import {
   usePipecatClient,
   usePipecatClientMediaDevices,
 } from "@pipecat-ai/client-react";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 /**
  * Props for the headless DeviceDropDown component that accepts device data and callbacks as props.
@@ -138,6 +138,21 @@ export const DeviceDropDown: React.FC<DeviceDropDownProps> = (props) => {
   const { availableMics, selectedMic, updateMic } =
     usePipecatClientMediaDevices();
 
+  const memoizedAvailableMics = useMemo(
+    () => availableMics,
+    [availableMics?.length, availableMics?.map((d) => d.deviceId).join(",")]
+  );
+
+  const memoizedSelectedMic = useMemo(
+    () => selectedMic,
+    [selectedMic?.deviceId]
+  );
+
+  const memoizedUpdateMic = useMemo(
+    () => updateMic,
+    [updateMic]
+  );
+
   useEffect(() => {
     if (!client) return;
 
@@ -148,9 +163,9 @@ export const DeviceDropDown: React.FC<DeviceDropDownProps> = (props) => {
 
   return (
     <DeviceDropDownComponent
-      availableDevices={availableMics}
-      selectedDevice={selectedMic}
-      updateDevice={updateMic}
+      availableDevices={memoizedAvailableMics}
+      selectedDevice={memoizedSelectedMic}
+      updateDevice={memoizedUpdateMic}
       {...props}
     />
   );
