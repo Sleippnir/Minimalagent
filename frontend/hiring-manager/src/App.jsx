@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { SupabaseProvider } from './SupabaseContext.jsx'
-import DashboardView from './components/DashboardView.jsx'
-import InterviewsView from './components/InterviewsView.jsx'
-import CandidatesView from './components/CandidatesView.jsx'
-import EvaluationsView from './components/EvaluationsView.jsx'
+import { SupabaseProvider } from '../../src/SupabaseContext.jsx'
+import EvaluationsView from '../../src/components/EvaluationsView.jsx'
+import JobsView from './components/JobsView.jsx'
+import QuestionsView from './components/QuestionsView.jsx'
+import HiringDashboardView from './components/HiringDashboardView.jsx'
 
 function App() {
   const [currentView, setCurrentView] = useState('dashboard')
@@ -11,15 +11,15 @@ function App() {
   const renderView = () => {
     switch (currentView) {
       case 'dashboard':
-        return <DashboardView />
-      case 'interviews':
-        return <InterviewsView />
-      case 'candidates':
-        return <CandidatesView />
+        return <HiringDashboardView />
+      case 'jobs':
+        return <JobsView />
+      case 'questions':
+        return <QuestionsView />
       case 'evaluations':
         return <EvaluationsView />
       default:
-        return <DashboardView />
+        return <HiringDashboardView />
     }
   }
 
@@ -31,7 +31,7 @@ function App() {
             <div className="flex justify-between h-16">
               <div className="flex">
                 <div className="flex-shrink-0 flex items-center">
-                  <h1 className="text-xl font-bold text-cyan-400">HR AI Assistant</h1>
+                  <h1 className="text-xl font-bold text-cyan-400">Hiring Manager Dashboard</h1>
                 </div>
                 <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                   <button
@@ -45,24 +45,24 @@ function App() {
                     Dashboard
                   </button>
                   <button
-                    onClick={() => setCurrentView('interviews')}
+                    onClick={() => setCurrentView('jobs')}
                     className={`${
-                      currentView === 'interviews'
+                      currentView === 'jobs'
                         ? 'border-cyan-400 text-cyan-400'
                         : 'border-transparent text-gray-300 hover:border-gray-300 hover:text-white'
                     } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
                   >
-                    Schedule Interview
+                    Jobs
                   </button>
                   <button
-                    onClick={() => setCurrentView('candidates')}
+                    onClick={() => setCurrentView('questions')}
                     className={`${
-                      currentView === 'candidates'
+                      currentView === 'questions'
                         ? 'border-cyan-400 text-cyan-400'
                         : 'border-transparent text-gray-300 hover:border-gray-300 hover:text-white'
                     } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
                   >
-                    Candidates
+                    Questions
                   </button>
                   <button
                     onClick={() => setCurrentView('evaluations')}

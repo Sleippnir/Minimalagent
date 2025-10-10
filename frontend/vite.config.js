@@ -12,7 +12,8 @@ export default defineConfig({
       input: {
         main: './index.html',
         'dashboards/hr/index': './dashboards/hr/index.html',
-        'candidate/index': './candidate/index.html'
+        'candidate/index': './candidate/index.html',
+        'hiring-manager/index': './hiring-manager/index.html'
       }
     }
   },
