@@ -25,7 +25,9 @@ export default function InterviewSession({ authToken, onBack, onTranscriptUpdate
   const [launching, setLaunching] = useState(false);
   const [launchError, setLaunchError] = useState(null);
   const [capturedTranscript, setCapturedTranscript] = useState([]);
+  const [sessionPhase, setSessionPhase] = useState('intro'); // 'intro', 'interview', 'outro'
   const abortRef = useRef(null);
+  const outroVideoRef = useRef(null);
 
   const { client, connect, disconnect, state } = useDailyInterviewClient({
     onStateChange: (s) => console.log("[InterviewSession] transport state", s),
@@ -40,10 +42,10 @@ export default function InterviewSession({ authToken, onBack, onTranscriptUpdate
 
   // Auto-launch when component mounts
   useEffect(() => {
-    if (authToken) {
+    if (authToken && sessionPhase === 'intro') {
       handleLaunch();
     }
-  }, [authToken]);
+  }, [authToken, sessionPhase]);
 
   const roomDetails = useMemo(() => {
     if (!connectResponse?.room?.room_url) return null;
@@ -79,6 +81,7 @@ export default function InterviewSession({ authToken, onBack, onTranscriptUpdate
       }
 
       setConnectResponse(payload);
+      setSessionPhase('interview');
     } catch (error) {
       if (error.name === "AbortError") return;
       console.error("Failed to launch bot:", error);
@@ -89,6 +92,15 @@ export default function InterviewSession({ authToken, onBack, onTranscriptUpdate
     }
   };
 
+  const handleDisconnect = useCallback(async () => {
+    try {
+      await disconnect();
+      setSessionPhase('outro');
+    } catch (error) {
+      console.error("Disconnect failed", error);
+    }
+  }, [disconnect]);
+
   const handleConnect = useCallback(async () => {
     if (!roomDetails) return;
     try {
@@ -98,6 +110,14 @@ export default function InterviewSession({ authToken, onBack, onTranscriptUpdate
       setLaunchError(error instanceof Error ? error.message : String(error));
     }
   }, [connect, roomDetails]);
+
+  const handleOutroEnd = useCallback(() => {
+    // Submit transcript before navigating back
+    if (capturedTranscript.length > 0 && onTranscriptUpdate) {
+      onTranscriptUpdate(capturedTranscript);
+    }
+    onBack();
+  }, [capturedTranscript, onTranscriptUpdate, onBack]);
 
   const autoConnectRef = useRef(null);
 
@@ -171,20 +191,35 @@ export default function InterviewSession({ authToken, onBack, onTranscriptUpdate
         </header>
 
         <main className="interview-main">
-          {roomDetails ? (
+          {sessionPhase === 'intro' && (
+            <div className="video-overlay">
+              <video
+                autoPlay
+                loop
+                className="intro-video"
+                src="/video/intro.mp4"
+              />
+              <div className="video-overlay-content glass-ui">
+                <p className="video-overlay-text">Preparing your interview experience...</p>
+                <div className="loading-spinner"></div>
+              </div>
+            </div>
+          )}
+
+          {sessionPhase === 'interview' && roomDetails ? (
             <PipecatClientProvider client={client}>
               <ConversationProvider>
                 <TranscriptCapture onUpdate={setCapturedTranscript}>
                   <ExperienceLayout
                     onConnect={handleConnect}
-                    onDisconnect={disconnect}
+                    onDisconnect={handleDisconnect}
                     connectionState={state.transport}
                   />
                 </TranscriptCapture>
               </ConversationProvider>
               <PipecatClientAudio />
             </PipecatClientProvider>
-          ) : (
+          ) : sessionPhase === 'interview' && (
             <div className="empty-state glass-ui">
               <p className="empty-headline">Starting Interview Session</p>
               <p className="empty-text">
@@ -203,6 +238,18 @@ export default function InterviewSession({ authToken, onBack, onTranscriptUpdate
                   </button>
                 </div>
               )}
+            </div>
+          )}
+
+          {sessionPhase === 'outro' && (
+            <div className="video-overlay">
+              <video
+                ref={outroVideoRef}
+                autoPlay
+                className="outro-video"
+                src="/video/outro.mp4"
+                onEnded={handleOutroEnd}
+              />
             </div>
           )}
         </main>
