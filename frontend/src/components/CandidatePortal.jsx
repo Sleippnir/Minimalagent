@@ -3,6 +3,7 @@ import { useSupabase } from '../SupabaseContext.jsx'
 import Spinner from './Spinner.jsx'
 import Toast from './Toast.jsx'
 import InterviewSession from './InterviewSession.jsx'
+import ReactMarkdown from 'react-markdown'
 
 const CandidatePortal = () => {
   const supabase = useSupabase()
@@ -12,6 +13,9 @@ const CandidatePortal = () => {
   const [loading, setLoading] = useState(false)
   const [toast, setToast] = useState(null)
   const [currentInterview, setCurrentInterview] = useState(null)
+  const [showTranscriptModal, setShowTranscriptModal] = useState(false)
+  const [transcriptData, setTranscriptData] = useState(null)
+  const [transcriptLoading, setTranscriptLoading] = useState(false)
 
   const handleLogout = () => {
     setCandidate(null)
@@ -126,6 +130,43 @@ const CandidatePortal = () => {
 
   const handleBackToPortal = () => {
     setCurrentInterview(null)
+  }
+
+  const handleViewTranscript = async (interview) => {
+    setTranscriptLoading(true)
+    setShowTranscriptModal(true)
+
+    try {
+      if (!supabase) {
+        // Mock data for development
+        setTranscriptData({
+          interview_id: interview.interview_id,
+          full_text: `# Interview Transcript\n\n**Interviewer:** Welcome to your interview for ${interview.applications?.jobs?.title || 'the position'}.\n\n**Candidate:** Thank you, I'm excited to be here.\n\n*This is mock transcript data for development purposes.*`
+        })
+      } else {
+        // Fetch transcript from Supabase
+        const { data: transcript, error } = await supabase
+          .from('transcripts')
+          .select('interview_id, full_text')
+          .eq('interview_id', interview.interview_id)
+          .single()
+
+        if (error) {
+          console.error('Error fetching transcript:', error)
+          setToast({ message: 'Failed to load transcript', type: 'error' })
+          setShowTranscriptModal(false)
+          return
+        }
+
+        setTranscriptData(transcript)
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      setToast({ message: 'An error occurred while loading the transcript', type: 'error' })
+      setShowTranscriptModal(false)
+    } finally {
+      setTranscriptLoading(false)
+    }
   }
 
   const handleTranscriptUpdate = async (transcript) => {
@@ -286,8 +327,11 @@ const CandidatePortal = () => {
                 )}
 
                 {interview.status === 'completed' && (
-                  <button className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors">
-                    View Results
+                  <button 
+                    onClick={() => handleViewTranscript(interview)}
+                    className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors"
+                  >
+                    View Transcript
                   </button>
                 )}
               </div>
@@ -295,6 +339,55 @@ const CandidatePortal = () => {
           </div>
         )}
       </main>
+
+      {/* Transcript Modal */}
+      {showTranscriptModal && (
+        <div className="fixed inset-0 z-10 overflow-y-auto" onClick={() => setShowTranscriptModal(false)}>
+          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            <div className="inline-block align-bottom glass-ui rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full" onClick={(e) => e.stopPropagation()}>
+              <div className="px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="sm:flex sm:items-start">
+                  <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                    <h3 className="text-lg leading-6 font-medium text-cyan-400 mb-4">
+                      Interview Transcript
+                    </h3>
+                    <div className="bg-dark-blue p-4 rounded-md max-h-96 overflow-y-auto">
+                      {transcriptLoading ? (
+                        <div className="flex justify-center items-center py-8">
+                          <Spinner />
+                          <span className="ml-2 text-gray-300">Loading transcript...</span>
+                        </div>
+                      ) : transcriptData ? (
+                        <div className="text-sm prose prose-invert max-w-none">
+                          <ReactMarkdown>
+                            {transcriptData.full_text}
+                          </ReactMarkdown>
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-gray-400">
+                          No transcript available for this interview.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button
+                  type="button"
+                  onClick={() => setShowTranscriptModal(false)}
+                  className="btn-secondary"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
