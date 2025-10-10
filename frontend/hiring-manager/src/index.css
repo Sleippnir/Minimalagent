@@ -32,3 +32,12 @@
 .btn-primary {
   @apply bg-cyan-400 text-gray-900 rounded-lg px-4 py-2 font-semibold hover:bg-cyan-300 transition-colors;
 }
+
+/* Override default recharts hover behavior */
+.recharts-wrapper:hover {
+  background: transparent !important;
+}
+
+.recharts-surface:hover {
+  background: transparent !important;
+}

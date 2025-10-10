@@ -3,7 +3,7 @@ import { useSupabase } from '../../../src/SupabaseContext.jsx'
 import StatCard from '../../../src/components/StatCard.jsx'
 import Spinner from '../../../src/components/Spinner.jsx'
 import Toast from '../../../src/components/Toast.jsx'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
 const HiringDashboardView = () => {
   const supabase = useSupabase()
@@ -12,6 +12,7 @@ const HiringDashboardView = () => {
   const [tagStats, setTagStats] = useState([])
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState(null)
+  const [hoveredBar, setHoveredBar] = useState(null)
 
   useEffect(() => {
     fetchDashboardData()
@@ -236,38 +237,54 @@ const HiringDashboardView = () => {
         </div>
 
         {/* Tag Distribution Chart */}
-        <div className="glass-ui rounded-lg p-6">
+        <div className="glass-ui rounded-lg p-6 relative">
           <h3 className="text-lg font-medium text-cyan-400 mb-4">Tag Distribution</h3>
           {tagStats.length > 0 ? (
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={tagStats} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <defs>
-                  <linearGradient id="tagGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#0891b2" stopOpacity={0.3}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(34, 197, 218, 0.1)" />
-                <XAxis
-                  dataKey="name"
-                  stroke="#9ca3af"
-                  fontSize={10}
-                  angle={-45}
-                  textAnchor="end"
-                  height={60}
-                />
-                <YAxis stroke="#9ca3af" fontSize={10} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'rgba(31, 41, 55, 0.9)',
-                    border: '1px solid rgba(34, 197, 218, 0.2)',
-                    borderRadius: '8px',
-                    color: '#e5e7eb'
-                  }}
-                />
-                <Bar dataKey="count" fill="url(#tagGradient)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <div
+              className={`transition-colors duration-200 ${hoveredBar !== null ? 'bg-blue-400/10' : ''}`}
+              style={{ borderRadius: '8px', padding: '8px' }}
+            >
+              <ResponsiveContainer width="100%" height={350}>
+                <BarChart data={tagStats} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                  <defs>
+                    <linearGradient id="tagGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#0891b2" stopOpacity={0.3}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(34, 197, 218, 0.1)" />
+                  <XAxis
+                    dataKey="name"
+                    stroke="#9ca3af"
+                    fontSize={10}
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                  />
+                  <YAxis stroke="#9ca3af" fontSize={10} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'rgba(31, 41, 55, 0.9)',
+                      border: '1px solid rgba(34, 197, 218, 0.2)',
+                      borderRadius: '8px',
+                      color: '#e5e7eb'
+                    }}
+                  />
+                  <Bar
+                    dataKey="count"
+                    fill="url(#tagGradient)"
+                    radius={[4, 4, 0, 0]}
+                    cursor="pointer"
+                    onMouseEnter={(data, index) => setHoveredBar(index)}
+                    onMouseLeave={() => setHoveredBar(null)}
+                    style={{
+                      filter: hoveredBar !== null ? 'drop-shadow(0 0 8px #60a5fa)' : 'none',
+                      transition: 'filter 0.2s ease'
+                    }}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           ) : (
             <div className="flex items-center justify-center h-48">
               <p className="text-gray-400">No tag data available</p>
