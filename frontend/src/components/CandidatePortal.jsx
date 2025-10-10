@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useSupabase } from '../SupabaseContext.jsx'
 import Spinner from './Spinner.jsx'
 import Toast from './Toast.jsx'
+import InterviewSession from './InterviewSession.jsx'
 
 const CandidatePortal = () => {
   const supabase = useSupabase()
@@ -127,23 +128,47 @@ const CandidatePortal = () => {
     setCurrentInterview(null)
   }
 
+  const handleTranscriptUpdate = async (transcript) => {
+    if (!currentInterview?.interview_id) return
+
+    try {
+      // Convert transcript to the expected format
+      const transcriptTurns = transcript.map(entry => ({
+        speaker: entry.role === 'user' ? 'candidate' : 'interviewer',
+        text: entry.content,
+        timestamp: entry.timestamp
+      }))
+
+      const response = await fetch(`/api/interviews/${currentInterview.interview_id}/transcript`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ turns: transcriptTurns })
+      })
+
+      if (response.ok) {
+        setToast({ message: 'Transcript submitted successfully', type: 'success' })
+        // Refresh interviews to show updated status
+        // This would need to be implemented based on your data fetching logic
+      } else {
+        const error = await response.json().catch(() => ({}))
+        setToast({ message: `Failed to submit transcript: ${error.detail || 'Unknown error'}`, type: 'error' })
+      }
+    } catch (error) {
+      console.error('Error submitting transcript:', error)
+      setToast({ message: 'Network error while submitting transcript', type: 'error' })
+    }
+  }
+
   // Show interview session if one is active
   if (currentInterview) {
     return (
-      <div className="min-h-screen main-background flex items-center justify-center">
-        <div className="glass-ui rounded-2xl p-8 max-w-md w-full mx-4">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-white mb-4">Interview Session</h2>
-            <p className="text-gray-300 mb-6">Interview functionality is temporarily disabled due to technical issues.</p>
-            <button
-              onClick={handleBackToPortal}
-              className="bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
-            >
-              Back to Portal
-            </button>
-          </div>
-        </div>
-      </div>
+      <InterviewSession
+        authToken={currentInterview.auth_token}
+        onBack={handleBackToPortal}
+        onTranscriptUpdate={handleTranscriptUpdate}
+      />
     )
   }
 

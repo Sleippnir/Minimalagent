@@ -1,286 +1,261 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Play, RotateCcw, CheckCircle, Loader2 } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ThemeProvider,
+  ConnectButton,
+  ConversationProvider,
+} from "@pipecat-ai/voice-ui-kit";
+import {
+  PipecatClientProvider,
+  PipecatClientAudio,
+  PipecatClientVideo,
+  usePipecatClientMediaTrack,
+} from "@pipecat-ai/client-react";
 
-// Transport state constants
-const TS = {
-  Disconnected: 'Disconnected',
-  Initializing: 'Initializing',
-  Initialized: 'Initialized',
-  Authenticating: 'Authenticating',
-  Authenticated: 'Authenticated',
-  Connecting: 'Connecting',
-  Connected: 'Connected',
-  Ready: 'Ready',
-  Disconnecting: 'Disconnecting',
-  Error: 'Error',
+import { useTranscriptRecorder } from "../lib/transcriptRecorder.js";
+import { useDailyInterviewClient } from "../hooks/useDailyInterviewClient.js";
+import AudioReactiveHalo from "./AudioReactiveHalo.jsx";
+
+const TranscriptCapture = ({ onUpdate, children }) => {
+  useTranscriptRecorder({ enabled: true, onUpdate });
+  return children;
 };
 
-const InterviewSession = ({ interview, onBack }) => {
-  const [currentScreen, setCurrentScreen] = useState('intro');
-  const [isLoading, setIsLoading] = useState(false);
-  const [videoError, setVideoError] = useState(false); // <-- moved up (fix TDZ)
+export default function InterviewSession({ authToken, onBack, onTranscriptUpdate }) {
+  const [connectResponse, setConnectResponse] = useState(null);
+  const [launching, setLaunching] = useState(false);
+  const [launchError, setLaunchError] = useState(null);
+  const [capturedTranscript, setCapturedTranscript] = useState([]);
+  const abortRef = useRef(null);
 
-  const introVideoRef = useRef(null);
-  const outroVideoRef = useRef(null);
+  const { client, connect, disconnect, state } = useDailyInterviewClient({
+    onStateChange: (s) => console.log("[InterviewSession] transport state", s),
+    onError: (err) => console.warn("[InterviewSession] client error", err),
+  });
 
-  // Pipecat client temporarily disabled - will be replaced with separate video interview app
-  const pcClient = null;
-
-  // Pipecat event listeners temporarily disabled - video interview will be separate app
   useEffect(() => {
-    // Video interview functionality moved to separate application
-  }, []);
+    return () => {
+      disconnect().catch(() => undefined);
+    };
+  }, [disconnect]);
 
-  // Video interview connection - will be implemented in separate app
-  const connectToBot = useCallback(async () => {
-    // Video interview functionality moved to separate application
-    console.log('Video interview will be handled by separate application');
-  }, []);
-
-  // Screen transition handlers
-  const handleStartInterview = async () => {
-    setIsLoading(true);
-    // Await the full connection process. The promise resolves when state is 'Ready'.
-    await connectToBot(); 
-    setIsLoading(false);
-
-    // Now that we are connected and ready, play the intro video.
-    if (introVideoRef.current) {
-      try {
-        await introVideoRef.current.play();
-        setCurrentScreen('intro-playing');
-      } catch (error) {
-        console.error('Intro video autoplay failed:', error);
-        // If autoplay fails, show manual play option
-        setCurrentScreen('intro-playing');
-        setVideoError(true);
-      }
+  // Auto-launch when component mounts
+  useEffect(() => {
+    if (authToken) {
+      handleLaunch();
     }
-  };
+  }, [authToken]);
 
-  const handleIntroVideoEnd = () => {
-    setCurrentScreen('interview');
-    // The bot has already started the conversation on the server.
-  };
+  const roomDetails = useMemo(() => {
+    if (!connectResponse?.room?.room_url) return null;
+    return {
+      roomUrl: connectResponse.room.room_url,
+      roomToken: connectResponse.room.room_token ?? undefined,
+    };
+  }, [connectResponse]);
 
-  // Handle video play error
-  const handleVideoError = () => {
-    setVideoError(true);
-  };
+  const handleLaunch = async () => {
+    if (!authToken) return;
+    await disconnect().catch(() => undefined);
+    setLaunching(true);
+    setLaunchError(null);
+    abortRef.current?.abort();
 
-  // Manual play function
-  const playIntroVideo = async () => {
-    if (introVideoRef.current) {
-      try {
-        await introVideoRef.current.play();
-        setCurrentScreen('intro-playing');
-        setVideoError(false);
-      } catch (error) {
-        console.error('Manual video play failed:', error);
-        // If manual play fails, skip to interview
-        setCurrentScreen('interview');
-      }
-    }
-  };
+    const controller = new AbortController();
+    abortRef.current = controller;
 
-  const cleanup = useCallback(() => {
-    try { pcClient?.disconnect(); } catch {}
     try {
-      if (introVideoRef.current) { introVideoRef.current.pause(); introVideoRef.current.currentTime = 0; }
-      if (outroVideoRef.current) { outroVideoRef.current.pause(); outroVideoRef.current.currentTime = 0; }
-    } catch {}
-  }, [pcClient]);
+      const response = await fetch(`/api/interviews/${authToken}?launch_bot=true`, {
+        signal: controller.signal,
+      });
 
-  // Cleanup on unmount
-  useEffect(() => () => { cleanup(); }, [cleanup]);
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.detail || response.statusText || "Failed to launch interview bot");
+      }
 
-  const handleRestart = () => {
-    cleanup();
-    setVideoError(false);
-    setIsLoading(false);
-    setCurrentScreen('intro');
-  };
+      const payload = await response.json();
+      if (!payload?.room?.room_url) {
+        throw new Error("Launch response did not include Daily room details");
+      }
 
-  const getStatusInfo = () => {
-    const currentState = pcClient?.state;
-    switch (currentState) {
-      case TS.Authenticating:
-      case TS.Authenticated:
-        return { text: 'Authorizing...', color: '#f39c12', icon: <Loader2 className="animate-spin" /> };
-      case TS.Initializing:
-      case TS.Connecting:
-        return { text: 'Connecting...', color: '#f39c12', icon: <Loader2 className="animate-spin" /> };
-      case TS.Connected:
-      case TS.Ready:
-        return { text: 'Connected', color: '#2ecc71', icon: <CheckCircle /> };
-      case TS.Disconnected:
-      case TS.Error:
-        return { text: 'Disconnected', color: '#e74c3c', icon: <RotateCcw /> };
-      default:
-        return { text: 'Disconnected', color: '#95a5a6', icon: <Loader2 /> };
+      setConnectResponse(payload);
+    } catch (error) {
+      if (error.name === "AbortError") return;
+      console.error("Failed to launch bot:", error);
+      setLaunchError(error.message || "Failed to launch bot");
+      setConnectResponse(null);
+    } finally {
+      setLaunching(false);
     }
   };
 
-  const statusInfo = getStatusInfo();
+  const handleConnect = useCallback(async () => {
+    if (!roomDetails) return;
+    try {
+      await connect(roomDetails);
+    } catch (error) {
+      console.error("Connect failed", error);
+      setLaunchError(error instanceof Error ? error.message : String(error));
+    }
+  }, [connect, roomDetails]);
+
+  const autoConnectRef = useRef(null);
+
+  useEffect(() => {
+    if (!roomDetails) {
+      autoConnectRef.current = null;
+      return;
+    }
+
+    if (autoConnectRef.current === roomDetails.roomUrl) {
+      return;
+    }
+
+    autoConnectRef.current = roomDetails.roomUrl;
+    handleConnect().catch((err) => {
+      console.error("Auto connect failed", err);
+    });
+  }, [roomDetails, handleConnect]);
+
+  // Update transcript when it changes
+  useEffect(() => {
+    if (capturedTranscript.length > 0 && onTranscriptUpdate) {
+      onTranscriptUpdate(capturedTranscript);
+    }
+  }, [capturedTranscript, onTranscriptUpdate]);
+
+  const handleDownloadTranscript = () => {
+    if (!capturedTranscript.length) return;
+    const blob = new Blob([JSON.stringify(capturedTranscript, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `interview-transcript-${authToken || "session"}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   return (
-    <div className="interview-session min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-      <div className="w-full max-w-6xl">
+    <ThemeProvider defaultTheme="dark">
+      <div className="interview-shell main-background">
+        <header className="interview-header glass-ui">
+          <div className="header-left">
+            <h1 className="title">Interview Session</h1>
+            <p className="subtitle">Real-time AI-powered interview experience</p>
+          </div>
 
-        {/* Intro Screen */}
-        {currentScreen === 'intro' && (
-          <div className="text-center space-y-8">
-            <div className="backdrop-blur-md bg-white/10 rounded-2xl p-8 border border-white/20">
-              <h1 className="text-4xl font-bold text-white mb-4">Welcome to Your Interview</h1>
-              <p className="text-xl text-gray-300 mb-8">Click the button below to begin your AI-powered interview session.</p>
-              <button
-                onClick={handleStartInterview}
-                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-4 px-8 rounded-xl text-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-3 mx-auto"
-              >
-                <Play size={24} />
-                Start Interview
+          <div className="header-right glass-ui inset">
+            <div className="token-input-row">
+              <button className="btn-secondary" onClick={onBack}>
+                ← Back to Portal
+              </button>
+              <button className="btn-primary" onClick={handleLaunch} disabled={launching}>
+                {launching ? "Launching..." : "Restart Interview"}
               </button>
             </div>
-          </div>
-        )}
 
-        {/* Intro Video Playing */}
-        {currentScreen === 'intro-playing' && (
-          <div className="text-center">
-            <video
-              ref={introVideoRef}
-              className="rounded-2xl shadow-2xl max-w-4xl mx-auto"
-              onEnded={handleIntroVideoEnd}
-              onError={handleVideoError}
-              autoPlay
-              muted
-              playsInline
-            >
-              <source src="/video/intro.mp4" type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
-            {videoError && (
-              <div className="mt-4">
-                <button
-                  onClick={playIntroVideo}
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg"
-                >
-                  Play Intro Video
-                </button>
-                <button
-                  onClick={() => setCurrentScreen('interview')}
-                  className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg ml-4"
-                >
-                  Skip to Interview
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+            {launchError && <p className="token-error">{launchError}</p>}
+            {roomDetails && <p className="token-success">Interview session active</p>}
 
-        {/* Interview Screen */}
-        {currentScreen === 'interview' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-            {/* Avatar Video */}
-            <div className="lg:col-span-2">
-              <div className="backdrop-blur-md bg-black/30 rounded-2xl p-4 border border-white/20">
-                <h3 className="text-white text-lg font-semibold mb-4 text-center">AI Interviewer</h3>
-                {/* Temporarily commented out Pipecat components due to packaging issues */}
-                {/* <PipecatClientVideo
-                  participant="bot"
-                  className="w-full rounded-xl bg-black"
-                />
-                <PipecatClientAudio /> */}
-                <div className="w-full h-64 rounded-xl bg-black flex items-center justify-center">
-                  <p className="text-white text-center">Video feed temporarily disabled</p>
-                </div>
-              </div>
+            <div className="transcript-actions">
+              <button className="btn-secondary" onClick={handleDownloadTranscript} disabled={!capturedTranscript.length}>
+                Download Transcript JSON
+              </button>
+              <span className="transcript-count">{capturedTranscript.length} entries captured</span>
             </div>
+          </div>
+        </header>
 
-            {/* User Video & Controls */}
-            <div className="space-y-4">
-
-              {/* User Camera */}
-              <div className="backdrop-blur-md bg-black/30 rounded-2xl p-4 border border-white/20">
-                <h3 className="text-white text-sm font-semibold mb-2">Your Camera</h3>
-                {/* Temporarily commented out Pipecat components due to packaging issues */}
-                {/* <PipecatClientVideo
-                  participant="local"
-                  className="w-full rounded-lg bg-black"
-                  mirror
-                /> */}
-                <div className="w-full h-32 rounded-lg bg-black flex items-center justify-center">
-                  <p className="text-white text-center text-sm">Camera feed temporarily disabled</p>
-                </div>
-              </div>
-
-              {/* Status & Controls */}
-              <div className="backdrop-blur-md bg-white/10 rounded-2xl p-4 border border-white/20">
-                <div className="flex items-center gap-3 mb-4">
-                  <div
-                    className="w-4 h-4 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: statusInfo.color }}
+        <main className="interview-main">
+          {roomDetails ? (
+            <PipecatClientProvider client={client}>
+              <ConversationProvider>
+                <TranscriptCapture onUpdate={setCapturedTranscript}>
+                  <ExperienceLayout
+                    onConnect={handleConnect}
+                    onDisconnect={disconnect}
+                    connectionState={state.transport}
+                  />
+                </TranscriptCapture>
+              </ConversationProvider>
+              <PipecatClientAudio />
+            </PipecatClientProvider>
+          ) : (
+            <div className="empty-state glass-ui">
+              <p className="empty-headline">Starting Interview Session</p>
+              <p className="empty-text">
+                {launching ? "Launching interview bot..." : "Preparing your interview experience..."}
+              </p>
+              {launchError && (
+                <div className="mt-4">
+                  <p className="text-red-400 mb-2">Failed to start interview:</p>
+                  <p className="text-sm text-gray-300">{launchError}</p>
+                  <button
+                    onClick={handleLaunch}
+                    className="mt-4 btn-primary"
+                    disabled={launching}
                   >
-                    {statusInfo.icon && React.cloneElement(statusInfo.icon, {
-                      size: 12,
-                      className: "text-white"
-                    })}
-                  </div>
-                  <span className="text-white font-medium">{statusInfo.text}</span>
+                    Try Again
+                  </button>
                 </div>
-
-                {isLoading && (
-                  <div className="text-center py-4">
-                    <Loader2 className="animate-spin mx-auto mb-2" size={24} color="#ffffff" />
-                    <p className="text-gray-300 text-sm">Setting up your interview...</p>
-                  </div>
-                )}
-              </div>
-
+              )}
             </div>
-          </div>
-        )}
+          )}
+        </main>
 
-        {/* Outro Screen */}
-        {currentScreen === 'outro' && (
-          <div className="text-center space-y-8">
-            <div className="backdrop-blur-md bg-white/10 rounded-2xl p-8 border border-white/20">
-              <h1 className="text-3xl font-bold text-white mb-4">Thank You</h1>
-              <p className="text-xl text-gray-300 mb-8">Your interview session has now ended.</p>
-
-              <video
-                ref={outroVideoRef}
-                className="rounded-2xl shadow-2xl max-w-2xl mx-auto mb-8"
-                autoPlay
-                playsInline
-                muted
-              >
-                <source src="/video/outro.mp4" type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
-
-              <button
-                onClick={handleRestart}
-                className="bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2 mx-auto"
-              >
-                <RotateCcw size={20} />
-                Start New Session
-              </button>
-
-              <button
-                onClick={onBack}
-                className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 mt-4 block mx-auto"
-              >
-                Back to Portal
-              </button>
-            </div>
-          </div>
-        )}
-
+        <footer className="interview-footer glass-ui inset">
+          <span className="footer-brand">Minimalagent Interview Suite</span>
+          <span className="footer-divider">|</span>
+          <span className="footer-note">Token: {authToken}</span>
+        </footer>
       </div>
+    </ThemeProvider>
+  );
+}
+
+function ExperienceLayout({ onConnect, onDisconnect, connectionState }) {
+  const botVideoTrack = usePipecatClientMediaTrack("video", "bot");
+
+  return (
+    <div className="experience-grid">
+      <section className="video-area">
+        <div className="remote-stage-wrapper">
+          <AudioReactiveHalo participantType="bot" className="remote-stage-halo">
+            <div className="remote-stage">
+              {botVideoTrack ? (
+                <PipecatClientVideo participant="bot" />
+              ) : (
+                <div className="remote-stage-placeholder">
+                  <span>Waiting for interviewer...</span>
+                </div>
+              )}
+            </div>
+          </AudioReactiveHalo>
+
+          <AudioReactiveHalo participantType="local" className="local-preview-halo">
+            <div className="local-preview">
+              <PipecatClientVideo participant="local" mirror />
+            </div>
+          </AudioReactiveHalo>
+        </div>
+
+        <div className="connection-controls">
+          <ConnectButton
+            onConnect={onConnect}
+            onDisconnect={onDisconnect}
+            stateContent={{
+              connecting: { children: "Connecting...", variant: "secondary" },
+              disconnected: { children: "Connect", variant: "active" },
+              ready: { children: "Disconnect", variant: "destructive" },
+            }}
+          />
+          <p className="connection-hint">Connection state: {connectionState}</p>
+        </div>
+      </section>
     </div>
   );
-};
-
-export default InterviewSession;
+}
