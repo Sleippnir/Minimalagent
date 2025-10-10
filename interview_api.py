@@ -477,9 +477,9 @@ async def submit_transcript(interview_id: str, transcript: TranscriptSubmission)
     4. Updates interview status to 'completed' (triggers evaluation)
     """
     try:
-        # Generate full text from transcript turns
-        full_text = "\n".join(
-            [f"{turn.speaker}: {turn.text}" for turn in transcript.turns]
+        # Generate full text from transcript turns with speaker identification
+        full_text = "\n\n".join(
+            [f"**{turn.speaker}:** {turn.text}" for turn in transcript.turns]
         )
 
         # Save transcript

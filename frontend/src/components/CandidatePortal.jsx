@@ -5,6 +5,64 @@ import Toast from './Toast.jsx'
 import InterviewSession from './InterviewSession.jsx'
 import ReactMarkdown from 'react-markdown'
 
+// Custom component to render transcript with speaker colors
+const ColoredTranscript = ({ content }) => {
+  return (
+    <ReactMarkdown
+      components={{
+        p: ({ children }) => {
+          // Process each paragraph to apply speaker colors
+          const processText = (text) => {
+            if (typeof text !== 'string') return text
+
+            // Split by double newlines to get individual speaker turns
+            const turns = text.split('\n\n')
+
+            return turns.map((turn, index) => {
+              if (turn.includes('**Interviewer:**')) {
+                return (
+                  <span key={index}>
+                    <span className="text-cyan-400 font-semibold">Interviewer:</span>{' '}
+                    {turn.replace('**Interviewer:**', '').trim()}
+                    {index < turns.length - 1 && '\n\n'}
+                  </span>
+                )
+              } else if (turn.includes('**Candidate:**')) {
+                return (
+                  <span key={index}>
+                    <span className="text-green-400 font-semibold">Candidate:</span>{' '}
+                    {turn.replace('**Candidate:**', '').trim()}
+                    {index < turns.length - 1 && '\n\n'}
+                  </span>
+                )
+              } else {
+                // Handle other speakers or fallback
+                const colonIndex = turn.indexOf(':')
+                if (colonIndex !== -1) {
+                  const speaker = turn.substring(0, colonIndex).replace(/\*\*/g, '')
+                  const message = turn.substring(colonIndex + 1).trim()
+                  return (
+                    <span key={index}>
+                      <span className="text-gray-400 font-semibold">{speaker}:</span>{' '}
+                      {message}
+                      {index < turns.length - 1 && '\n\n'}
+                    </span>
+                  )
+                }
+                return <span key={index}>{turn}{index < turns.length - 1 && '\n\n'}</span>
+              }
+            })
+          }
+
+          return <p className="mb-4">{processText(children)}</p>
+        }
+      }}
+    >
+      {content}
+    </ReactMarkdown>
+  )
+}
+
 const CandidatePortal = () => {
   const supabase = useSupabase()
   const [email, setEmail] = useState('')
@@ -128,42 +186,45 @@ const CandidatePortal = () => {
     }
   }
 
-  const handleBackToPortal = () => {
-    setCurrentInterview(null)
+  const handleCloseTranscriptModal = () => {
+    setShowTranscriptModal(false)
+    setTranscriptData(null)
+    setTranscriptLoading(false)
   }
 
   const handleViewTranscript = async (interview) => {
     setTranscriptLoading(true)
-    setShowTranscriptModal(true)
 
     try {
       if (!supabase) {
-        // Mock data for development
-        setTranscriptData({
-          interview_id: interview.interview_id,
-          full_text: `# Interview Transcript\n\n**Interviewer:** Welcome to your interview for ${interview.applications?.jobs?.title || 'the position'}.\n\n**Candidate:** Thank you, I'm excited to be here.\n\n*This is mock transcript data for development purposes.*`
-        })
-      } else {
-        // Fetch transcript from Supabase
-        const { data: transcript, error } = await supabase
-          .from('transcripts')
-          .select('interview_id, full_text')
-          .eq('interview_id', interview.interview_id)
-          .single()
-
-        if (error) {
-          console.error('Error fetching transcript:', error)
-          setToast({ message: 'Failed to load transcript', type: 'error' })
-          setShowTranscriptModal(false)
-          return
-        }
-
-        setTranscriptData(transcript)
+        // No Supabase connection - show message
+        setToast({ message: 'Transcript viewing requires database connection', type: 'error' })
+        return
       }
+
+      // Fetch transcript from Supabase
+      const { data: transcript, error } = await supabase
+        .from('transcripts')
+        .select('interview_id, full_text')
+        .eq('interview_id', interview.interview_id)
+        .single()
+
+      if (error) {
+        console.error('Error fetching transcript:', error)
+        setToast({ message: 'Transcript not found or not yet available', type: 'error' })
+        return
+      }
+
+      if (!transcript || !transcript.full_text) {
+        setToast({ message: 'No transcript available for this interview', type: 'error' })
+        return
+      }
+
+      setTranscriptData(transcript)
+      setShowTranscriptModal(true)
     } catch (error) {
       console.error('Error:', error)
       setToast({ message: 'An error occurred while loading the transcript', type: 'error' })
-      setShowTranscriptModal(false)
     } finally {
       setTranscriptLoading(false)
     }
@@ -342,7 +403,7 @@ const CandidatePortal = () => {
 
       {/* Transcript Modal */}
       {showTranscriptModal && (
-        <div className="fixed inset-0 z-10 overflow-y-auto" onClick={() => setShowTranscriptModal(false)}>
+        <div className="fixed inset-0 z-10 overflow-y-auto" onClick={handleCloseTranscriptModal}>
           <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div className="fixed inset-0 transition-opacity" aria-hidden="true">
               <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
@@ -361,10 +422,8 @@ const CandidatePortal = () => {
                           <span className="ml-2 text-gray-300">Loading transcript...</span>
                         </div>
                       ) : transcriptData ? (
-                        <div className="text-sm prose prose-invert max-w-none">
-                          <ReactMarkdown>
-                            {transcriptData.full_text}
-                          </ReactMarkdown>
+                        <div className="text-sm">
+                          <ColoredTranscript content={transcriptData.full_text} />
                         </div>
                       ) : (
                         <div className="text-center py-8 text-gray-400">
@@ -378,7 +437,7 @@ const CandidatePortal = () => {
               <div className="px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                 <button
                   type="button"
-                  onClick={() => setShowTranscriptModal(false)}
+                  onClick={handleCloseTranscriptModal}
                   className="btn-secondary"
                 >
                   Close
